@@ -17,11 +17,11 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/permissions_fragment">
+    app:startDestination="@id/hijaiyah_fragment">
 
     <fragment
         android:id="@+id/permissions_fragment"
-        android:name="com.google.mediapipe.examples.gesturerecognizer.fragment.PermissionsFragment"
+        android:name="com.google.mediapipe.examples.gesturerecognizer.ui.permissions.PermissionsFragment"
         android:label="PermissionsFragment">
 
         <action
@@ -34,7 +34,7 @@
 
     <fragment
         android:id="@+id/camera_fragment"
-        android:name="com.google.mediapipe.examples.gesturerecognizer.fragment.CameraFragment"
+        android:name="com.google.mediapipe.examples.gesturerecognizer.ui.camera.CameraFragment"
         android:label="CameraFragment">
 
         <action
@@ -46,6 +46,17 @@
 
     <fragment
         android:id="@+id/gallery_fragment"
-        android:name="com.google.mediapipe.examples.gesturerecognizer.fragment.GalleryFragment"
+        android:name="com.google.mediapipe.examples.gesturerecognizer.ui.gallery.GalleryFragment"
         android:label="GalleryFragment" />
+
+    <fragment
+        android:id="@+id/hijaiyah_fragment"
+        android:name="com.google.mediapipe.examples.gesturerecognizer.ui.hijaiyah.HijaiyahFragment"
+        android:label="HijaiyahFragment">
+
+        <action
+            android:id="@+id/action_hijaiyah_to_camera"
+            app:destination="@id/camera_fragment" />
+
+    </fragment>
 </navigation>

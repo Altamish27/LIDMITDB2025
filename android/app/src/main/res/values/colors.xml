@@ -28,4 +28,12 @@
     <color name="icActive">#FFFFFFFF</color>
     <color name="icFocused">#DDFFFFFF</color>
     <color name="icPressed">#AAFFFFFF</color>
+    
+    <!-- Hijaiyah Learning Colors -->
+    <color name="hijaiyah_grey">#D5DBDB</color>
+    <color name="hijaiyah_yellow">#F1C40F</color>
+    <color name="hijaiyah_navy">#2C3E50</color>
+    <color name="hijaiyah_green">#147E7E</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
 </resources>

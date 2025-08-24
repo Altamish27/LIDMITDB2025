@@ -30,10 +30,12 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.Navigation
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.mediapipe.examples.gesturerecognizer.GestureRecognizerHelper
 import com.google.mediapipe.examples.gesturerecognizer.MainViewModel
 import com.google.mediapipe.examples.gesturerecognizer.R
+import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentCameraBinding
 import com.google.mediapipe.examples.gesturerecognizer.ui.adapter.GestureRecognizerResultsAdapter
 import com.google.mediapipe.examples.gesturerecognizer.ui.permissions.PermissionsFragment
@@ -68,6 +70,15 @@ class CameraFragment : Fragment(),
     private var camera: Camera? = null
     private var cameraProvider: ProcessCameraProvider? = null
     private var cameraFacing = CameraSelector.LENS_FACING_FRONT
+
+    // Hijaiyah Learning Variables
+    private var isHijaiyahMode = false
+    private var selectedLetter: String? = null
+    private var letterName: String? = null
+    private var letterPosition: Int? = null
+    private var progressManager: HijaiyahProgressManager? = null
+    private var correctGestureCount = 0
+    private val requiredCorrectGestures = 5
 
     /** Blocking ML operations are performed using this executor */
     private lateinit var backgroundExecutor: ExecutorService
@@ -159,6 +170,38 @@ class CameraFragment : Fragment(),
 
         // Attach listeners to UI control widgets
         initBottomSheetControls()
+        
+        // Setup Hijaiyah learning mode if arguments are passed
+        setupHijaiyahLearningMode()
+    }
+    
+    private fun setupHijaiyahLearningMode() {
+        // Check if we're in Hijaiyah learning mode
+        arguments?.let { args ->
+            selectedLetter = args.getString("selected_letter")
+            letterName = args.getString("letter_name")
+            letterPosition = args.getInt("letter_position", -1)
+            
+            if (selectedLetter != null && letterName != null && letterPosition != -1) {
+                isHijaiyahMode = true
+                progressManager = HijaiyahProgressManager(requireContext())
+                
+                // Show Hijaiyah learning overlay
+                fragmentCameraBinding.hijaiyahLearningOverlay.visibility = View.VISIBLE
+                fragmentCameraBinding.recyclerviewResults.visibility = View.GONE
+                fragmentCameraBinding.bottomSheetLayout.root.visibility = View.GONE
+                
+                // Set target letter info
+                fragmentCameraBinding.tvTargetLetter.text = selectedLetter
+                fragmentCameraBinding.tvLetterName.text = letterName
+                fragmentCameraBinding.tvDetectionStatus.text = "Tunjukkan tangan sesuai huruf $letterName"
+                
+                // Setup back button
+                fragmentCameraBinding.btnBackHijaiyah.setOnClickListener {
+                    findNavController().navigateUp()
+                }
+            }
+        }
     }
 
     private fun initBottomSheetControls() {
@@ -365,16 +408,22 @@ class CameraFragment : Fragment(),
             if (_fragmentCameraBinding != null) {
                 // Show result of recognized gesture
                 val gestureCategories = resultBundle.results.first().gestures()
-                if (gestureCategories.isNotEmpty()) {
-                    gestureRecognizerResultAdapter.updateResults(
-                        gestureCategories.first()
-                    )
+                
+                if (isHijaiyahMode) {
+                    handleHijaiyahLearningResults(gestureCategories)
                 } else {
-                    gestureRecognizerResultAdapter.updateResults(emptyList())
-                }
+                    // Normal gesture recognition mode
+                    if (gestureCategories.isNotEmpty()) {
+                        gestureRecognizerResultAdapter.updateResults(
+                            gestureCategories.first()
+                        )
+                    } else {
+                        gestureRecognizerResultAdapter.updateResults(emptyList())
+                    }
 
-                fragmentCameraBinding.bottomSheetLayout.inferenceTimeVal.text =
-                    String.format("%d ms", resultBundle.inferenceTime)
+                    fragmentCameraBinding.bottomSheetLayout.inferenceTimeVal.text =
+                        String.format("%d ms", resultBundle.inferenceTime)
+                }
 
                 // Pass necessary information to OverlayView for drawing on the canvas
                 fragmentCameraBinding.overlay.setResults(
@@ -387,6 +436,62 @@ class CameraFragment : Fragment(),
                 // Force a redraw
                 fragmentCameraBinding.overlay.invalidate()
             }
+        }
+    }
+    
+    private fun handleHijaiyahLearningResults(gestureCategories: List<List<com.google.mediapipe.tasks.components.containers.Category>>) {
+        if (gestureCategories.isNotEmpty() && gestureCategories.first().isNotEmpty()) {
+            val topGesture = gestureCategories.first().first()
+            val gestureName = topGesture.categoryName()
+            val confidence = topGesture.score()
+            
+            // Check if the detected gesture matches the target letter
+            // For now, we'll use a simple mapping - in real implementation, you'd have a proper gesture-to-letter mapping
+            val isCorrectGesture = checkIfGestureMatchesLetter(gestureName, selectedLetter)
+            
+            if (isCorrectGesture && confidence > 0.7f) {
+                correctGestureCount++
+                
+                // Update UI to show success
+                fragmentCameraBinding.tvDetectionStatus.text = "Benar! ${correctGestureCount}/${requiredCorrectGestures}"
+                fragmentCameraBinding.statusIndicator.background = ContextCompat.getDrawable(requireContext(), R.drawable.status_indicator_success)
+                
+                // Check if learning is complete
+                if (correctGestureCount >= requiredCorrectGestures) {
+                    markLetterCompleted()
+                }
+            } else {
+                // Reset count if wrong gesture or low confidence
+                if (correctGestureCount > 0) {
+                    correctGestureCount = 0
+                }
+                fragmentCameraBinding.tvDetectionStatus.text = "Tunjukkan tangan sesuai huruf $letterName"
+                fragmentCameraBinding.statusIndicator.background = ContextCompat.getDrawable(requireContext(), R.drawable.status_indicator_default)
+            }
+        } else {
+            // No gesture detected
+            fragmentCameraBinding.tvDetectionStatus.text = "Tunjukkan tangan"
+            fragmentCameraBinding.statusIndicator.background = ContextCompat.getDrawable(requireContext(), R.drawable.status_indicator_default)
+        }
+    }
+    
+    private fun checkIfGestureMatchesLetter(gestureName: String, targetLetter: String?): Boolean {
+        // Simple mapping for demonstration - in real app, you'd have proper gesture recognition for Arabic letters
+        // For now, we'll consider any detected hand gesture as potentially correct
+        return gestureName.isNotEmpty() && targetLetter != null
+    }
+    
+    private fun markLetterCompleted() {
+        letterPosition?.let { position ->
+            progressManager?.markLetterCompleted(position)
+            
+            // Show completion message
+            fragmentCameraBinding.tvDetectionStatus.text = "Selesai! Huruf $letterName berhasil dipelajari"
+            
+            // Navigate back to Hijaiyah screen after a delay
+            fragmentCameraBinding.root.postDelayed({
+                findNavController().navigateUp()
+            }, 2000)
         }
     }
 

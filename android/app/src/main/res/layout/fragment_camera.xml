@@ -31,6 +31,80 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <!-- Hijaiyah Learning Overlay -->
+    <LinearLayout
+        android:id="@+id/hijaiyah_learning_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:background="@color/hijaiyah_navy"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/btn_back_hijaiyah"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/ic_arrow_back"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="16dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_target_letter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ا"
+                android:textColor="@color/hijaiyah_yellow"
+                android:textSize="32sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_letter_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Alif"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tv_detection_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tunjukkan Tangan"
+                android:textColor="@color/hijaiyah_grey"
+                android:textSize="14sp"
+                android:gravity="center" />
+
+            <View
+                android:id="@+id/status_indicator"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/status_indicator_default" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
     <include
         android:id="@+id/bottom_sheet_layout"
         layout="@layout/info_bottom_sheet" />
