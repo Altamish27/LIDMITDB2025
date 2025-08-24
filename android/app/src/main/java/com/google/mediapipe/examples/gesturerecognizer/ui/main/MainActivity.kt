@@ -15,10 +15,16 @@
  */
 package com.google.mediapipe.examples.gesturerecognizer.ui.main
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.google.mediapipe.examples.gesturerecognizer.MainViewModel
@@ -29,24 +35,72 @@ class MainActivity : AppCompatActivity() {
     private lateinit var activityMainBinding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
 
+    companion object {
+        private const val TAG = "MainActivity"
+    }
+
+    // Permission request launcher
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Log.d(TAG, "Camera permission granted")
+            setupNavigation()
+        } else {
+            Log.e(TAG, "Camera permission denied")
+            Toast.makeText(
+                this,
+                "Camera permission is required for gesture recognition",
+                Toast.LENGTH_LONG
+            ).show()
+            finish()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activityMainBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(activityMainBinding.root)
 
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
-        val navController = navHostFragment.navController
-        activityMainBinding.navigation.setupWithNavController(navController)
-        activityMainBinding.navigation.setOnItemReselectedListener {
-            // ignore the reselection
-        }
+        // Check camera permission first
+        checkCameraPermission()
+    }
 
-        // Handle back press with modern API
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                finish()
+    private fun checkCameraPermission() {
+        when (PackageManager.PERMISSION_GRANTED) {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) -> {
+                Log.d(TAG, "Camera permission already granted")
+                setupNavigation()
             }
-        })
+            else -> {
+                Log.d(TAG, "Requesting camera permission")
+                requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
+    }
+
+    private fun setupNavigation() {
+        try {
+            val navHostFragment =
+                supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
+            val navController = navHostFragment.navController
+            activityMainBinding.navigation.setupWithNavController(navController)
+            activityMainBinding.navigation.setOnItemReselectedListener {
+                // ignore the reselection
+            }
+
+            // Handle back press with modern API
+            onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    finish()
+                }
+            })
+            
+            Log.d(TAG, "Navigation setup completed")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to setup navigation: ${e.message}", e)
+            Toast.makeText(this, "Failed to initialize camera interface: ${e.message}", Toast.LENGTH_LONG).show()
+            finish()
+        }
     }
 }
