@@ -472,6 +472,793 @@
                         </LinearLayout>
                     </LinearLayout>
                     
+                    <!-- Baris 3: KHA, DAL, DZAL, RA -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:orientation="horizontal">
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_kha"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginEnd="6dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="خ"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="KHA"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_dal"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginHorizontal="3dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="د"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="DAL"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_dzal"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginHorizontal="3dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ذ"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="DZAL"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_ra"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginStart="6dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ر"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="RA"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                    
+                    <!-- Baris 4: ZA, SIN, SYIN, SHAD -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:orientation="horizontal">
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_za"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginEnd="6dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ز"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ZA"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_sin"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginHorizontal="3dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="س"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="SIN"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_syin"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginHorizontal="3dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ش"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="SYIN"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_shad"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginStart="6dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ص"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="SHAD"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                    
+                    <!-- Baris 5: DHAD, THA, ZHA, AIN -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:orientation="horizontal">
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_dhad"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginEnd="6dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ض"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="DHAD"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_tha"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginHorizontal="3dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ط"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="THA"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_zha"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginHorizontal="3dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ظ"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ZHA"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_ain"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginStart="6dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ع"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="AIN"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                    
+                    <!-- Baris 6: GHAIN, FA, QAF, KAF -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:orientation="horizontal">
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_ghain"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginEnd="6dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="غ"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="GHAIN"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_fa"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginHorizontal="3dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ف"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="FA"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_qaf"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginHorizontal="3dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ق"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="QAF"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_kaf"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginStart="6dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ك"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="KAF"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                    
+                    <!-- Baris 7: LAM, MIM, NUN, WAW -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:orientation="horizontal">
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_lam"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginEnd="6dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ل"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="LAM"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_mim"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginHorizontal="3dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="م"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="MIM"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_nun"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginHorizontal="3dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ن"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="NUN"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_waw"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginStart="6dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="و"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="WAW"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                    
+                    <!-- Baris 8: HA (akhir), YA -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:orientation="horizontal">
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_ha_akhir"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginEnd="6dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ه"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="HHA"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:id="@+id/letter_ya"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_horizontal"
+                            android:background="@drawable/cr16bc4c4c4"
+                            android:paddingVertical="18dp"
+                            android:paddingHorizontal="16dp"
+                            android:layout_marginHorizontal="3dp"
+                            android:elevation="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ي"
+                                android:textColor="#2C3E50"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="YA"
+                                android:textColor="#2C3E50"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        
+                        <!-- Empty space for alignment -->
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginHorizontal="3dp" />
+                        
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp" />
+                    </LinearLayout>
+                
                 </LinearLayout>
                 
                 <!-- RecyclerView hidden for now -->

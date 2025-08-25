@@ -34,19 +34,19 @@
 
     <fragment
         android:id="@+id/camera_fragment"
-        android:name="com.google.mediapipe.examples.gesturerecognizer.ui.camera.CameraFragment"
+        android:name="com.google.mediapipe.examples.gesturerecognizer.fragment.CameraFragment"
         android:label="CameraFragment">
         
         <argument
-            android:name="selectedLetter"
+            android:name="selected_letter"
             app:argType="string"
             android:defaultValue="" />
         <argument
-            android:name="letterName"
+            android:name="letter_name"
             app:argType="string"
             android:defaultValue="" />
         <argument
-            android:name="letterPosition"
+            android:name="letter_position"
             app:argType="integer"
             android:defaultValue="-1" />
 
@@ -71,6 +71,10 @@
             android:id="@+id/action_hijaiyah_list_to_camera"
             app:destination="@id/camera_fragment" />
 
+        <action
+            android:id="@+id/action_hijaiyah_list_to_hijaiyah"
+            app:destination="@id/hijaiyah_fragment" />
+
     </fragment>
 
     <fragment
@@ -83,4 +87,5 @@
             app:destination="@id/camera_fragment" />
 
     </fragment>
+
 </navigation>

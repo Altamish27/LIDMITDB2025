@@ -48,30 +48,35 @@ class HijaiyahListFragment : Fragment() {
     }
 
     private fun setupStaticLetters() {
-        // Setup click listeners for static letters
-        binding.letterAlif.setOnClickListener {
-            navigateToCamera("ا", "ALIF", 1)
-        }
-        
-        binding.letterBa.setOnClickListener {
-            navigateToCamera("ب", "BA", 2)
-        }
-        
-        binding.letterTa.setOnClickListener {
-            navigateToCamera("ت", "TA", 3)
-        }
-        
-        binding.letterTsa.setOnClickListener {
-            navigateToCamera("ث", "TSA", 4)
-        }
-        
-        binding.letterJim.setOnClickListener {
-            navigateToCamera("ج", "JIM", 5)
-        }
-        
-        binding.letterHa.setOnClickListener {
-            navigateToCamera("ح", "HA", 6)
-        }
+        // Setup click listeners for all 28 Hijaiyah letters
+        binding.letterAlif.setOnClickListener { navigateToCamera("ا", "ALIF", 1) }
+        binding.letterBa.setOnClickListener { navigateToCamera("ب", "BA", 2) }
+        binding.letterTa.setOnClickListener { navigateToCamera("ت", "TA", 3) }
+        binding.letterTsa.setOnClickListener { navigateToCamera("ث", "TSA", 4) }
+        binding.letterJim.setOnClickListener { navigateToCamera("ج", "JIM", 5) }
+        binding.letterHa.setOnClickListener { navigateToCamera("ح", "HA", 6) }
+        binding.letterKha.setOnClickListener { navigateToCamera("خ", "KHA", 7) }
+        binding.letterDal.setOnClickListener { navigateToCamera("د", "DAL", 8) }
+        binding.letterDzal.setOnClickListener { navigateToCamera("ذ", "DZAL", 9) }
+        binding.letterRa.setOnClickListener { navigateToCamera("ر", "RA", 10) }
+        binding.letterZa.setOnClickListener { navigateToCamera("ز", "ZA", 11) }
+        binding.letterSin.setOnClickListener { navigateToCamera("س", "SIN", 12) }
+        binding.letterSyin.setOnClickListener { navigateToCamera("ش", "SYIN", 13) }
+        binding.letterShad.setOnClickListener { navigateToCamera("ص", "SHAD", 14) }
+        binding.letterDhad.setOnClickListener { navigateToCamera("ض", "DHAD", 15) }
+        binding.letterTha.setOnClickListener { navigateToCamera("ط", "THA", 16) }
+        binding.letterZha.setOnClickListener { navigateToCamera("ظ", "ZHA", 17) }
+        binding.letterAin.setOnClickListener { navigateToCamera("ع", "AIN", 18) }
+        binding.letterGhain.setOnClickListener { navigateToCamera("غ", "GHAIN", 19) }
+        binding.letterFa.setOnClickListener { navigateToCamera("ف", "FA", 20) }
+        binding.letterQaf.setOnClickListener { navigateToCamera("ق", "QAF", 21) }
+        binding.letterKaf.setOnClickListener { navigateToCamera("ك", "KAF", 22) }
+        binding.letterLam.setOnClickListener { navigateToCamera("ل", "LAM", 23) }
+        binding.letterMim.setOnClickListener { navigateToCamera("م", "MIM", 24) }
+        binding.letterNun.setOnClickListener { navigateToCamera("ن", "NUN", 25) }
+        binding.letterWaw.setOnClickListener { navigateToCamera("و", "WAW", 26) }
+        binding.letterHaAkhir.setOnClickListener { navigateToCamera("ه", "HHA", 27) }
+        binding.letterYa.setOnClickListener { navigateToCamera("ي", "YA", 28) }
         
         // Update backgrounds based on completion status
         updateLetterBackgrounds()
@@ -79,15 +84,40 @@ class HijaiyahListFragment : Fragment() {
     
     private fun updateLetterBackgrounds() {
         val completedLetters = progressManager.getCompletedLetters()
+        val completedDrawable = ContextCompat.getDrawable(requireContext(), 
+            com.google.mediapipe.examples.gesturerecognizer.R.drawable.cr16lr270f1c40ff39c12)
+        val incompleteDrawable = ContextCompat.getDrawable(requireContext(), 
+            com.google.mediapipe.examples.gesturerecognizer.R.drawable.cr16bc4c4c4)
         
-        // Update Alif background
-        if (completedLetters.contains(1)) {
-            binding.letterAlif.background = ContextCompat.getDrawable(requireContext(), 
-                com.google.mediapipe.examples.gesturerecognizer.R.drawable.cr16lr270f1c40ff39c12)
-        }
-        
-        // Update other letters backgrounds similarly
-        // For now keeping them as grey (incomplete)
+        // Update all 28 letter backgrounds
+        binding.letterAlif.background = if (completedLetters.contains(1)) completedDrawable else incompleteDrawable
+        binding.letterBa.background = if (completedLetters.contains(2)) completedDrawable else incompleteDrawable
+        binding.letterTa.background = if (completedLetters.contains(3)) completedDrawable else incompleteDrawable
+        binding.letterTsa.background = if (completedLetters.contains(4)) completedDrawable else incompleteDrawable
+        binding.letterJim.background = if (completedLetters.contains(5)) completedDrawable else incompleteDrawable
+        binding.letterHa.background = if (completedLetters.contains(6)) completedDrawable else incompleteDrawable
+        binding.letterKha.background = if (completedLetters.contains(7)) completedDrawable else incompleteDrawable
+        binding.letterDal.background = if (completedLetters.contains(8)) completedDrawable else incompleteDrawable
+        binding.letterDzal.background = if (completedLetters.contains(9)) completedDrawable else incompleteDrawable
+        binding.letterRa.background = if (completedLetters.contains(10)) completedDrawable else incompleteDrawable
+        binding.letterZa.background = if (completedLetters.contains(11)) completedDrawable else incompleteDrawable
+        binding.letterSin.background = if (completedLetters.contains(12)) completedDrawable else incompleteDrawable
+        binding.letterSyin.background = if (completedLetters.contains(13)) completedDrawable else incompleteDrawable
+        binding.letterShad.background = if (completedLetters.contains(14)) completedDrawable else incompleteDrawable
+        binding.letterDhad.background = if (completedLetters.contains(15)) completedDrawable else incompleteDrawable
+        binding.letterTha.background = if (completedLetters.contains(16)) completedDrawable else incompleteDrawable
+        binding.letterZha.background = if (completedLetters.contains(17)) completedDrawable else incompleteDrawable
+        binding.letterAin.background = if (completedLetters.contains(18)) completedDrawable else incompleteDrawable
+        binding.letterGhain.background = if (completedLetters.contains(19)) completedDrawable else incompleteDrawable
+        binding.letterFa.background = if (completedLetters.contains(20)) completedDrawable else incompleteDrawable
+        binding.letterQaf.background = if (completedLetters.contains(21)) completedDrawable else incompleteDrawable
+        binding.letterKaf.background = if (completedLetters.contains(22)) completedDrawable else incompleteDrawable
+        binding.letterLam.background = if (completedLetters.contains(23)) completedDrawable else incompleteDrawable
+        binding.letterMim.background = if (completedLetters.contains(24)) completedDrawable else incompleteDrawable
+        binding.letterNun.background = if (completedLetters.contains(25)) completedDrawable else incompleteDrawable
+        binding.letterWaw.background = if (completedLetters.contains(26)) completedDrawable else incompleteDrawable
+        binding.letterHaAkhir.background = if (completedLetters.contains(27)) completedDrawable else incompleteDrawable
+        binding.letterYa.background = if (completedLetters.contains(28)) completedDrawable else incompleteDrawable
     }
 
     private fun setupRecyclerView() {
@@ -116,10 +146,10 @@ class HijaiyahListFragment : Fragment() {
 
     private fun updateProgressDisplay() {
         val completedCount = progressManager.getCompletedLetters().size
-        val totalCount = allLetters.size
+        val totalCount = 28 // All 28 Hijaiyah letters now available
         val percentage = if (totalCount > 0) (completedCount * 100) / totalCount else 0
 
-        binding.tvProgressSummary.text = "$completedCount / $totalCount Huruf"
+        binding.tvProgressSummary.text = "$completedCount / $totalCount Huruf Hijaiyah Lengkap"
         binding.tvOverallPercentage.text = "$percentage%"
         binding.overallProgress.progress = percentage
     }
