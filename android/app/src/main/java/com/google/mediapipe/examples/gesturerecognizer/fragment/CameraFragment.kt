@@ -33,6 +33,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.mediapipe.examples.gesturerecognizer.GestureRecognizerHelper
+import com.google.mediapipe.examples.gesturerecognizer.HijaiyahData
 import com.google.mediapipe.examples.gesturerecognizer.MainViewModel
 import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentCameraBinding
@@ -148,8 +149,12 @@ class CameraFragment : Fragment(),
         super.onViewCreated(view, savedInstanceState)
         
         // Get target letter from arguments
-        targetLetter = arguments?.getString("selected_letter")
-        targetLetterName = arguments?.getString("letter_name")
+        targetLetter = arguments?.getString("selectedLetter")
+        targetLetterName = arguments?.getString("letterName")
+        
+        // Debug logs to check received parameters
+        Log.d(TAG, "Received arguments - Letter: $targetLetter, Name: $targetLetterName")
+        Log.d(TAG, "All arguments: ${arguments?.keySet()?.map { "$it = ${arguments?.get(it)}" }}")
         
         // Setup UI with target letter
         setupHijaiyahUI()
@@ -190,12 +195,20 @@ class CameraFragment : Fragment(),
         // Setup target letter display
         targetLetter?.let { letter ->
             fragmentCameraBinding.textTargetLetter.text = letter
+        } ?: run {
+            fragmentCameraBinding.textTargetLetter.text = "?"
         }
         
         targetLetterName?.let { name ->
             fragmentCameraBinding.textLetterName.text = "Huruf $name"
             fragmentCameraBinding.textInstruction.text = "Peragakan huruf $name selama 2 detik berturut-turut"
+        } ?: run {
+            fragmentCameraBinding.textLetterName.text = "Huruf Tidak Dikenali"
+            fragmentCameraBinding.textInstruction.text = "Error: Target huruf tidak diterima dengan benar"
         }
+        
+        // Debug log to check received parameters
+        Log.d(TAG, "Setup UI - Target Letter: $targetLetter, Letter Name: $targetLetterName")
         
         // Setup back button
         fragmentCameraBinding.buttonBack.setOnClickListener {
@@ -233,8 +246,27 @@ class CameraFragment : Fragment(),
         
         val currentTime = System.currentTimeMillis()
         
-        // Check if this is the target gesture
-        val isCorrectGesture = detectedGesture.equals(targetLetterName, ignoreCase = true)
+        // Safety check: if targetLetterName is null, stop detection
+        if (targetLetterName == null) {
+            updatePredictionText("Error: Tidak ada huruf target")
+            resetGestureDetection()
+            return
+        }
+        
+        // Find the letter data to get the correct gesture name
+        val targetLetter = HijaiyahData.letters.find { 
+            it.transliteration.equals(targetLetterName, ignoreCase = true) 
+        }
+        
+        val expectedGestureName = targetLetter?.gestureName
+        
+        // Check if this is the target gesture - compare with gesture name format
+        val isCorrectGesture = if (expectedGestureName != null) {
+            detectedGesture.equals(expectedGestureName, ignoreCase = true)
+        } else {
+            // Fallback to transliteration comparison
+            detectedGesture.equals(targetLetterName, ignoreCase = true)
+        }
         
         if (isCorrectGesture) {
             // Correct gesture detected
@@ -261,17 +293,15 @@ class CameraFragment : Fragment(),
                 }
             }
         } else {
-            // Wrong gesture or no gesture
+            // Wrong gesture or no gesture detected
             if (detectedGesture.isNotEmpty() && detectedGesture != "Unknown") {
-                updatePredictionText("$detectedGesture - tidak cocok")
+                updatePredictionText("$detectedGesture - tidak cocok (target: ${expectedGestureName ?: targetLetterName})")
             } else {
                 updatePredictionText("Tidak ada gesture")
             }
             
-            // Reset if there was a previous correct sequence
-            if (currentGesture != null) {
-                resetGestureDetection()
-            }
+            // ALWAYS reset if gesture is wrong or no gesture (fix for progress bar issue)
+            resetGestureDetection()
         }
     }
     
@@ -284,7 +314,7 @@ class CameraFragment : Fragment(),
         gestureStartTime = 0L
         consecutiveCorrectCount = 0
         fragmentCameraBinding.progressTimer.progress = 0
-        updatePredictionText("Reset - coba lagi")
+        updatePredictionText("Reset - siap deteksi")
         
         // Brief pause before allowing new detection
         resetTimer?.cancel()
