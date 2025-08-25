@@ -68,7 +68,8 @@
         android:layout_height="wrap_content"
         android:layout_margin="20dp"
         app:cardCornerRadius="20dp"
-        app:cardElevation="12dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@android:color/transparent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -78,82 +79,99 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/gradient_card_white"
             android:padding="20dp">
 
-            <!-- Header Section with Location and Time -->
+            <!-- Header Section dengan 2 area terpisah -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="16dp">
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp"
+                android:paddingTop="8dp">
 
+                <!-- Top Row: Lokasi dan Jam di kanan -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:orientation="horizontal"
+                    android:gravity="end"
+                    android:layout_marginBottom="12dp">
 
+                    <!-- Right Side: Lokasi dan Jam -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal">
 
-                        <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:src="@android:drawable/ic_menu_mylocation"
-                            android:layout_marginEnd="8dp"
-                            android:tint="#147E7E" />
-
-                        <TextView
+                        <!-- Location Section with Icon -->
+                        <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Kuningan, Jawa Barat"
-                            android:textSize="14sp"
-                            android:textColor="#147E7E"
-                            android:fontFamily="sans-serif-medium" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp">
+
+                            <ImageView
+                                android:layout_width="14dp"
+                                android:layout_height="14dp"
+                                android:src="@android:drawable/ic_menu_mylocation"
+                                android:layout_marginEnd="6dp"
+                                android:tint="@color/dark_blue_gray" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Kuningan, Jawa Barat"
+                                android:textSize="13sp"
+                                android:textColor="@color/dark_blue_gray"
+                                android:fontFamily="sans-serif-medium" />
+
+                        </LinearLayout>
+
+                        <!-- Time Section - Large and Bold -->
+                        <TextView
+                            android:id="@+id/tv_current_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="15.30"
+                            android:textSize="36sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="sans-serif-black"
+                            android:letterSpacing="0.05"
+                            android:layout_marginBottom="12dp" />
 
                     </LinearLayout>
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Jadwal Sholat"
-                            android:textSize="18sp"
-                            android:textStyle="bold"
-                            android:textColor="#2C3E50"
-                            android:fontFamily="sans-serif-black"
-                            android:layout_marginTop="4dp" />                </LinearLayout>
+                </LinearLayout>
 
-                <!-- Current Time with gradient background -->
+                <!-- Bottom Row: Jadwal Sholat di kiri sejajar dengan gambar Quran -->
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="@drawable/gradient_card_blue"
-                    android:padding="12dp"
-                    android:minWidth="80dp">
+                    android:orientation="horizontal"
+                    android:gravity="bottom">
 
+                    <!-- Left: Jadwal Sholat di paling bawah -->
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="15.30"
+                        android:layout_weight="1"
+                        android:text="Jadwal Sholat"
                         android:textSize="20sp"
                         android:textStyle="bold"
-                        android:textColor="@android:color/white"
-                        android:fontFamily="sans-serif-black" />
+                        android:textColor="@color/dark_blue_gray"
+                        android:fontFamily="sans-serif-black"
+                        android:gravity="start|bottom" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="WIB"
-                        android:textSize="10sp"
-                        android:textColor="@android:color/white"
-                        android:alpha="0.8" />
+                    <!-- Right: Quran Image -->
+                    <ImageView
+                        android:layout_width="120dp"
+                        android:layout_height="80dp"
+                        android:src="@drawable/quranhome"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="Quran Home Image" />
 
                 </LinearLayout>
 
@@ -165,7 +183,9 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:weightSum="5"
-                android:gravity="center">
+                android:gravity="center"
+                android:background="@drawable/gradient_prayer_yellow"
+                android:padding="16dp">
 
                 <!-- Shubuh -->
                 <LinearLayout
@@ -173,26 +193,23 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="@drawable/gradient_card_mint"
-                    android:padding="12dp"
-                    android:layout_margin="2dp">
+                    android:gravity="center">
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Shubuh"
-                        android:textSize="10sp"
-                        android:textColor="#2C3E50"
-                        android:fontFamily="sans-serif-medium" />
+                        android:textSize="14sp"
+                        android:textColor="@color/dark_blue_gray"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginBottom="4dp" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="04.30"
-                        android:textSize="12sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="#2C3E50"
-                        android:fontFamily="sans-serif-black"
-                        android:layout_marginTop="2dp" />
+                        android:textColor="@color/dark_blue_gray"
+                        android:fontFamily="sans-serif-black" />
                 </LinearLayout>
 
                 <!-- Dzuhur -->
@@ -201,55 +218,48 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="@drawable/gradient_card_orange"
-                    android:padding="12dp"
-                    android:layout_margin="2dp">
+                    android:gravity="center">
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Dzuhur"
-                        android:textSize="10sp"
-                        android:textColor="#2C3E50"
-                        android:fontFamily="sans-serif-medium" />
+                        android:textSize="14sp"
+                        android:textColor="@color/dark_blue_gray"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginBottom="4dp" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="12.05"
-                        android:textSize="12sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="#2C3E50"
-                        android:fontFamily="sans-serif-black"
-                        android:layout_marginTop="2dp" />
+                        android:textColor="@color/dark_blue_gray"
+                        android:fontFamily="sans-serif-black" />
                 </LinearLayout>
 
-                <!-- Ashar (Active) -->
+                <!-- Ashar -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="@drawable/gradient_card_blue"
-                    android:padding="12dp"
-                    android:layout_margin="2dp">
+                    android:gravity="center">
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Ashar"
-                        android:textSize="10sp"
-                        android:textColor="@android:color/white"
+                        android:textSize="14sp"
+                        android:textColor="@color/dark_blue_gray"
                         android:fontFamily="sans-serif-medium"
-                        android:alpha="0.9" />
+                        android:layout_marginBottom="4dp" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="15.12"
-                        android:textSize="12sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="@android:color/white"
-                        android:fontFamily="sans-serif-black"
-                        android:layout_marginTop="2dp" />
+                        android:textColor="@color/dark_blue_gray"
+                        android:fontFamily="sans-serif-black" />
                 </LinearLayout>
 
                 <!-- Maghrib -->
@@ -258,26 +268,23 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="@drawable/gradient_card_pink"
-                    android:padding="12dp"
-                    android:layout_margin="2dp">
+                    android:gravity="center">
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Maghrib"
-                        android:textSize="10sp"
-                        android:textColor="#2C3E50"
-                        android:fontFamily="sans-serif-medium" />
+                        android:textSize="14sp"
+                        android:textColor="@color/dark_blue_gray"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginBottom="4dp" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="18.10"
-                        android:textSize="12sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="#2C3E50"
-                        android:fontFamily="sans-serif-black"
-                        android:layout_marginTop="2dp" />
+                        android:textColor="@color/dark_blue_gray"
+                        android:fontFamily="sans-serif-black" />
                 </LinearLayout>
 
                 <!-- Isya -->
@@ -286,27 +293,23 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="@drawable/gradient_card_purple"
-                    android:padding="12dp"
-                    android:layout_margin="2dp">
+                    android:gravity="center">
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Isya"
-                        android:textSize="10sp"
-                        android:textColor="@android:color/white"
+                        android:textSize="14sp"
+                        android:textColor="@color/dark_blue_gray"
                         android:fontFamily="sans-serif-medium"
-                        android:alpha="0.9" />
+                        android:layout_marginBottom="4dp" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="19.12"
-                        android:textSize="12sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="@android:color/white"
-                        android:fontFamily="sans-serif-black"
-                        android:layout_marginTop="2dp" />
+                        android:textColor="@color/dark_blue_gray"
+                        android:fontFamily="sans-serif-black" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -314,94 +317,184 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- Modern Main Content Container - Center -->
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="24dp"
-        app:layout_constraintTop_toBottomOf="@+id/jadwal_sholat_card"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/feature_cards_container"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="20dp">
-
-        <!-- Modern App Title with gradient text effect -->
-        <TextView
-            android:id="@+id/tv_app_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Gesture Recognition"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:fontFamily="sans-serif-black"
-            android:layout_marginBottom="8dp"
-            android:shadowColor="#2E3440"
-            android:shadowDx="2"
-            android:shadowDy="2"
-            android:shadowRadius="4"
-            android:gravity="center" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Learn Arabic Letters with AI"
-            android:textSize="14sp"
-            android:textColor="@android:color/white"
-            android:fontFamily="sans-serif-medium"
-            android:layout_marginBottom="24dp"
-            android:alpha="0.9"
-            android:gravity="center" />
-
-        <!-- Modern Start Button dengan gradient -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_start_gesture"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="Start Recognition"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:fontFamily="sans-serif-black"
-            android:background="@drawable/gradient_button_primary"
-            android:layout_marginHorizontal="32dp"
-            app:cornerRadius="28dp"
-            app:icon="@android:drawable/ic_media_play"
-            app:iconGravity="textStart"
-            app:iconPadding="12dp"
-            app:iconSize="24dp"
-            app:iconTint="@android:color/white"
-            android:elevation="12dp"
-            android:stateListAnimator="@null" />
-
-    </LinearLayout>
-
     <!-- Modern Feature Cards Grid - Bottom Area -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/feature_cards_container"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:paddingBottom="20dp"
+        app:layout_constraintTop_toBottomOf="@+id/jadwal_sholat_card"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toTopOf="@+id/btn_coba_deteksi">
 
         <!-- Row 1 -->
         <androidx.cardview.widget.CardView
             android:id="@+id/card_hijaiyah"
             android:layout_width="0dp"
-            android:layout_height="100dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="8dp"
+            android:layout_height="140dp"
+            android:layout_marginEnd="6dp"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            android:alpha="0.85"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/card_quiz"
-            app:layout_constraintWidth_percent="0.32">
+            app:layout_constraintWidth_percent="0.31">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/gradient_card_hijaiyah"
+                android:padding="12dp">
+
+                <!-- Title -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Huruf Hijaiyah"
+                    android:textSize="12sp"
+                    android:textColor="@color/dark_blue_gray"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-black"
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Image -->
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/huruf_hijaiyah"
+                    android:scaleType="centerCrop"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Progress Text -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Progress"
+                    android:textSize="9sp"
+                    android:textColor="@color/dark_blue_gray"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="2dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="28/28"
+                    android:textSize="12sp"
+                    android:textColor="@color/dark_blue_gray"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-black" />
+
+                <!-- Progress Bar -->
+                <ProgressBar
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:layout_marginTop="4dp"
+                    android:progress="32"
+                    android:progressTint="@color/yellow_secondary"
+                    android:progressBackgroundTint="#CCFFFFFF" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/card_quiz"
+            android:layout_width="0dp"
+            android:layout_height="140dp"
+            android:layout_marginStart="3dp"
+            android:layout_marginEnd="3dp"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            android:alpha="0.85"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/card_hijaiyah"
+            app:layout_constraintEnd_toStartOf="@+id/card_surat"
+            app:layout_constraintWidth_percent="0.31">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/gradient_card_quiz"
+                android:padding="12dp">
+
+                <!-- Title -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Quiz"
+                    android:textSize="12sp"
+                    android:textColor="@color/dark_blue_gray"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-black"
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Image -->
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/quiz"
+                    android:scaleType="centerCrop"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Progress Text -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Progress"
+                    android:textSize="9sp"
+                    android:textColor="@color/dark_blue_gray"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="2dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="8/10"
+                    android:textSize="12sp"
+                    android:textColor="@color/dark_blue_gray"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-black" />
+
+                <!-- Progress Bar -->
+                <ProgressBar
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:layout_marginTop="4dp"
+                    android:progress="80"
+                    android:progressTint="@color/yellow_secondary"
+                    android:progressBackgroundTint="#CCFFFFFF" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/card_surat"
+            android:layout_width="0dp"
+            android:layout_height="140dp"
+            android:layout_marginStart="6dp"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            android:alpha="0.85"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/card_quiz"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintWidth_percent="0.31">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -411,131 +504,54 @@
                 android:background="@drawable/gradient_card_mint"
                 android:padding="12dp">
 
-                <ImageView
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:src="@drawable/ic_app_logo"
-                    android:layout_marginBottom="8dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Huruf Hijaiyah"
-                    android:textSize="11sp"
-                    android:textColor="#2C3E50"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-black"
-                    android:gravity="center" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="28 Huruf"
-                    android:textSize="9sp"
-                    android:textColor="#2C3E50"
-                    android:fontFamily="sans-serif-medium"
-                    android:layout_marginTop="2dp" />
-
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <androidx.cardview.widget.CardView
-            android:id="@+id/card_quiz"
-            android:layout_width="0dp"
-            android:layout_height="100dp"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="8dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/card_hijaiyah"
-            app:layout_constraintEnd_toStartOf="@+id/card_surat"
-            app:layout_constraintWidth_percent="0.32">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:background="@drawable/gradient_card_orange"
-                android:padding="12dp">
-
-                <ImageView
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:src="@android:drawable/ic_menu_help"
-                    android:layout_marginBottom="8dp"
-                    android:tint="#2C3E50" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Quiz"
-                    android:textSize="11sp"
-                    android:textColor="#2C3E50"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-black"
-                    android:gravity="center" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="20 Soal"
-                    android:textSize="9sp"
-                    android:textColor="#2C3E50"
-                    android:fontFamily="sans-serif-medium"
-                    android:layout_marginTop="2dp" />
-
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <androidx.cardview.widget.CardView
-            android:id="@+id/card_surat"
-            android:layout_width="0dp"
-            android:layout_height="100dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="8dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/card_quiz"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintWidth_percent="0.32">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:background="@drawable/gradient_card_pink"
-                android:padding="12dp">
-
-                <ImageView
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:src="@android:drawable/ic_menu_sort_by_size"
-                    android:layout_marginBottom="8dp"
-                    android:tint="#2C3E50" />
-
+                <!-- Title -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Surat"
-                    android:textSize="11sp"
-                    android:textColor="#2C3E50"
+                    android:textSize="12sp"
+                    android:textColor="@color/dark_blue_gray"
                     android:textStyle="bold"
                     android:fontFamily="sans-serif-black"
-                    android:gravity="center" />
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Image -->
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/surat"
+                    android:scaleType="centerCrop"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Progress Text -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Progress"
+                    android:textSize="9sp"
+                    android:textColor="@color/dark_blue_gray"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="2dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="114 Surat"
-                    android:textSize="9sp"
-                    android:textColor="#2C3E50"
-                    android:fontFamily="sans-serif-medium"
-                    android:layout_marginTop="2dp" />
+                    android:text="2/10"
+                    android:textSize="12sp"
+                    android:textColor="@color/dark_blue_gray"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-black" />
+
+                <!-- Progress Bar -->
+                <ProgressBar
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:layout_marginTop="4dp"
+                    android:progress="20"
+                    android:progressTint="@color/yellow_secondary"
+                    android:progressBackgroundTint="#CCFFFFFF" />
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -546,6 +562,7 @@
             android:layout_width="0dp"
             android:layout_height="80dp"
             android:layout_marginEnd="8dp"
+            android:layout_marginTop="20dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="8dp"
             android:clickable="true"
@@ -560,7 +577,7 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/gradient_card_blue"
+                android:background="@drawable/gradient_card_surat"
                 android:padding="12dp">
 
                 <ImageView
@@ -588,6 +605,7 @@
             android:layout_width="0dp"
             android:layout_height="80dp"
             android:layout_marginStart="8dp"
+            android:layout_marginTop="20dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="8dp"
             android:clickable="true"
@@ -627,23 +645,34 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Floating Logo with modern gradient -->
-    <ImageView
-        android:id="@+id/img_floating_logo"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:src="@drawable/ic_app_logo"
-        android:background="@drawable/gradient_circle_bg"
-        android:elevation="16dp"
-        android:scaleType="centerInside"
-        android:padding="8dp"
-        app:layout_constraintTop_toTopOf="parent"
+    <!-- Tombol Coba Deteksi di paling bawah -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_coba_deteksi"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_margin="20dp"
+        android:text="Coba Deteksi"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        android:fontFamily="sans-serif-black"
+        android:background="@drawable/gradient_button_primary"
+        app:layout_constraintTop_toBottomOf="@+id/feature_cards_container"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp" />
+        app:layout_constraintBottom_toTopOf="@+id/version_info"
+        app:cornerRadius="28dp"
+        app:icon="@android:drawable/ic_media_play"
+        app:iconGravity="textStart"
+        app:iconPadding="12dp"
+        app:iconSize="24dp"
+        app:iconTint="@android:color/white"
+        android:elevation="12dp"
+        android:stateListAnimator="@null" />
 
     <!-- Modern Version Info -->
     <LinearLayout
+        android:id="@+id/version_info"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -675,7 +704,7 @@
             android:layout_height="wrap_content"
             android:text="AI Powered"
             android:textSize="11sp"
-            android:textColor="#147E7E"
+            android:textColor="@color/teal_secondary"
             android:fontFamily="sans-serif-medium" />
 
     </LinearLayout>

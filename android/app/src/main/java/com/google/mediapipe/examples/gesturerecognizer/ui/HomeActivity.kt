@@ -1,7 +1,19 @@
 /*
- * Copyright 2022 The TensorFlow Authors. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Copyright 2022 The TensorFlow Authors. All Rights Rese    private fun setupClickListeners() {
+        binding.btnCobaDeteksi?.setOnClickListener {
+            animateButtonClick(it) {
+                try {
+                    val intent = Intent(this, MainActivity::class.java)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Failed to start MainActivity: ${e.message}", e)
+                    Toast.makeText(this, "Error starting camera: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+        
+        // Handle card view clicks - hapus karena tidak ada lagi tombol About dan Settings
+    }icensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -60,7 +72,7 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        binding.btnStartGesture.setOnClickListener {
+        binding.btnCobaDeteksi?.setOnClickListener {
             animateButtonClick(it) {
                 try {
                     val intent = Intent(this, MainActivity::class.java)
@@ -72,45 +84,22 @@ class HomeActivity : AppCompatActivity() {
             }
         }
         
-        // Handle card view clicks
-        binding.btnAbout.setOnClickListener {
-            animateButtonClick(it) {
-                Toast.makeText(this, "About page coming soon!", Toast.LENGTH_SHORT).show()
-            }
-        }
-        
-        binding.btnSettings.setOnClickListener {
-            animateButtonClick(it) {
-                Toast.makeText(this, "Settings page coming soon!", Toast.LENGTH_SHORT).show()
-            }
-        }
+        // Handle card view clicks - hapus karena tidak ada lagi tombol About dan Settings
     }
 
     private fun startAnimations() {
         // Animate elements fade in
-        binding.tvAppTitle.alpha = 0f
-        binding.btnStartGesture.alpha = 0f
-        binding.imgFloatingLogo.alpha = 0f
+        binding.btnCobaDeteksi?.alpha = 0f
 
         // Create fade in animations        
-        val logoFadeIn = ObjectAnimator.ofFloat(binding.imgFloatingLogo, "alpha", 0f, 1f).apply {
-            duration = 800
-            startDelay = 400
-        }
-        
-        val titleFadeIn = ObjectAnimator.ofFloat(binding.tvAppTitle, "alpha", 0f, 1f).apply {
-            duration = 800
-            startDelay = 600
-        }
-        
-        val buttonFadeIn = ObjectAnimator.ofFloat(binding.btnStartGesture, "alpha", 0f, 1f).apply {
+        val buttonFadeIn = ObjectAnimator.ofFloat(binding.btnCobaDeteksi, "alpha", 0f, 1f).apply {
             duration = 800
             startDelay = 800
         }
 
         // Start all animations
         AnimatorSet().apply {
-            playTogether(logoFadeIn, titleFadeIn, buttonFadeIn)
+            playTogether(buttonFadeIn)
             interpolator = AccelerateDecelerateInterpolator()
             start()
         }
