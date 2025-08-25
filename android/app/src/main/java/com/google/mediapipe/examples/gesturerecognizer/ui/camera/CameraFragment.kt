@@ -1,7 +1,20 @@
 /*
  * Copyright 2022 The TensorFlow Authors. All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ *     // Hijaiyah Learning Variables
+    private var isHijaiyahMode = false
+    private var selectedLetter: String? = null
+    private var letterName: String? = null
+    private var letterPosition: Int? = null
+    private var progressManager: HijaiyahProgressManager? = null
+    
+    // Detection and confirmation variables
+    private var currentDetectedLetter: String? = null
+    private var detectionStartTime = 0L
+    private var isConfirming = false
+    private var confirmationDuration = 3000L // 3 seconds
+    private var lastGestureUpdate = 0L
+    private val gestureUpdateInterval = 100L // Update UI every 100mser the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -16,6 +29,7 @@
 package com.google.mediapipe.examples.gesturerecognizer.ui.camera
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
@@ -33,7 +47,9 @@ import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.mediapipe.examples.gesturerecognizer.GestureRecognizerHelper
+import com.google.mediapipe.examples.gesturerecognizer.HijaiyahData
 import com.google.mediapipe.examples.gesturerecognizer.MainViewModel
+import com.google.mediapipe.examples.gesturerecognizer.OverlayView
 import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentCameraBinding
@@ -77,8 +93,14 @@ class CameraFragment : Fragment(),
     private var letterName: String? = null
     private var letterPosition: Int? = null
     private var progressManager: HijaiyahProgressManager? = null
-    private var correctGestureCount = 0
-    private val requiredCorrectGestures = 5
+    
+    // Detection and confirmation variables
+    private var currentDetectedLetter: String? = null
+    private var detectionStartTime = 0L
+    private var isConfirming = false
+    private var confirmationDuration = 3000L // 3 seconds
+    private var lastGestureUpdate = 0L
+    private val gestureUpdateInterval = 100L // Update UI every 100ms
 
     /** Blocking ML operations are performed using this executor */
     private lateinit var backgroundExecutor: ExecutorService
@@ -195,6 +217,22 @@ class CameraFragment : Fragment(),
                 fragmentCameraBinding.tvTargetLetter.text = selectedLetter
                 fragmentCameraBinding.tvLetterName.text = letterName
                 fragmentCameraBinding.tvDetectionStatus.text = "Tunjukkan tangan sesuai huruf $letterName"
+                fragmentCameraBinding.tvProgressText.text = "Belajar Huruf: $letterName"
+                fragmentCameraBinding.tvStatusText.text = "Siap"
+                
+                // Initialize progress bar
+                fragmentCameraBinding.progressDetection.progress = 0
+                fragmentCameraBinding.progressDetection.visibility = View.VISIBLE
+                fragmentCameraBinding.tvProgressPercentage.text = "0%"
+                
+                // Setup interactive buttons
+                fragmentCameraBinding.btnHint.setOnClickListener {
+                    showHintDialog()
+                }
+                
+                fragmentCameraBinding.btnReset.setOnClickListener {
+                    resetLearningProgress()
+                }
                 
                 // Setup back button
                 fragmentCameraBinding.btnBackHijaiyah.setOnClickListener {
@@ -440,45 +478,265 @@ class CameraFragment : Fragment(),
     }
     
     private fun handleHijaiyahLearningResults(gestureCategories: List<List<com.google.mediapipe.tasks.components.containers.Category>>) {
-        if (gestureCategories.isNotEmpty() && gestureCategories.first().isNotEmpty()) {
-            val topGesture = gestureCategories.first().first()
+        val currentTime = System.currentTimeMillis()
+        
+        // Only update UI every gestureUpdateInterval to avoid too frequent updates
+        if (currentTime - lastGestureUpdate < gestureUpdateInterval) return
+        lastGestureUpdate = currentTime
+
+        if (gestureCategories.isNotEmpty() && gestureCategories[0].isNotEmpty()) {
+            val topGesture = gestureCategories[0][0]
             val gestureName = topGesture.categoryName()
             val confidence = topGesture.score()
+
+            // Map gesture to letter name (this would be your actual mapping logic)
+            val detectedLetterName = mapGestureToLetter(gestureName)
             
-            // Check if the detected gesture matches the target letter
-            // For now, we'll use a simple mapping - in real implementation, you'd have a proper gesture-to-letter mapping
-            val isCorrectGesture = checkIfGestureMatchesLetter(gestureName, selectedLetter)
+            // Always show what's currently being detected
+            updateDetectionDisplay(detectedLetterName, confidence)
             
-            if (isCorrectGesture && confidence > 0.7f) {
-                correctGestureCount++
-                
-                // Update UI to show success
-                fragmentCameraBinding.tvDetectionStatus.text = "Benar! ${correctGestureCount}/${requiredCorrectGestures}"
-                fragmentCameraBinding.statusIndicator.background = ContextCompat.getDrawable(requireContext(), R.drawable.status_indicator_success)
-                
-                // Check if learning is complete
-                if (correctGestureCount >= requiredCorrectGestures) {
-                    markLetterCompleted()
-                }
+            // Check if this matches our target letter
+            val isTargetLetter = detectedLetterName == letterName
+            
+            if (isTargetLetter && confidence > 0.6f) {
+                handleCorrectDetection(currentTime)
+            } else if (detectedLetterName != null) {
+                handleWrongDetection(detectedLetterName)
             } else {
-                // Reset count if wrong gesture or low confidence
-                if (correctGestureCount > 0) {
-                    correctGestureCount = 0
-                }
-                fragmentCameraBinding.tvDetectionStatus.text = "Tunjukkan tangan sesuai huruf $letterName"
-                fragmentCameraBinding.statusIndicator.background = ContextCompat.getDrawable(requireContext(), R.drawable.status_indicator_default)
+                handleNoDetection()
             }
         } else {
-            // No gesture detected
-            fragmentCameraBinding.tvDetectionStatus.text = "Tunjukkan tangan"
-            fragmentCameraBinding.statusIndicator.background = ContextCompat.getDrawable(requireContext(), R.drawable.status_indicator_default)
+            handleNoDetection()
         }
+    }
+    
+    private fun mapGestureToLetter(gestureName: String): String? {
+        // Map MediaPipe gestures to Hijaiyah letter names
+        return when (gestureName.lowercase()) {
+            "thumbs_up", "open_palm" -> "ALIF"
+            "pointing_up" -> "BA" 
+            "victory" -> "TA"
+            "closed_fist" -> "TSA"
+            "thumbs_down" -> "JIM"
+            "ok_sign" -> "HA"
+            "love_you" -> "KHA"
+            "rock" -> "DAL"
+            else -> gestureName.uppercase()
+        }
+    }
+    
+    private fun updateDetectionDisplay(detectedLetter: String?, confidence: Float) {
+        if (detectedLetter != null) {
+            fragmentCameraBinding.tvDetectionStatus.text = "Terdeteksi: $detectedLetter (${(confidence * 100).toInt()}%)"
+            
+            if (detectedLetter == letterName) {
+                fragmentCameraBinding.statusIndicator.background = 
+                    ContextCompat.getDrawable(requireContext(), R.drawable.status_indicator_success)
+                fragmentCameraBinding.tvStatusText.text = "Benar!"
+            } else {
+                fragmentCameraBinding.statusIndicator.background = 
+                    ContextCompat.getDrawable(requireContext(), R.drawable.status_indicator_default)
+                fragmentCameraBinding.tvStatusText.text = "Salah"
+            }
+        } else {
+            fragmentCameraBinding.tvDetectionStatus.text = "Tunjukkan tangan Anda"
+            fragmentCameraBinding.statusIndicator.background = 
+                ContextCompat.getDrawable(requireContext(), R.drawable.status_indicator_default)
+            fragmentCameraBinding.tvStatusText.text = "Menunggu..."
+        }
+    }
+    
+    private fun handleCorrectDetection(currentTime: Long) {
+        if (!isConfirming) {
+            isConfirming = true
+            detectionStartTime = currentTime
+            fragmentCameraBinding.tvStatusText.text = "Konfirmasi..."
+            startConfirmationCountdown()
+        }
+    }
+    
+    private fun handleWrongDetection(wrongLetter: String) {
+        resetConfirmation()
+        fragmentCameraBinding.tvStatusText.text = "Bukan $letterName"
+    }
+    
+    private fun handleNoDetection() {
+        resetConfirmation()
+        fragmentCameraBinding.tvDetectionStatus.text = "Tunjukkan tangan untuk huruf $letterName"
+        fragmentCameraBinding.tvStatusText.text = "Menunggu..."
+    }
+    
+    private fun resetConfirmation() {
+        isConfirming = false
+        detectionStartTime = 0L
+        fragmentCameraBinding.progressDetection.progress = 0
+    }
+    
+    private fun startConfirmationCountdown() {
+        val handler = android.os.Handler(android.os.Looper.getMainLooper())
+        val startTime = System.currentTimeMillis()
+        
+        val updateRunnable = object : Runnable {
+            override fun run() {
+                if (!isConfirming) return
+                
+                val elapsed = System.currentTimeMillis() - startTime
+                val progress = ((elapsed.toFloat() / confirmationDuration) * 100).toInt()
+                
+                fragmentCameraBinding.progressDetection.progress = progress
+                fragmentCameraBinding.tvProgressPercentage.text = "${progress}%"
+                
+                val remaining = ((confirmationDuration - elapsed) / 1000.0).toInt() + 1
+                fragmentCameraBinding.tvDetectionStatus.text = "Tahan posisi: ${remaining}s"
+                
+                if (elapsed >= confirmationDuration) {
+                    showSuccessWithAnimation()
+                } else {
+                    handler.postDelayed(this, 50)
+                }
+            }
+        }
+        
+        handler.post(updateRunnable)
+    }
+    
+    private fun showSuccessWithAnimation() {
+        isConfirming = false
+        fragmentCameraBinding.progressDetection.progress = 100
+        fragmentCameraBinding.tvProgressPercentage.text = "100%"
+        fragmentCameraBinding.tvDetectionStatus.text = "🎉 BERHASIL!"
+        fragmentCameraBinding.tvStatusText.text = "Sempurna!"
+        
+        fragmentCameraBinding.root.postDelayed({
+            showAnimatedSuccessDialog()
+        }, 500)
+    }
+    
+    private fun showAnimatedSuccessDialog() {
+        val builder = AlertDialog.Builder(requireContext(), R.style.HijaiyahDialogTheme)
+        builder.setTitle("🎉 FANTASTIC!")
+        
+        val successMessage = """
+        ✨ Luar biasa! Anda berhasil mendeteksi huruf $letterName!
+        
+        🎯 Deteksi berhasil dalam 3 detik!
+        ⭐ Akurasi: 100%
+        
+        🚀 Siap untuk huruf berikutnya?
+        """.trimIndent()
+        
+        builder.setMessage(successMessage)
+        builder.setPositiveButton("Lanjutkan! 🚀") { dialog, _ ->
+            markLetterCompleted()
+            dialog.dismiss()
+            findNavController().navigateUp()
+        }
+        
+        builder.setNegativeButton("Ulangi 🔄") { dialog, _ ->
+            resetLearningProgress()
+            dialog.dismiss()
+        }
+        
+        val dialog = builder.create()
+        dialog.show()
+        
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(ContextCompat.getColor(requireContext(), R.color.hijaiyah_green))
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(ContextCompat.getColor(requireContext(), R.color.hijaiyah_yellow))
+    }
+    
+    private fun showHintDialog() {
+        val builder = AlertDialog.Builder(requireContext(), R.style.HijaiyahDialogTheme)
+        builder.setTitle("💡 Bantuan Pembelajaran")
+        
+        val hintMessage = """
+        📋 Tips untuk huruf $letterName ($selectedLetter):
+        
+        🖐️ Posisikan tangan dengan jelas di depan kamera
+        📱 Pastikan pencahayaan cukup terang
+        🎯 Tahan posisi tangan selama beberapa detik
+        🔄 Ulangi gerakan yang sama 5 kali berturut-turut
+        
+        ⭐ Semakin stabil gerakan, semakin cepat terdeteksi!
+        """.trimIndent()
+        
+        builder.setMessage(hintMessage)
+        builder.setPositiveButton("Mengerti! 👍") { dialog, _ ->
+            dialog.dismiss()
+        }
+        
+        val dialog = builder.create()
+        dialog.show()
+        
+        // Customize button colors
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(ContextCompat.getColor(requireContext(), R.color.hijaiyah_green))
+    }
+
+    private fun showSuccessDialog() {
+        Log.d("HijaiyahLearning", "showSuccessDialog() called - creating dialog")
+        
+        try {
+            val builder = AlertDialog.Builder(requireContext(), R.style.HijaiyahDialogTheme)
+            builder.setTitle("🎉 Selamat!")
+            
+            val successMessage = """
+            ✨ Luar biasa! Anda berhasil mempelajari huruf $letterName ($selectedLetter)!
+            
+            📊 Statistik Pembelajaran:
+            ✅ Gerakan terdeteksi dengan sempurna
+            🎯 Konfirmasi 3 detik berhasil
+            ⏱️ Pembelajaran selesai!
+            
+            🚀 Anda siap melanjutkan ke huruf berikutnya!
+            """.trimIndent()
+            
+            builder.setMessage(successMessage)
+            builder.setCancelable(false)
+            
+            builder.setPositiveButton("Lanjutkan! 🚀") { dialog, _ ->
+                Log.d("HijaiyahLearning", "Success dialog - Lanjutkan button clicked")
+                markLetterCompleted()
+                dialog.dismiss()
+                findNavController().navigateUp()
+            }
+            
+            builder.setNegativeButton("Ulangi 🔄") { dialog, _ ->
+                Log.d("HijaiyahLearning", "Success dialog - Ulangi button clicked")
+                resetLearningProgress()
+                dialog.dismiss()
+            }
+            
+            val dialog = builder.create()
+            dialog.show()
+            
+            Log.d("HijaiyahLearning", "Success dialog shown successfully")
+            
+            // Customize button colors
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(ContextCompat.getColor(requireContext(), R.color.hijaiyah_green))
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(ContextCompat.getColor(requireContext(), R.color.hijaiyah_yellow))
+            
+        } catch (e: Exception) {
+            Log.e("HijaiyahLearning", "Error showing success dialog: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+    
+    private fun resetLearningProgress() {
+        isConfirming = false
+        detectionStartTime = 0L
+        fragmentCameraBinding.tvDetectionStatus.text = "Mulai lagi! Tunjukkan huruf $letterName"
+        fragmentCameraBinding.statusIndicator.background = ContextCompat.getDrawable(requireContext(), R.drawable.status_indicator_default)
+        fragmentCameraBinding.progressDetection.progress = 0
+        fragmentCameraBinding.progressDetection.visibility = View.VISIBLE
+        fragmentCameraBinding.tvProgressPercentage.text = "0%"
+        fragmentCameraBinding.tvStatusText.text = "Siap"
     }
     
     private fun checkIfGestureMatchesLetter(gestureName: String, targetLetter: String?): Boolean {
         // Simple mapping for demonstration - in real app, you'd have proper gesture recognition for Arabic letters
         // For now, we'll consider any detected hand gesture as potentially correct
-        return gestureName.isNotEmpty() && targetLetter != null
+        val isMatch = gestureName.isNotEmpty() && targetLetter != null
+        Log.d("HijaiyahLearning", "Checking gesture '$gestureName' for letter '$targetLetter' -> Match: $isMatch")
+        return isMatch
     }
     
     private fun markLetterCompleted() {
@@ -486,7 +744,7 @@ class CameraFragment : Fragment(),
             progressManager?.markLetterCompleted(position)
             
             // Show completion message
-            fragmentCameraBinding.tvDetectionStatus.text = "Selesai! Huruf $letterName berhasil dipelajari"
+            fragmentCameraBinding.tvDetectionStatus.text = "✅ Huruf $letterName berhasil dipelajari!"
             
             // Navigate back to Hijaiyah screen after a delay
             fragmentCameraBinding.root.postDelayed({

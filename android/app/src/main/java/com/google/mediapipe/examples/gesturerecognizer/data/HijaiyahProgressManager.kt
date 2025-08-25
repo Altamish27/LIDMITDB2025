@@ -34,6 +34,10 @@ class HijaiyahProgressManager(context: Context) {
         return (1..28).count { isLetterCompleted(it) }
     }
     
+    fun getCompletedLetters(): Set<Int> {
+        return (1..28).filter { isLetterCompleted(it) }.toSet()
+    }
+    
     fun resetProgress() {
         prefs.edit().clear().apply()
     }

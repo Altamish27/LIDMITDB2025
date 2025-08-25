@@ -83,7 +83,15 @@ class HijaiyahFragment : Fragment() {
             
             override fun afterTextChanged(s: Editable?) {
                 val query = s?.toString() ?: ""
-                val filteredLetters = HijaiyahData.searchLetters(query, allLetters)
+                val filteredLetters = if (query.isEmpty()) {
+                    allLetters
+                } else {
+                    allLetters.filter { letter ->
+                        letter.arabic.contains(query, ignoreCase = true) ||
+                        letter.transliteration.contains(query, ignoreCase = true) ||
+                        letter.pronunciation.contains(query, ignoreCase = true)
+                    }
+                }
                 adapter.updateLetters(filteredLetters)
             }
         })

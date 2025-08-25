@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/letter_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:background="@drawable/grey_button_ripple"
+    android:paddingVertical="18dp"
+    android:paddingHorizontal="16dp"
+    android:layout_margin="6dp"
+    android:elevation="12dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_arabic_letter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ا"
+        android:textColor="#2C3E50"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_roman_letter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ALIF"
+        android:textColor="#2C3E50"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:layout_marginTop="4dp" />
+
+</LinearLayout>

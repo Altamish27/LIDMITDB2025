@@ -22,4 +22,10 @@
     <style name="AppThemeProgressStyle">
         <item name="colorAccent">@color/mp_color_primary_variant</item>
     </style>
+
+    <style name="HijaiyahDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/dialog_background</item>
+        <item name="android:textColorPrimary">@color/hijaiyah_navy</item>
+        <item name="colorAccent">@color/hijaiyah_green</item>
+    </style>
 </resources>

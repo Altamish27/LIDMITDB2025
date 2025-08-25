@@ -17,7 +17,7 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/hijaiyah_fragment">
+    app:startDestination="@id/hijaiyah_list_fragment">
 
     <fragment
         android:id="@+id/permissions_fragment"
@@ -36,6 +36,19 @@
         android:id="@+id/camera_fragment"
         android:name="com.google.mediapipe.examples.gesturerecognizer.ui.camera.CameraFragment"
         android:label="CameraFragment">
+        
+        <argument
+            android:name="selectedLetter"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="letterName"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="letterPosition"
+            app:argType="integer"
+            android:defaultValue="-1" />
 
         <action
             android:id="@+id/action_camera_to_permissions"
@@ -48,6 +61,17 @@
         android:id="@+id/gallery_fragment"
         android:name="com.google.mediapipe.examples.gesturerecognizer.ui.gallery.GalleryFragment"
         android:label="GalleryFragment" />
+
+    <fragment
+        android:id="@+id/hijaiyah_list_fragment"
+        android:name="com.google.mediapipe.examples.gesturerecognizer.ui.hijaiyah.HijaiyahListFragment"
+        android:label="HijaiyahListFragment">
+
+        <action
+            android:id="@+id/action_hijaiyah_list_to_camera"
+            app:destination="@id/camera_fragment" />
+
+    </fragment>
 
     <fragment
         android:id="@+id/hijaiyah_fragment"
