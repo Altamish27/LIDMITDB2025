@@ -84,6 +84,20 @@ class HomeActivity : AppCompatActivity() {
             }
         }
         
+        // Navigate to Hijaiyah Learning
+        binding.cardHijaiyah?.setOnClickListener {
+            animateButtonClick(it) {
+                try {
+                    val intent = Intent(this, MainActivity::class.java)
+                    intent.putExtra("navigate_to", "hijaiyah_list")
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Failed to start Hijaiyah learning: ${e.message}", e)
+                    Toast.makeText(this, "Error starting Hijaiyah learning: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+        
         // Handle card view clicks - hapus karena tidak ada lagi tombol About dan Settings
     }
 

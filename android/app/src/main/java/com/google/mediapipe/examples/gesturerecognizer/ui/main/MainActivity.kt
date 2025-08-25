@@ -27,6 +27,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import androidx.navigation.NavController
 import com.google.mediapipe.examples.gesturerecognizer.MainViewModel
 import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityMainBinding
@@ -34,6 +35,7 @@ import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityMainB
 class MainActivity : AppCompatActivity() {
     private lateinit var activityMainBinding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
+    private lateinit var navController: NavController
 
     companion object {
         private const val TAG = "MainActivity"
@@ -83,10 +85,17 @@ class MainActivity : AppCompatActivity() {
         try {
             val navHostFragment =
                 supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
-            val navController = navHostFragment.navController
+            navController = navHostFragment.navController
             activityMainBinding.navigation.setupWithNavController(navController)
             activityMainBinding.navigation.setOnItemReselectedListener {
                 // ignore the reselection
+            }
+
+            // Check if we need to navigate to specific destination
+            val navigateTo = intent.getStringExtra("navigate_to")
+            if (navigateTo == "hijaiyah_list") {
+                // Navigate to HijaiyahListFragment
+                navController.navigate(R.id.hijaiyah_list_fragment)
             }
 
             // Handle back press with modern API

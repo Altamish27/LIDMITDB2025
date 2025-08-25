@@ -38,8 +38,6 @@
         tools:ignore="AllowBackup">
 
         <activity
-            android:name=".ui.main.MainActivity"
-            android:exported="true">
             android:name=".ui.HomeActivity"
             android:exported="true"
             android:theme="@style/Theme.GestureRecognizer.FullScreen">
