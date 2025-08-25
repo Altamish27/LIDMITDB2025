@@ -37,8 +37,10 @@ import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityHomeBinding
 import com.google.mediapipe.examples.gesturerecognizer.ui.main.MainActivity
@@ -54,6 +56,7 @@ class HomeActivity : AppCompatActivity() {
         setupUI()
         setupClickListeners()
         setupCustomFonts()
+        setupSidebar()
         startAnimations()
     }
 
@@ -74,6 +77,11 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
+        // Menu Hamburger Click
+        binding.btnMenu.setOnClickListener {
+            binding.drawerLayout.openDrawer(GravityCompat.START)
+        }
+
         // Navigate to Hijaiyah Learning
         binding.cardHijaiyah?.setOnClickListener {
             animateButtonClick(it) {
@@ -143,5 +151,68 @@ class HomeActivity : AppCompatActivity() {
         scaleUp.start()
         
         view.postDelayed(action, 200)
+    }
+
+    private fun setupSidebar() {
+        // Get navigation drawer views
+        val navigationDrawer = findViewById<View>(R.id.navigation_drawer) ?: return
+        
+        // Setup menu item click listeners
+        navigationDrawer.findViewById<View>(R.id.menu_home)?.setOnClickListener {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+            // Already on home, do nothing
+        }
+        
+        navigationDrawer.findViewById<View>(R.id.menu_panduan)?.setOnClickListener {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+            try {
+                val intent = Intent(this, com.google.mediapipe.examples.gesturerecognizer.ui.panduan.PanduanHijaiyahActivity::class.java)
+                startActivity(intent)
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Failed to start PanduanHijaiyahActivity: ${e.message}", e)
+                Toast.makeText(this, "Error opening panduan: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+        
+        navigationDrawer.findViewById<View>(R.id.menu_camera)?.setOnClickListener {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+            try {
+                val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Failed to start Camera: ${e.message}", e)
+                Toast.makeText(this, "Error starting camera: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+        
+        navigationDrawer.findViewById<View>(R.id.menu_learning)?.setOnClickListener {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+            try {
+                val intent = Intent(this, MainActivity::class.java)
+                intent.putExtra("navigate_to", "hijaiyah_list")
+                startActivity(intent)
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Failed to start Learning: ${e.message}", e)
+                Toast.makeText(this, "Error starting learning: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+        
+        navigationDrawer.findViewById<View>(R.id.menu_settings)?.setOnClickListener {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+            Toast.makeText(this, "Pengaturan - Akan segera tersedia", Toast.LENGTH_SHORT).show()
+        }
+        
+        navigationDrawer.findViewById<View>(R.id.menu_about)?.setOnClickListener {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+            Toast.makeText(this, "Tentang Aplikasi - Akan segera tersedia", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onBackPressed() {
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+        } else {
+            super.onBackPressed()
+        }
     }
 }
