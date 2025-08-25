@@ -63,6 +63,12 @@
                 android:name="android.notch_support"
                 android:value="true" />
         </activity>
+
+        <activity
+            android:name=".ui.panduan.PanduanHijaiyahActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer">
+        </activity>
     </application>
 
 </manifest>

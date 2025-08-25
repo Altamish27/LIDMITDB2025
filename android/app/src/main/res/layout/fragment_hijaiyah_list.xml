@@ -483,6 +483,418 @@
                     android:nestedScrollingEnabled="false"
                     android:visibility="gone" />
                 
+                <!-- Tabel Panduan Huruf Hijaiyah dengan Bahasa Isyarat -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+                    android:layout_marginHorizontal="20dp"
+                    android:layout_marginBottom="24dp"
+                    android:orientation="vertical">
+                    
+                    <!-- Headline Panduan -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Panduan Huruf Hijaiyah dengan Bahasa Isyarat"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:layout_marginBottom="16dp" />
+                    
+                    <!-- Tabel Container -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/white_rounded_bg"
+                        android:elevation="4dp"
+                        android:padding="16dp"
+                        android:orientation="vertical">
+                        
+                        <!-- Header Tabel -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@color/hijaiyah_green"
+                            android:paddingVertical="12dp"
+                            android:paddingHorizontal="8dp"
+                            android:layout_marginBottom="2dp"
+                            android:orientation="horizontal">
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Huruf"
+                                android:textColor="@color/white"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Isyarat"
+                                android:textColor="@color/white"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Latin"
+                                android:textColor="@color/white"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                        </LinearLayout>
+                        
+                        <!-- Baris Data Tabel - Row 1: Alif -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="#F8F9FA"
+                            android:paddingVertical="12dp"
+                            android:paddingHorizontal="8dp"
+                            android:layout_marginBottom="1dp"
+                            android:orientation="horizontal">
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="ا"
+                                android:textColor="@color/hijaiyah_navy"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="👆"
+                                android:textSize="18sp"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Alif"
+                                android:textColor="@color/hijaiyah_navy"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                        </LinearLayout>
+                        
+                        <!-- Baris Data Tabel - Row 2: Ba -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@color/white"
+                            android:paddingVertical="12dp"
+                            android:paddingHorizontal="8dp"
+                            android:layout_marginBottom="1dp"
+                            android:orientation="horizontal">
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="ب"
+                                android:textColor="@color/hijaiyah_navy"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="✊"
+                                android:textSize="18sp"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Ba"
+                                android:textColor="@color/hijaiyah_navy"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                        </LinearLayout>
+                        
+                        <!-- Baris Data Tabel - Row 3: Ta -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="#F8F9FA"
+                            android:paddingVertical="12dp"
+                            android:paddingHorizontal="8dp"
+                            android:layout_marginBottom="1dp"
+                            android:orientation="horizontal">
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="ت"
+                                android:textColor="@color/hijaiyah_navy"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="✌️"
+                                android:textSize="18sp"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Ta"
+                                android:textColor="@color/hijaiyah_navy"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                        </LinearLayout>
+                        
+                        <!-- Baris Data Tabel - Row 4: Tsa -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@color/white"
+                            android:paddingVertical="12dp"
+                            android:paddingHorizontal="8dp"
+                            android:layout_marginBottom="1dp"
+                            android:orientation="horizontal">
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="ث"
+                                android:textColor="@color/hijaiyah_navy"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="🤟"
+                                android:textSize="18sp"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Tsa"
+                                android:textColor="@color/hijaiyah_navy"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                        </LinearLayout>
+                        
+                        <!-- Baris Data Tabel - Row 5: Jim -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="#F8F9FA"
+                            android:paddingVertical="12dp"
+                            android:paddingHorizontal="8dp"
+                            android:layout_marginBottom="1dp"
+                            android:orientation="horizontal">
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="ج"
+                                android:textColor="@color/hijaiyah_navy"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="🤞"
+                                android:textSize="18sp"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Jim"
+                                android:textColor="@color/hijaiyah_navy"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                        </LinearLayout>
+                        
+                        <!-- Baris Data Tabel - Row 6: Ha -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@color/white"
+                            android:paddingVertical="12dp"
+                            android:paddingHorizontal="8dp"
+                            android:layout_marginBottom="1dp"
+                            android:orientation="horizontal">
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="ح"
+                                android:textColor="@color/hijaiyah_navy"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="✋"
+                                android:textSize="18sp"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Ha"
+                                android:textColor="@color/hijaiyah_navy"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                        </LinearLayout>
+                        
+                        <!-- Baris Data Tabel - Row 7: Kha -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="#F8F9FA"
+                            android:paddingVertical="12dp"
+                            android:paddingHorizontal="8dp"
+                            android:layout_marginBottom="1dp"
+                            android:orientation="horizontal">
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="خ"
+                                android:textColor="@color/hijaiyah_navy"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="🖖"
+                                android:textSize="18sp"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Kha"
+                                android:textColor="@color/hijaiyah_navy"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                        </LinearLayout>
+                        
+                        <!-- Dan seterusnya untuk huruf lainnya... -->
+                        <!-- Untuk sementara saya tambahkan beberapa lagi sebagai contoh -->
+                        
+                        <!-- Baris Data Tabel - Row 8: Dal -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@color/white"
+                            android:paddingVertical="12dp"
+                            android:paddingHorizontal="8dp"
+                            android:layout_marginBottom="1dp"
+                            android:orientation="horizontal">
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="د"
+                                android:textColor="@color/hijaiyah_navy"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="☝️"
+                                android:textSize="18sp"
+                                android:gravity="center" />
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Dal"
+                                android:textColor="@color/hijaiyah_navy"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                        </LinearLayout>
+                        
+                        <!-- Lihat Lebih Lengkap Button -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:gravity="center"
+                            android:orientation="horizontal">
+                            
+                            <TextView
+                                android:id="@+id/btn_lihat_semua_tabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Lihat Semua Huruf (28 total)"
+                                android:textColor="@color/hijaiyah_green"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:paddingVertical="8dp"
+                                android:paddingHorizontal="16dp"
+                                android:background="@drawable/white_rounded_bg"
+                                android:elevation="2dp"
+                                android:clickable="true"
+                                android:focusable="true" />
+                        </LinearLayout>
+                        
+                    </LinearLayout>
+                </LinearLayout>
+                
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

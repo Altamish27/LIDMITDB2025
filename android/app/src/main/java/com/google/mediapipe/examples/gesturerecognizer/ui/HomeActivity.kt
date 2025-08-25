@@ -30,6 +30,7 @@ package com.google.mediapipe.examples.gesturerecognizer.ui
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -52,6 +53,7 @@ class HomeActivity : AppCompatActivity() {
 
         setupUI()
         setupClickListeners()
+        setupCustomFonts()
         startAnimations()
     }
 
@@ -72,18 +74,6 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        binding.btnCobaDeteksi?.setOnClickListener {
-            animateButtonClick(it) {
-                try {
-                    val intent = Intent(this, MainActivity::class.java)
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    Log.e("HomeActivity", "Failed to start MainActivity: ${e.message}", e)
-                    Toast.makeText(this, "Error starting camera: ${e.message}", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
-        
         // Navigate to Hijaiyah Learning
         binding.cardHijaiyah?.setOnClickListener {
             animateButtonClick(it) {
@@ -97,26 +87,25 @@ class HomeActivity : AppCompatActivity() {
                 }
             }
         }
-        
-        // Handle card view clicks - hapus karena tidak ada lagi tombol About dan Settings
+    }
+
+    private fun setupCustomFonts() {
+        try {
+            // Load custom Hijaiyah font
+            val hijaiyahTypeface = Typeface.createFromAsset(assets, "fonts/fonthurufhijaiyah.TTF")
+            
+            // Apply font to the Hijaiyah font example
+            binding.tvHijaiyahFontExample?.typeface = hijaiyahTypeface
+            
+            Log.d("HomeActivity", "Custom fonts loaded successfully")
+        } catch (e: Exception) {
+            Log.e("HomeActivity", "Error loading custom fonts: ${e.message}", e)
+        }
     }
 
     private fun startAnimations() {
-        // Animate elements fade in
-        binding.btnCobaDeteksi?.alpha = 0f
-
-        // Create fade in animations        
-        val buttonFadeIn = ObjectAnimator.ofFloat(binding.btnCobaDeteksi, "alpha", 0f, 1f).apply {
-            duration = 800
-            startDelay = 800
-        }
-
-        // Start all animations
-        AnimatorSet().apply {
-            playTogether(buttonFadeIn)
-            interpolator = AccelerateDecelerateInterpolator()
-            start()
-        }
+        // No animations needed for buttons since we removed the detection button
+        Log.d("HomeActivity", "Animations started")
     }
 
     private fun animateButtonClick(view: View, action: () -> Unit) {

@@ -1,5 +1,6 @@
 package com.google.mediapipe.examples.gesturerecognizer.ui.hijaiyah
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -15,6 +16,7 @@ import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressMana
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahLetter
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentHijaiyahListBinding
 import com.google.mediapipe.examples.gesturerecognizer.ui.adapter.HijaiyahListAdapter
+import com.google.mediapipe.examples.gesturerecognizer.ui.panduan.PanduanHijaiyahActivity
 
 class HijaiyahListFragment : Fragment() {
 
@@ -23,7 +25,7 @@ class HijaiyahListFragment : Fragment() {
 
     private lateinit var adapter: HijaiyahListAdapter
     private lateinit var progressManager: HijaiyahProgressManager
-    private var allLetters = HijaiyahData.letters
+    private var allLetters = HijaiyahData.getAllLetters()
     private var filteredLetters = allLetters
 
     override fun onCreateView(
@@ -42,6 +44,7 @@ class HijaiyahListFragment : Fragment() {
         setupStaticLetters()
         setupSearch()
         updateProgressDisplay()
+        setupPanduanButton()
     }
 
     private fun setupStaticLetters() {
@@ -105,15 +108,10 @@ class HijaiyahListFragment : Fragment() {
     }
 
     private fun filterLetters(query: String) {
-        filteredLetters = if (query.isEmpty()) {
-            allLetters
-        } else {
-            allLetters.filter { letter ->
-                letter.arabic.contains(query, ignoreCase = true) ||
-                letter.transliteration.contains(query, ignoreCase = true)
-            }
+        filteredLetters = HijaiyahData.searchLetters(query, allLetters)
+        if (::adapter.isInitialized) {
+            adapter.updateLetters(filteredLetters)
         }
-        adapter.updateLetters(filteredLetters)
     }
 
     private fun updateProgressDisplay() {
@@ -139,6 +137,13 @@ class HijaiyahListFragment : Fragment() {
 
     private fun navigateToCamera(letter: HijaiyahLetter, position: Int) {
         navigateToCamera(letter.arabic, letter.transliteration, position)
+    }
+    
+    private fun setupPanduanButton() {
+        binding.btnLihatSemuaTabel.setOnClickListener {
+            val intent = Intent(requireContext(), PanduanHijaiyahActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     override fun onResume() {
