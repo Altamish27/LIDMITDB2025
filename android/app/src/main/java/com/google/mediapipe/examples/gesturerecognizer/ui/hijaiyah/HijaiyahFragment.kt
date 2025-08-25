@@ -120,9 +120,9 @@ class HijaiyahFragment : Fragment() {
     
     private fun navigateToGestureRecognition(letter: HijaiyahLetter) {
         val bundle = Bundle().apply {
-            putString("selected_letter", letter.arabic)
-            putString("letter_name", letter.transliteration)
-            putInt("letter_position", letter.position)
+            putString("selectedLetter", letter.arabic)
+            putString("letterName", letter.transliteration)
+            putInt("letterPosition", letter.position)
         }
         findNavController().navigate(R.id.action_hijaiyah_to_camera, bundle)
     }
