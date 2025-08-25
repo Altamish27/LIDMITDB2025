@@ -87,6 +87,19 @@ class HomeActivity : AppCompatActivity() {
                 }
             }
         }
+        
+        // Navigate to Panduan Hijaiyah (Lihat Semua Tabel)
+        binding.btnLihatSemuaTabel?.setOnClickListener {
+            animateButtonClick(it) {
+                try {
+                    val intent = Intent(this, com.google.mediapipe.examples.gesturerecognizer.ui.panduan.PanduanHijaiyahActivity::class.java)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Failed to start PanduanHijaiyahActivity: ${e.message}", e)
+                    Toast.makeText(this, "Error opening panduan: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 
     private fun setupCustomFonts() {
@@ -94,8 +107,8 @@ class HomeActivity : AppCompatActivity() {
             // Load custom Hijaiyah font
             val hijaiyahTypeface = Typeface.createFromAsset(assets, "fonts/fonthurufhijaiyah.TTF")
             
-            // Apply font to the Hijaiyah font example
-            binding.tvHijaiyahFontExample?.typeface = hijaiyahTypeface
+            // Apply font to any available Hijaiyah font example (commenting out for now since the view doesn't exist)
+            // binding.tvHijaiyahFontExample?.typeface = hijaiyahTypeface
             
             Log.d("HomeActivity", "Custom fonts loaded successfully")
         } catch (e: Exception) {

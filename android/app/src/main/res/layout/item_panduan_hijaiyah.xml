@@ -24,8 +24,11 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="👆"
-        android:textSize="20sp"
+        android:text="ا"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="@color/hijaiyah_navy"
+        android:fontFamily="@font/hijaiyah_font_family"
         android:gravity="center" />
     
     <TextView

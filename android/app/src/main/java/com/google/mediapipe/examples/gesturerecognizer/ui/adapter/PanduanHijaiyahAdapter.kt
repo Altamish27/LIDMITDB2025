@@ -12,36 +12,36 @@ class PanduanHijaiyahAdapter(
     private val letters: List<HijaiyahLetter>
 ) : RecyclerView.Adapter<PanduanHijaiyahAdapter.ViewHolder>() {
 
-    // Mapping posisi huruf ke emoji isyarat
-    private val gestureEmojis = mapOf(
-        1 to "👆", // Alif
-        2 to "✊", // Ba
-        3 to "✌️", // Ta
-        4 to "🤟", // Tsa
-        5 to "🤞", // Jim
-        6 to "✋", // Ha
-        7 to "🖖", // Kho
-        8 to "☝️", // Dal
-        9 to "👍", // Dzal
-        10 to "🤏", // Ra
-        11 to "🤌", // Zai
-        12 to "🖐️", // Sin
-        13 to "🤚", // Syin
-        14 to "👊", // Shod
-        15 to "🖕", // Dhod
-        16 to "🫵", // Tho
-        17 to "🫶", // Zho
-        18 to "👌", // Ain
-        19 to "🤙", // Ghoin
-        20 to "🫰", // Fa
-        21 to "👎", // Qof
-        22 to "🤛", // Kaf
-        23 to "🤜", // Lam
-        24 to "🤝", // Mim
-        25 to "🙏", // Nun
-        26 to "👋", // Wau
-        27 to "🫷", // Ha
-        28 to "🫸"  // Ya
+    // Mapping posisi huruf ke huruf Hijaiyah asli untuk isyarat
+    private val gestureHijaiyah = mapOf(
+        1 to "ا", // Alif
+        2 to "ب", // Ba
+        3 to "ت", // Ta
+        4 to "ث", // Tsa
+        5 to "ج", // Jim
+        6 to "ح", // Ha
+        7 to "خ", // Kho
+        8 to "د", // Dal
+        9 to "ذ", // Dzal
+        10 to "ر", // Ra
+        11 to "ز", // Zai
+        12 to "س", // Sin
+        13 to "ش", // Syin
+        14 to "ص", // Shod
+        15 to "ض", // Dhod
+        16 to "ط", // Tho
+        17 to "ظ", // Zho
+        18 to "ع", // Ain
+        19 to "غ", // Ghoin
+        20 to "ف", // Fa
+        21 to "ق", // Qof
+        22 to "ك", // Kaf
+        23 to "ل", // Lam
+        24 to "م", // Mim
+        25 to "ن", // Nun
+        26 to "و", // Wau
+        27 to "ه", // Ha
+        28 to "ي"  // Ya
     )
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -61,7 +61,7 @@ class PanduanHijaiyahAdapter(
         
         holder.tvHuruf.text = letter.arabic
         holder.tvLatin.text = letter.transliteration
-        holder.tvIsyarat.text = gestureEmojis[letter.position] ?: "🤷"
+        holder.tvIsyarat.text = gestureHijaiyah[letter.position] ?: "ا"
         
         // Alternate row colors
         val context = holder.itemView.context

@@ -54,7 +54,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Tabel Lengkap 28 Huruf Hijaiyah dengan Bahasa Isyarat"
+            android:text="Tabel Lengkap 28 Huruf Hijaiyah dengan Font Gesture"
             android:textColor="#D5DBDB"
             android:textSize="14sp"
             android:gravity="center"
@@ -106,7 +106,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Isyarat"
+                        android:text="Gesture"
                         android:textColor="@color/white"
                         android:textSize="16sp"
                         android:textStyle="bold"
@@ -154,7 +154,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="• Gunakan tabel ini sebagai panduan untuk mempelajari bentuk isyarat setiap huruf hijaiyah\n• Latih gerakan tangan sesuai dengan simbol isyarat yang ditampilkan\n• Kembali ke halaman utama untuk mempraktikkan pengenalan gesture secara langsung"
+                    android:text="• Gunakan tabel ini sebagai panduan untuk mempelajari bentuk gesture setiap huruf hijaiyah\n• Kolom 'Gesture' menampilkan representasi visual huruf untuk pembelajaran\n• Latih gerakan tangan sesuai dengan huruf Hijaiyah yang ditampilkan\n• Kembali ke halaman utama untuk mempraktikkan pengenalan gesture secara langsung"
                     android:textColor="@color/hijaiyah_navy"
                     android:textSize="14sp"
                     android:lineSpacingExtra="4dp" />

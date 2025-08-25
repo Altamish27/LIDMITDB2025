@@ -44,7 +44,7 @@ class HijaiyahListFragment : Fragment() {
         setupStaticLetters()
         setupSearch()
         updateProgressDisplay()
-        setupPanduanButton()
+        // setupPanduanButton() // Commented out as button doesn't exist in fragment layout
     }
 
     private fun setupStaticLetters() {
@@ -170,10 +170,13 @@ class HijaiyahListFragment : Fragment() {
     }
     
     private fun setupPanduanButton() {
+        // Button doesn't exist in fragment layout - functionality moved to home activity
+        /*
         binding.btnLihatSemuaTabel.setOnClickListener {
             val intent = Intent(requireContext(), PanduanHijaiyahActivity::class.java)
             startActivity(intent)
         }
+        */
     }
 
     override fun onResume() {
