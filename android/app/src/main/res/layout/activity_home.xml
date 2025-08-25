@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true">
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     tools:context=".ui.HomeActivity">
 
     <!-- Background Atas (Top) - bgatashome.png -->
@@ -317,6 +322,70 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
+    <!-- Quotes Section from Al-Quran -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/quotes_card"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="30dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:layout_constraintTop_toBottomOf="@+id/jadwal_sholat_card"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@android:color/transparent"
+            android:padding="16dp">
+
+            <!-- Quote Text -->
+            <TextView
+                android:id="@+id/tv_quote_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="وَقُل رَّبِّ زِدْنِي عِلْمًا"
+                android:textSize="16sp"
+                android:textStyle="italic"
+                android:textColor="@color/dark_blue_gray"
+                android:fontFamily="serif"
+                android:gravity="center"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Translation -->
+            <TextView
+                android:id="@+id/tv_quote_translation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Dan katakanlah: Ya Tuhanku, tambahkanlah kepadaku ilmu pengetahuan."
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:fontFamily="sans-serif"
+                android:gravity="center"
+                android:layout_marginBottom="6dp" />
+
+            <!-- Surah Reference -->
+            <TextView
+                android:id="@+id/tv_quote_reference"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="(QS. Taha: 114)"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/teal_secondary"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
     <!-- Modern Feature Cards Grid - Bottom Area -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/feature_cards_container"
@@ -327,7 +396,7 @@
         android:layout_marginTop="20dp"
         android:layout_marginBottom="20dp"
         android:paddingBottom="20dp"
-        app:layout_constraintTop_toBottomOf="@+id/jadwal_sholat_card"
+        app:layout_constraintTop_toBottomOf="@+id/quotes_card"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/btn_coba_deteksi">
@@ -398,11 +467,10 @@
                 <ProgressBar
                     style="@style/Widget.AppCompat.ProgressBar.Horizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="4dp"
+                    android:layout_height="8dp"
                     android:layout_marginTop="4dp"
-                    android:progress="32"
-                    android:progressTint="@color/yellow_secondary"
-                    android:progressBackgroundTint="#CCFFFFFF" />
+                    android:progress="100"
+                    android:progressDrawable="@drawable/custom_progress_bar" />
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -473,11 +541,10 @@
                 <ProgressBar
                     style="@style/Widget.AppCompat.ProgressBar.Horizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="4dp"
+                    android:layout_height="8dp"
                     android:layout_marginTop="4dp"
                     android:progress="80"
-                    android:progressTint="@color/yellow_secondary"
-                    android:progressBackgroundTint="#CCFFFFFF" />
+                    android:progressDrawable="@drawable/custom_progress_bar" />
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -547,30 +614,27 @@
                 <ProgressBar
                     style="@style/Widget.AppCompat.ProgressBar.Horizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="4dp"
+                    android:layout_height="8dp"
                     android:layout_marginTop="4dp"
                     android:progress="20"
-                    android:progressTint="@color/yellow_secondary"
-                    android:progressBackgroundTint="#CCFFFFFF" />
+                    android:progressDrawable="@drawable/custom_progress_bar" />
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Row 2 -->
+        <!-- Row 2 - Button Tentang (Full Width) -->
         <androidx.cardview.widget.CardView
             android:id="@+id/btn_about"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="80dp"
-            android:layout_marginEnd="8dp"
             android:layout_marginTop="20dp"
             app:cardCornerRadius="16dp"
-            app:cardElevation="8dp"
+            app:cardElevation="0dp"
             android:clickable="true"
             android:focusable="true"
             app:layout_constraintTop_toBottomOf="@+id/card_hijaiyah"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/btn_settings"
-            app:layout_constraintWidth_percent="0.48">
+            app:layout_constraintEnd_toEndOf="parent">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -590,50 +654,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="About"
-                    android:textSize="12sp"
-                    android:textColor="@android:color/white"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-black"
-                    android:gravity="center" />
-
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <androidx.cardview.widget.CardView
-            android:id="@+id/btn_settings"
-            android:layout_width="0dp"
-            android:layout_height="80dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="20dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            app:layout_constraintTop_toBottomOf="@+id/card_quiz"
-            app:layout_constraintStart_toEndOf="@+id/btn_about"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintWidth_percent="0.48">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:background="@drawable/gradient_card_purple"
-                android:padding="12dp">
-
-                <ImageView
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:src="@android:drawable/ic_menu_preferences"
-                    android:layout_marginBottom="6dp"
-                    android:tint="@android:color/white" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Settings"
+                    android:text="Tentang"
                     android:textSize="12sp"
                     android:textColor="@android:color/white"
                     android:textStyle="bold"
@@ -710,3 +731,5 @@
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>
