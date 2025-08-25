@@ -36,4 +36,14 @@
     <color name="hijaiyah_green">#147E7E</color>
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
+    <!-- Custom colors untuk design -->
+    <color name="text_primary">#2C3E50</color>
+    <color name="text_secondary">#7F8C8D</color>
+    <color name="dark_blue_gray">#2C3E50</color>
+    
+    <!-- Updated gradient colors -->
+    <color name="yellow_primary">#F1C40F</color>
+    <color name="yellow_secondary">#F39C12</color>
+    <color name="teal_primary">#147E7E</color>
+    <color name="teal_secondary">#2C5F5F</color>
 </resources>

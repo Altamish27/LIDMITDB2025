@@ -107,20 +107,33 @@ class CameraFragment : Fragment(),
 
     override fun onResume() {
         super.onResume()
-        // Make sure that all permissions are still present, since the
-        // user could have removed them while the app was in paused state.
-        if (!PermissionsFragment.hasPermissions(requireContext())) {
-            Navigation.findNavController(
-                requireActivity(), R.id.fragment_container
-            ).navigate(R.id.action_camera_to_permissions)
-        }
-
-        // Start the GestureRecognizerHelper again when users come back
-        // to the foreground.
-        backgroundExecutor.execute {
-            if (gestureRecognizerHelper.isClosed()) {
-                gestureRecognizerHelper.setupGestureRecognizer()
+        
+        try {
+            // Make sure that all permissions are still present, since the
+            // user could have removed them while the app was in paused state.
+            if (!PermissionsFragment.hasPermissions(requireContext())) {
+                Log.w(TAG, "Camera permission not granted, navigating to permissions")
+                Navigation.findNavController(
+                    requireActivity(), R.id.fragment_container
+                ).navigate(R.id.action_camera_to_permissions)
+                return
             }
+
+            // Start the GestureRecognizerHelper again when users come back
+            // to the foreground.
+            backgroundExecutor.execute {
+                try {
+                    if (this@CameraFragment::gestureRecognizerHelper.isInitialized && 
+                        gestureRecognizerHelper.isClosed()) {
+                        gestureRecognizerHelper.setupGestureRecognizer()
+                        Log.d(TAG, "GestureRecognizer re-initialized")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to reinitialize GestureRecognizer: ${e.message}", e)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in onResume: ${e.message}", e)
         }
     }
 
@@ -162,9 +175,55 @@ class CameraFragment : Fragment(),
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        with(fragmentCameraBinding.recyclerviewResults) {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = gestureRecognizerResultAdapter
+        
+        try {
+            with(fragmentCameraBinding.recyclerviewResults) {
+                layoutManager = LinearLayoutManager(requireContext())
+                adapter = gestureRecognizerResultAdapter
+            }
+
+            // Initialize our background executor
+            backgroundExecutor = Executors.newSingleThreadExecutor()
+
+            // Wait for the views to be properly laid out
+            fragmentCameraBinding.viewFinder.post {
+                // Set up the camera and its use cases
+                try {
+                    setUpCamera()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to setup camera: ${e.message}", e)
+                    Toast.makeText(requireContext(), "Failed to setup camera: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+
+            // Create the Hand Gesture Recognition Helper that will handle the
+            // inference
+            backgroundExecutor.execute {
+                try {
+                    gestureRecognizerHelper = GestureRecognizerHelper(
+                        context = requireContext(),
+                        runningMode = RunningMode.LIVE_STREAM,
+                        minHandDetectionConfidence = viewModel.currentMinHandDetectionConfidence,
+                        minHandTrackingConfidence = viewModel.currentMinHandTrackingConfidence,
+                        minHandPresenceConfidence = viewModel.currentMinHandPresenceConfidence,
+                        currentDelegate = viewModel.currentDelegate,
+                        gestureRecognizerListener = this@CameraFragment
+                    )
+                    Log.d(TAG, "GestureRecognizerHelper initialized successfully")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to initialize GestureRecognizerHelper: ${e.message}", e)
+                    requireActivity().runOnUiThread {
+                        Toast.makeText(requireContext(), "Failed to initialize gesture recognition: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+
+            // Attach listeners to UI control widgets
+            initBottomSheetControls()
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in onViewCreated: ${e.message}", e)
+            Toast.makeText(requireContext(), "Failed to initialize camera view: ${e.message}", Toast.LENGTH_LONG).show()
         }
 
         // Initialize our background executor
@@ -363,70 +422,109 @@ class CameraFragment : Fragment(),
 
     // Initialize CameraX, and prepare to bind the camera use cases
     private fun setUpCamera() {
-        val cameraProviderFuture =
-            ProcessCameraProvider.getInstance(requireContext())
-        cameraProviderFuture.addListener(
-            {
-                // CameraProvider
-                cameraProvider = cameraProviderFuture.get()
+        try {
+            val cameraProviderFuture =
+                ProcessCameraProvider.getInstance(requireContext())
+            cameraProviderFuture.addListener(
+                {
+                    try {
+                        // CameraProvider
+                        cameraProvider = cameraProviderFuture.get()
+                        Log.d(TAG, "CameraProvider obtained successfully")
 
-                // Build and bind the camera use cases
-                bindCameraUseCases()
-            }, ContextCompat.getMainExecutor(requireContext())
-        )
+                        // Build and bind the camera use cases
+                        bindCameraUseCases()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to get CameraProvider: ${e.message}", e)
+                        requireActivity().runOnUiThread {
+                            Toast.makeText(requireContext(), "Failed to initialize camera provider: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }, ContextCompat.getMainExecutor(requireContext())
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to setup camera: ${e.message}", e)
+            Toast.makeText(requireContext(), "Failed to setup camera: ${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
 
     // Declare and bind preview, capture and analysis use cases
     @SuppressLint("UnsafeOptInUsageError")
     private fun bindCameraUseCases() {
-
-        // CameraProvider
-        val cameraProvider = cameraProvider
-            ?: throw IllegalStateException("Camera initialization failed.")
-
-        val cameraSelector =
-            CameraSelector.Builder().requireLensFacing(cameraFacing).build()
-
-        // Preview. Only using the 4:3 ratio because this is the closest to our models
-        preview = Preview.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3)
-            .setTargetRotation(fragmentCameraBinding.viewFinder.display.rotation)
-            .build()
-
-        // ImageAnalysis. Using RGBA 8888 to match how our models work
-        imageAnalyzer =
-            ImageAnalysis.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                .setTargetRotation(fragmentCameraBinding.viewFinder.display.rotation)
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
-                .build()
-                // The analyzer can then be assigned to the instance
-                .also {
-                    it.setAnalyzer(backgroundExecutor) { image ->
-                        recognizeHand(image)
-                    }
-                }
-
-        // Must unbind the use-cases before rebinding them
-        cameraProvider.unbindAll()
-
         try {
-            // A variable number of use-cases can be passed here -
-            // camera provides access to CameraControl & CameraInfo
-            camera = cameraProvider.bindToLifecycle(
-                this, cameraSelector, preview, imageAnalyzer
-            )
+            // CameraProvider
+            val cameraProvider = cameraProvider
+                ?: throw IllegalStateException("Camera initialization failed.")
 
-            // Attach the viewfinder's surface provider to preview use case
-            preview?.setSurfaceProvider(fragmentCameraBinding.viewFinder.surfaceProvider)
-        } catch (exc: Exception) {
-            Log.e(TAG, "Use case binding failed", exc)
+            val cameraSelector =
+                CameraSelector.Builder().requireLensFacing(cameraFacing).build()
+
+            // Preview. Only using the 4:3 ratio because this is the closest to our models
+            preview = Preview.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                .setTargetRotation(fragmentCameraBinding.viewFinder.display.rotation)
+                .build()
+
+            // ImageAnalysis. Using RGBA 8888 to match how our models work
+            imageAnalyzer =
+                ImageAnalysis.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                    .setTargetRotation(fragmentCameraBinding.viewFinder.display.rotation)
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+                    .build()
+                    // The analyzer can then be assigned to the instance
+                    .also {
+                        it.setAnalyzer(backgroundExecutor) { image ->
+                            try {
+                                recognizeHand(image)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error in image analysis: ${e.message}", e)
+                                image.close()
+                            }
+                        }
+                    }
+
+            // Must unbind the use-cases before rebinding them
+            cameraProvider.unbindAll()
+
+            try {
+                // A variable number of use-cases can be passed here -
+                // camera provides access to CameraControl & CameraInfo
+                camera = cameraProvider.bindToLifecycle(
+                    this, cameraSelector, preview, imageAnalyzer
+                )
+
+                // Attach the viewfinder's surface provider to preview use case
+                preview?.setSurfaceProvider(fragmentCameraBinding.viewFinder.surfaceProvider)
+                
+                Log.d(TAG, "Camera use cases bound successfully")
+            } catch (exc: Exception) {
+                Log.e(TAG, "Use case binding failed", exc)
+                requireActivity().runOnUiThread {
+                    Toast.makeText(requireContext(), "Camera binding failed: ${exc.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to bind camera use cases: ${e.message}", e)
+            requireActivity().runOnUiThread {
+                Toast.makeText(requireContext(), "Failed to bind camera: ${e.message}", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
     private fun recognizeHand(imageProxy: ImageProxy) {
-        gestureRecognizerHelper.recognizeLiveStream(
-            imageProxy = imageProxy,
-        )
+        try {
+            if (this::gestureRecognizerHelper.isInitialized) {
+                gestureRecognizerHelper.recognizeLiveStream(
+                    imageProxy = imageProxy,
+                )
+            } else {
+                Log.w(TAG, "GestureRecognizerHelper not initialized, skipping frame")
+                imageProxy.close()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in recognizeHand: ${e.message}", e)
+            imageProxy.close()
+        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
