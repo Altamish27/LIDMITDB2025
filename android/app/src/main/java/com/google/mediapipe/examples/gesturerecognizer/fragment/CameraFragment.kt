@@ -36,6 +36,7 @@ import com.google.mediapipe.examples.gesturerecognizer.GestureRecognizerHelper
 import com.google.mediapipe.examples.gesturerecognizer.HijaiyahData
 import com.google.mediapipe.examples.gesturerecognizer.MainViewModel
 import com.google.mediapipe.examples.gesturerecognizer.R
+import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentCameraBinding
 import com.google.mediapipe.examples.gesturerecognizer.ui.adapter.GestureRecognizerResultsAdapter
 import com.google.mediapipe.examples.gesturerecognizer.ui.permissions.PermissionsFragment
@@ -81,10 +82,14 @@ class CameraFragment : Fragment(),
     private var targetLetterName: String? = null
     private var practiceTimer: CountDownTimer? = null
     private var resetTimer: CountDownTimer? = null
+    private var countdownTimer: CountDownTimer? = null
     private var isDetecting = false
     private var currentGesture: String? = null
     private var gestureStartTime = 0L
     private var consecutiveCorrectCount = 0
+    
+    // Progress tracking
+    private lateinit var progressManager: HijaiyahProgressManager
 
     override fun onResume() {
         super.onResume()
@@ -116,6 +121,11 @@ class CameraFragment : Fragment(),
             // Close the Gesture Recognizer helper and release resources
             backgroundExecutor.execute { gestureRecognizerHelper.clearGestureRecognizer() }
         }
+        
+        // Cancel all timers to prevent memory leaks
+        practiceTimer?.cancel()
+        resetTimer?.cancel()
+        countdownTimer?.cancel()
     }
 
     override fun onDestroyView() {
@@ -147,6 +157,9 @@ class CameraFragment : Fragment(),
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // Initialize progress manager
+        progressManager = HijaiyahProgressManager(requireContext())
         
         // Get target letter from arguments
         targetLetter = arguments?.getString("selectedLetter")
@@ -345,19 +358,64 @@ class CameraFragment : Fragment(),
             fragmentCameraBinding.iconResult.setImageResource(R.drawable.ic_check_circle)
             fragmentCameraBinding.textResult.text = "Bagus!"
             fragmentCameraBinding.textResultDetail.text = "Anda berhasil memperagakan huruf ${targetLetterName}"
+            
+            // Mark letter as completed
+            val letterPosition = arguments?.getInt("letterPosition", -1) ?: -1
+            if (letterPosition > 0) {
+                progressManager.markLetterCompleted(letterPosition)
+                Log.d(TAG, "Letter $letterPosition ($targetLetterName) marked as completed")
+            }
+            
+            // Auto navigate back to hijaiyah learning page after success
+            fragmentCameraBinding.textInstruction.text = "Berhasil! Kembali ke halaman belajar dalam 3 detik..."
+            
+            // Show option to stay or go back
+            fragmentCameraBinding.buttonStart.visibility = View.VISIBLE
+            fragmentCameraBinding.buttonStart.text = "Tetap Di Sini"
+            fragmentCameraBinding.buttonStart.setOnClickListener {
+                countdownTimer?.cancel()
+                fragmentCameraBinding.overlayResult.visibility = View.GONE
+                fragmentCameraBinding.buttonStart.visibility = View.GONE
+                fragmentCameraBinding.textInstruction.text = "Tekan tombol untuk mencoba huruf lain"
+            }
+            
+            // Show countdown
+            var countdown = 3
+            countdownTimer?.cancel() // Cancel any existing countdown
+            countdownTimer = object : CountDownTimer(3000, 1000) {
+                override fun onTick(millisUntilFinished: Long) {
+                    countdown--
+                    fragmentCameraBinding.textInstruction.text = 
+                        "Berhasil! Kembali ke halaman belajar dalam $countdown detik..."
+                }
+                
+                override fun onFinish() {
+                    // Navigate back after countdown
+                    try {
+                        Navigation.findNavController(requireActivity(), R.id.fragment_container)
+                            .navigateUp()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Navigation error: ${e.message}")
+                        // Fallback navigation
+                        requireActivity().onBackPressed()
+                    }
+                }
+            }
+            countdownTimer?.start()
+            
         } else {
             fragmentCameraBinding.iconResult.setImageResource(R.drawable.ic_error_circle)
             fragmentCameraBinding.textResult.text = "Coba Lagi"
             fragmentCameraBinding.textResultDetail.text = "Gesture belum tepat. Silakan coba lagi!"
+            
+            // Show start button again for retry
+            fragmentCameraBinding.buttonStart.visibility = View.VISIBLE
+            fragmentCameraBinding.buttonStart.text = "Coba Lagi"
+            fragmentCameraBinding.buttonStart.setOnClickListener {
+                startAutomaticDetection()
+            }
+            fragmentCameraBinding.textInstruction.text = "Tekan tombol untuk mencoba lagi"
         }
-        
-        // Show start button again
-        fragmentCameraBinding.buttonStart.visibility = View.VISIBLE
-        fragmentCameraBinding.buttonStart.text = "Coba Lagi"
-        fragmentCameraBinding.buttonStart.setOnClickListener {
-            startAutomaticDetection()
-        }
-        fragmentCameraBinding.textInstruction.text = "Tekan tombol untuk mencoba lagi"
     }
 
     private fun initBottomSheetControls() {
