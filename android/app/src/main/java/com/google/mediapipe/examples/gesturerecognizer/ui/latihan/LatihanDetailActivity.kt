@@ -129,12 +129,11 @@ class LatihanDetailActivity : AppCompatActivity() {
             return
         }
         
-        // Navigate to camera fragment for gesture recognition
-        val intent = Intent(this, MainActivity::class.java).apply {
-            putExtra("selectedLetter", huruf.arabic)
-            putExtra("letterName", huruf.title)
-            putExtra("letterPosition", huruf.id)
+        // Navigate to practice page with grid layout
+        val intent = Intent(this, LatihanPracticeActivity::class.java).apply {
+            putExtra("exerciseId", exerciseId)
             putExtra("exerciseTitle", exerciseTitle)
+            putExtra("selectedHuruf", huruf.id)
         }
         startActivity(intent)
     }
