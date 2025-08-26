@@ -18,6 +18,12 @@
     <string name="app_name">Belajar Hijaiyah</string>
 
     <string name="media_pipe">MediaPipe</string>
+    
+    <!-- Category Dropdown Items -->
+    <string-array name="category_options">
+        <item>Hijaiyah</item>
+        <item>Tanda Baca</item>
+    </string-array>
 
     <string name="alt_bottom_sheet_chevron">Bottom sheet expandable indicator</string>
 

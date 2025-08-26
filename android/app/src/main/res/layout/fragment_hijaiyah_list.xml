@@ -1,1277 +1,1094 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout 
+<FrameLayout 
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="#FFFFFF"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     
+    <!-- Background Layer 1 - Top -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/bgatashome"
+        android:scaleType="centerCrop" />
+    
+    <!-- Background Layer 2 - Middle with opacity -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="150dp"
+        android:src="@drawable/bgtengah"
+        android:scaleType="centerCrop"
+        android:alpha="0.4" />
+    
+    <!-- Background Layer 3 - Bottom -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="300dp"
+        android:src="@drawable/bgbawah"
+        android:scaleType="centerCrop" />
+    
     <ScrollView 
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="#F8F9FA">
+        android:layout_height="match_parent">
         
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
             
             <!-- Header Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/gradient_header_background"
                 android:paddingTop="20dp"
-                android:paddingBottom="8dp"
+                android:paddingBottom="24dp"
                 android:orientation="vertical">
-                
-                <!-- Top Navigation -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="16dp"
-                    android:layout_marginHorizontal="20dp"
-                    android:orientation="horizontal">
-                    
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_marginEnd="16dp"
-                        android:src="@mipmap/ic_launcher"
-                        android:scaleType="fitXY" />
-                    
-                    <!-- Decorative dots -->
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:gravity="end"
-                        android:paddingTop="14dp"
-                        android:orientation="vertical">
-                        
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
-                            
-                            <View
-                                android:layout_width="12dp"
-                                android:layout_height="12dp"
-                                android:background="@drawable/status_indicator_success"
-                                android:layout_marginEnd="8dp" />
-                            
-                            <View
-                                android:layout_width="8dp"
-                                android:layout_height="8dp"
-                                android:background="@drawable/status_indicator_default" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
-                            
-                            <View
-                                android:layout_width="10dp"
-                                android:layout_height="10dp"
-                                android:background="@drawable/status_indicator_success"
-                                android:layout_marginEnd="6dp" />
-                            
-                            <View
-                                android:layout_width="14dp"
-                                android:layout_height="14dp"
-                                android:background="@drawable/status_indicator_default"
-                                android:layout_marginEnd="6dp" />
-                            
-                            <View
-                                android:layout_width="9dp"
-                                android:layout_height="9dp"
-                                android:background="@drawable/status_indicator_success" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </LinearLayout>
                 
                 <!-- Title and Progress -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:gravity="center_vertical"
                     android:layout_marginHorizontal="20dp"
-                    android:orientation="vertical">
-                    
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="HIJAIYAH HURUF"
-                        android:textColor="#FFFFFF"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="8dp" />
-                    
-                    <TextView
-                        android:id="@+id/tv_progress_summary"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0 / 28 Huruf"
-                        android:textColor="#D5DBDB"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-                
-                <!-- Progress Bar Section -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="20dp"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
                     
                     <LinearLayout
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/white_rounded_bg"
-                        android:layout_marginBottom="12dp"
+                        android:layout_weight="1"
                         android:orientation="vertical">
                         
-                        <LinearLayout
+                        <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/progress_bar_bg"
-                            android:paddingVertical="2dp"
-                            android:orientation="vertical">
-                            
-                            <ProgressBar
-                                android:id="@+id/overall_progress"
-                                style="?android:attr/progressBarStyleHorizontal"
-                                android:layout_width="120dp"
-                                android:layout_height="8dp"
-                                android:progress="0"
-                                android:max="100"
-                                android:progressTint="@color/hijaiyah_yellow"
-                                android:progressBackgroundTint="@color/hijaiyah_grey" />
-                        </LinearLayout>
+                            android:text="Huruf Hijaiyah"
+                            android:textColor="@color/white"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Pelajari 28 Huruf Hijaiyah"
+                            android:textColor="@color/white"
+                            android:textSize="14sp"
+                            android:layout_marginTop="4dp" />
                     </LinearLayout>
                     
+                    <!-- Progress Circle -->
                     <LinearLayout
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        
+                        <ProgressBar
+                            android:id="@+id/progressCircle"
+                            android:layout_width="60dp"
+                            android:layout_height="60dp"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:progressDrawable="@drawable/custom_progress_bar"
+                            android:progress="50"
+                            android:max="100" />
                         
                         <TextView
-                            android:id="@+id/tv_overall_percentage"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="0%"
-                            android:textColor="#FFFFFF"
-                            android:textSize="14sp"
+                            android:text="50%"
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
                             android:textStyle="bold"
-                            android:layout_marginBottom="2dp" />
-                        
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Progress"
-                            android:textColor="#D5DBDB"
-                            android:textSize="10sp"
-                            android:textStyle="bold" />
+                            android:layout_marginTop="4dp" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
             
-            <!-- Main Content -->
+            <!-- Letters Grid - 2 per row consistently -->
+            
+            <!-- Row 1: Alif, Ba -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="#FFFFFF"
-                android:paddingTop="24dp"
-                android:paddingBottom="2dp"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
                 
-                <!-- Title -->
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_horizontal"
-                    android:layout_marginBottom="16dp"
-                    android:orientation="vertical">
+                    android:id="@+id/letter_alif"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
                     
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Mulai Belajar"
-                        android:textColor="#2C3E50"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-                
-                <!-- Search Bar -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:background="@drawable/white_rounded_bg"
-                    android:paddingVertical="14dp"
-                    android:paddingHorizontal="16dp"
-                    android:layout_marginBottom="24dp"
-                    android:layout_marginHorizontal="20dp"
-                    android:elevation="3dp"
-                    android:orientation="horizontal">
-                    
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@mipmap/ic_launcher"
-                        android:scaleType="fitXY" />
-                    
-                    <EditText
-                        android:id="@+id/et_search"
-                        android:inputType="text"
-                        android:hint="Cari Huruf Hijaiyah"
-                        android:background="@null"
-                        android:textColor="#6B7280"
-                        android:textSize="14sp"
+                        android:text="ا"
+                        android:textSize="32sp"
                         android:textStyle="bold"
-                        android:layout_width="0dp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:paddingVertical="1dp" />
+                        android:text="Alif"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
                 </LinearLayout>
                 
-                <!-- Letters Grid -->
                 <LinearLayout
-                    android:id="@+id/letters_container"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="20dp"
-                    android:orientation="vertical">
+                    android:id="@+id/letter_ba"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
                     
-                    <!-- Row 1: ا ب -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:orientation="horizontal">
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_alif"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16lr270f1c40ff39c12"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginEnd="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ا"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ALIF"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_ba"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginStart="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ب"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="BA"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                    </LinearLayout>
+                        android:text="ب"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
                     
-                    <!-- Row 2: ت ث -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:orientation="horizontal">
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_ta"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginEnd="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ت"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="TA"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_tsa"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginStart="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ث"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="TSA"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                    </LinearLayout>
-                    
-                    <!-- Row 3: ج ح -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:orientation="horizontal">
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_jim"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginEnd="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ج"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="JIM"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_ha"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginStart="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ح"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="HA"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                    </LinearLayout>
-                    
-                    <!-- Baris 3: KHA, DAL, DZAL, RA -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:orientation="horizontal">
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_kha"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginEnd="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="خ"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="KHA"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_dal"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginHorizontal="3dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="د"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="DAL"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_dzal"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginHorizontal="3dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ذ"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="DZAL"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_ra"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginStart="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ر"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="RA"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                    </LinearLayout>
-                    
-                    <!-- Baris 4: ZA, SIN, SYIN, SHAD -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:orientation="horizontal">
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_za"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginEnd="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ز"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ZA"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_sin"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginHorizontal="3dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="س"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="SIN"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_syin"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginHorizontal="3dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ش"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="SYIN"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_shad"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginStart="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ص"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="SHAD"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                    </LinearLayout>
-                    
-                    <!-- Baris 5: DHAD, THA, ZHA, AIN -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:orientation="horizontal">
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_dhad"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginEnd="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ض"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="DHAD"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_tha"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginHorizontal="3dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ط"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="THA"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_zha"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginHorizontal="3dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ظ"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ZHA"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_ain"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginStart="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ع"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="AIN"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                    </LinearLayout>
-                    
-                    <!-- Baris 6: GHAIN, FA, QAF, KAF -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:orientation="horizontal">
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_ghain"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginEnd="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="غ"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="GHAIN"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_fa"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginHorizontal="3dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ف"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="FA"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_qaf"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginHorizontal="3dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ق"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="QAF"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_kaf"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginStart="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ك"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="KAF"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                    </LinearLayout>
-                    
-                    <!-- Baris 7: LAM, MIM, NUN, WAW -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:orientation="horizontal">
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_lam"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginEnd="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ل"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="LAM"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_mim"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginHorizontal="3dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="م"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="MIM"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_nun"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginHorizontal="3dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ن"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="NUN"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_waw"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginStart="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="و"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="WAW"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                    </LinearLayout>
-                    
-                    <!-- Baris 8: HA (akhir), YA -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:orientation="horizontal">
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_ha_akhir"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginEnd="6dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ه"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="HHA"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <LinearLayout
-                            android:id="@+id/letter_ya"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_horizontal"
-                            android:background="@drawable/cr16bc4c4c4"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="16dp"
-                            android:layout_marginHorizontal="3dp"
-                            android:elevation="12dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical">
-                            
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ي"
-                                android:textColor="#2C3E50"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-                                
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="YA"
-                                android:textColor="#2C3E50"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        
-                        <!-- Empty space for alignment -->
-                        <View
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginHorizontal="3dp" />
-                        
-                        <View
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="6dp" />
-                    </LinearLayout>
+                        android:text="Ba"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+            
+            <!-- Row 2: Ta, Tsa -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
                 
+                <LinearLayout
+                    android:id="@+id/letter_ta"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ت"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ta"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
                 </LinearLayout>
                 
-                <!-- RecyclerView hidden for now -->
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rv_hijaiyah_letters"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="20dp"
-                    android:nestedScrollingEnabled="false"
-                    android:visibility="gone" />
-                
-               
+                <LinearLayout
+                    android:id="@+id/letter_tsa"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ث"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tsa"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
             </LinearLayout>
+            
+            <!-- Row 3: Jim, Ha -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+                
+                <LinearLayout
+                    android:id="@+id/letter_jim"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ج"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Jim"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+                
+                <LinearLayout
+                    android:id="@+id/letter_ha"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ح"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ha"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+            
+            <!-- Row 4: Kho, Dal -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+                
+                <LinearLayout
+                    android:id="@+id/letter_kho"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="خ"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Kho"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+                
+                <LinearLayout
+                    android:id="@+id/letter_dal"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="د"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Dal"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+            
+            <!-- Row 5: Dzal, Ra -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+                
+                <LinearLayout
+                    android:id="@+id/letter_dzal"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ذ"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Dzal"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+                
+                <LinearLayout
+                    android:id="@+id/letter_ra"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ر"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ra"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+            
+            <!-- Row 6: Zai, Sin -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+                
+                <LinearLayout
+                    android:id="@+id/letter_zai"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ز"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Zai"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+                
+                <LinearLayout
+                    android:id="@+id/letter_sin"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="س"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sin"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+            
+            <!-- Row 7: Syin, Shad -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+                
+                <LinearLayout
+                    android:id="@+id/letter_syin"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ش"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Syin"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+                
+                <LinearLayout
+                    android:id="@+id/letter_shad"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ص"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Shad"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+            
+            <!-- Row 8: Dhad, Tha -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+                
+                <LinearLayout
+                    android:id="@+id/letter_dhad"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ض"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Dhad"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+                
+                <LinearLayout
+                    android:id="@+id/letter_tha"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ط"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tha"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+            
+            <!-- Row 9: Zha, Ain -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+                
+                <LinearLayout
+                    android:id="@+id/letter_zha"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ظ"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Zha"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+                
+                <LinearLayout
+                    android:id="@+id/letter_ain"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ع"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ain"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+            
+            <!-- Row 10: Ghain, Fa -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+                
+                <LinearLayout
+                    android:id="@+id/letter_ghain"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="غ"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ghain"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+                
+                <LinearLayout
+                    android:id="@+id/letter_fa"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ف"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Fa"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+            
+            <!-- Row 11: Qaf, Kaf -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+                
+                <LinearLayout
+                    android:id="@+id/letter_qaf"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ق"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Qaf"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+                
+                <LinearLayout
+                    android:id="@+id/letter_kaf"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ك"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Kaf"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+            
+            <!-- Row 12: Lam, Mim -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+                
+                <LinearLayout
+                    android:id="@+id/letter_lam"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ل"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Lam"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+                
+                <LinearLayout
+                    android:id="@+id/letter_mim"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="م"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Mim"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+            
+            <!-- Row 13: Nun, Waw -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+                
+                <LinearLayout
+                    android:id="@+id/letter_nun"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ن"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Nun"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+                
+                <LinearLayout
+                    android:id="@+id/letter_waw"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="و"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Waw"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+            
+            <!-- Row 14: Ha, Ya -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+                
+                <LinearLayout
+                    android:id="@+id/letter_ha_final"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ه"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ha"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+                
+                <LinearLayout
+                    android:id="@+id/letter_ya"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/letter_container_default"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="0dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ي"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:gravity="center" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ya"
+                        android:textSize="12sp"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+            
         </LinearLayout>
     </ScrollView>
-</LinearLayout>
+</FrameLayout>

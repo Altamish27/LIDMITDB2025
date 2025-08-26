@@ -22,6 +22,8 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
@@ -55,6 +57,7 @@ class HijaiyahFragment : Fragment() {
         progressManager = HijaiyahProgressManager(requireContext())
         
         setupUI()
+        setupSpinner()
         setupRecyclerView()
         setupSearch()
         setupClickListeners()
@@ -67,12 +70,40 @@ class HijaiyahFragment : Fragment() {
         binding.tvCurrentLetter.text = "Belajar Hijaiyah"
     }
     
+    private fun setupSpinner() {
+        try {
+            val categories = arrayOf("Hijaiyah", "Tanda Baca")
+            val spinnerAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, categories)
+            spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            binding.spinnerCategory.adapter = spinnerAdapter
+            
+            binding.spinnerCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    when (position) {
+                        0 -> { // Hijaiyah
+                            loadLetters()
+                        }
+                        1 -> { // Tanda Baca
+                            adapter.updateLetters(emptyList())
+                        }
+                    }
+                }
+                
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                    // Do nothing
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+    
     private fun setupRecyclerView() {
         adapter = HijaiyahAdapter { letter ->
             navigateToGestureRecognition(letter)
         }
         
-        binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 4)
+        binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.recyclerView.adapter = adapter
     }
     
