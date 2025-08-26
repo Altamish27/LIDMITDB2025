@@ -111,11 +111,21 @@ class HomeActivity : AppCompatActivity() {
         binding.btnDaftarHurufHijaiyah?.setOnClickListener {
             animateButtonClick(it) {
                 try {
-                    val intent = Intent(this, com.google.mediapipe.examples.gesturerecognizer.ui.hijaiyahdb.HijaiyahDBListActivity::class.java)
+                    // Use BasicTestActivity first to debug the crash issue
+                    val intent = Intent(this, com.google.mediapipe.examples.gesturerecognizer.ui.hijaiyahdb.BasicTestActivity::class.java)
                     startActivity(intent)
                 } catch (e: Exception) {
-                    Log.e("HomeActivity", "Failed to open Hijaiyah List: ${e.message}", e)
-                    Toast.makeText(this, "Error opening list: ${e.message}", Toast.LENGTH_LONG).show()
+                    Log.e("HomeActivity", "Failed to open Test Activity: ${e.message}", e)
+                    Toast.makeText(this, "Error opening test: ${e.message}", Toast.LENGTH_LONG).show()
+                    
+                    // Fallback to original activity
+                    try {
+                        val fallbackIntent = Intent(this, com.google.mediapipe.examples.gesturerecognizer.ui.hijaiyahdb.HijaiyahDBListActivity::class.java)
+                        startActivity(fallbackIntent)
+                    } catch (fallbackError: Exception) {
+                        Log.e("HomeActivity", "Fallback also failed: ${fallbackError.message}", fallbackError)
+                        Toast.makeText(this, "Both activities failed to start", Toast.LENGTH_LONG).show()
+                    }
                 }
             }
         }

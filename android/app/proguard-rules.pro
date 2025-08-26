@@ -19,3 +19,40 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Supabase and Kotlinx Serialization rules
+-keep class kotlinx.serialization.** { *; }
+-keep class io.github.jan.supabase.** { *; }
+-keep class io.github.jan.tennert.supabase.** { *; }
+-keep class io.ktor.** { *; }
+-keepattributes *Annotation*, InnerClasses
+-dontnote kotlinx.serialization.AnnotationsKt
+
+# Keep data classes used with Supabase
+-keep class com.google.mediapipe.examples.gesturerecognizer.ui.hijaiyahdb.** { *; }
+-keep class com.google.mediapipe.examples.gesturerecognizer.supabase.** { *; }
+
+# Kotlinx Coroutines
+-keep class kotlinx.coroutines.** { *; }
+-dontwarn kotlinx.coroutines.**
+
+# Ktor specific rules
+-keep class io.ktor.client.engine.android.** { *; }
+-keep class io.ktor.client.plugins.** { *; }
+-keep class io.ktor.serialization.** { *; }
+-dontwarn io.ktor.**
+
+# Gson/Json serialization
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class sun.misc.Unsafe { *; }
+-keep class com.google.gson.** { *; }
+
+# Network and reflection for Supabase
+-keepclassmembers class * {
+    @kotlinx.serialization.SerialName <fields>;
+}
+-keepclassmembers @kotlinx.serialization.Serializable class * {
+    <fields>;
+    <methods>;
+}

@@ -19,6 +19,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'de.undercouch.download'
     id 'org.jetbrains.kotlin.plugin.compose' version '2.0.0'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.9.10'
 }
 
 android {
@@ -76,18 +77,24 @@ dependencies {
     //noinspection GradleDependency
     implementation 'androidx.core:core-ktx:1.8.0'
 
-    // Supabase Kotlin client
-    implementation "io.github.jan-tennert.supabase:supabase-kt:3.2.2"
-    implementation "io.github.jan-tennert.supabase:postgrest-kt:3.2.2"
+    // Supabase Kotlin client - Updated to stable version
+    implementation "io.github.jan-tennert.supabase:supabase-kt:2.6.0"
+    implementation "io.github.jan-tennert.supabase:postgrest-kt:2.6.0"
 
+    // Kotlinx Serialization
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3"
 
-    // Ktor Client (Supabase-kt membutuhkan ini)
-    implementation "io.ktor:ktor-client-android:2.3.4"
-    implementation "io.ktor:ktor-client-serialization:2.3.4"
-    implementation "io.ktor:ktor-client-logging:2.3.4"
+    // Ktor Client (Supabase-kt membutuhkan ini) - Matched versions
+    implementation "io.ktor:ktor-client-android:2.3.8"
+    implementation "io.ktor:ktor-client-content-negotiation:2.3.8"
+    implementation "io.ktor:ktor-serialization-kotlinx-json:2.3.8"
+    implementation "io.ktor:ktor-client-logging:2.3.8"
+    implementation "io.ktor:ktor-client-cio:2.3.8"
+    implementation "io.ktor:ktor-client-core:2.3.8"
 
     // Coroutines (untuk operasi asynchronous)
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
 
 
     // App compat and UI things
