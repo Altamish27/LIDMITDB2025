@@ -82,6 +82,10 @@
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer" />
         
+        <activity
+            android:name=".ui.latihan.LatihanDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer" />
 
 
     </application>

@@ -16,6 +16,7 @@
 
 package com.google.mediapipe.examples.gesturerecognizer.ui.latihan
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -23,6 +24,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanData
+import com.google.mediapipe.examples.gesturerecognizer.data.LatihanItem
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanProgressManager
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentLatihanBinding
 
@@ -54,14 +56,21 @@ class LatihanFragment : Fragment() {
 
     private fun setupRecyclerView() {
         adapter = LatihanAdapter { exercise ->
-            // Handle exercise click
-            // TODO: Navigate to exercise detail or start exercise
+            navigateToExerciseDetail(exercise)
         }
         
         binding.recyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = this@LatihanFragment.adapter
         }
+    }
+    
+    private fun navigateToExerciseDetail(exercise: LatihanItem) {
+        val intent = Intent(requireContext(), LatihanDetailActivity::class.java).apply {
+            putExtra("exerciseId", exercise.id)
+            putExtra("exerciseTitle", exercise.title)
+        }
+        startActivity(intent)
     }
 
     private fun loadExercises() {
