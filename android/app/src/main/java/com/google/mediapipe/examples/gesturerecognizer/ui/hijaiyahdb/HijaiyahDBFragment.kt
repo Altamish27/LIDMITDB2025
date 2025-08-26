@@ -36,112 +36,11 @@ class HijaiyahDbFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return try {
-            android.util.Log.d("HijaiyahDBFragment", "Creating HijaiyahDbFragment view")
-            
-            ComposeView(requireContext()).apply {
-                setContent {
-                    MaterialTheme {
-                        Surface(modifier = Modifier.fillMaxSize()) {
-                            SafeHijaiyahDbScreen()
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("HijaiyahDBFragment", "Critical error creating fragment view", e)
-            // Return a completely basic view
-            ComposeView(requireContext()).apply {
-                setContent {
-                    Text(
-                        text = "Critical error: ${e.message}",
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun SafeHijaiyahDbScreen() {
-    var connectionState by remember { mutableStateOf("starting") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var letters by remember { mutableStateOf<List<HijaiyahItem>>(emptyList()) }
-    
-    LaunchedEffect(Unit) {
-        try {
-            connectionState = "connecting"
-            android.util.Log.d("SafeHijaiyahDbFragment", "Starting safe connection test")
-            
-            val result = withContext(Dispatchers.IO) {
-                try {
-                    supabaseClient.from("hijaiyah")
-                        .select()
-                        .decodeList<HijaiyahItem>()
-                } catch (networkError: Exception) {
-                    android.util.Log.e("SafeHijaiyahDbFragment", "Network error", networkError)
-                    throw networkError
-                }
-            }
-            
-            connectionState = "success"
-            letters = result
-            android.util.Log.d("SafeHijaiyahDbFragment", "Successfully loaded ${result.size} items")
-            
-        } catch (e: Exception) {
-            android.util.Log.e("SafeHijaiyahDbFragment", "General error", e)
-            connectionState = "error"
-            errorMessage = "Error: ${e.message}"
-        }
-    }
-    
-    when (connectionState) {
-        "starting" -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Initializing...")
-            }
-        }
-        "connecting" -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator()
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Connecting to database...")
-                }
-            }
-        }
-        "error" -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = errorMessage ?: "Unknown error",
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-        }
-        "success" -> {
-            if (letters.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Connected successfully, but no data found")
-                }
-            } else {
-                LazyColumn(modifier = Modifier.padding(16.dp)) {
-                    item {
-                        Text(
-                            text = "✅ Loaded ${letters.size} letters",
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-                    }
-                    items(letters) { letter ->
-                        Column(modifier = Modifier.padding(8.dp)) {
-                            Text(
-                                text = letter.arabic_char,
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                            Text(text = letter.latin_name)
-                        }
+        return ComposeView(requireContext()).apply {
+            setContent {
+                MaterialTheme {
+                    Surface(modifier = Modifier.fillMaxSize()) {
+                        HijaiyahDbScreen()
                     }
                 }
             }
@@ -157,37 +56,16 @@ fun HijaiyahDbScreen() {
 
     LaunchedEffect(Unit) {
         try {
-            android.util.Log.d("SupabaseTest", "Fragment: Starting connection test to Supabase...")
-            
             val data = withContext(Dispatchers.IO) {
-                try {
-                    kotlinx.coroutines.withTimeout(15000) { // 15 second timeout
-                        supabaseClient.from("hijaiyah")
-                            .select()
-                            .decodeList<HijaiyahItem>()
-                    }
-                } catch (timeoutException: kotlinx.coroutines.TimeoutCancellationException) {
-                    android.util.Log.e("SupabaseTest", "Fragment: Data fetch timeout")
-                    throw Exception("Data fetch timeout - Please try again")
-                }
+                supabaseClient.from("hijaiyah")
+                    .select()
+                    .decodeList<HijaiyahItem>()
             }
-            
-            android.util.Log.d("SupabaseTest", "Fragment: Successfully fetched ${data.size} items from Supabase")
             letters = data
-            
         } catch (e: Exception) {
-            android.util.Log.e("SupabaseTest", "Fragment: Failed to connect to Supabase", e)
-            val errorDetail = when (e) {
-                is java.net.UnknownHostException -> "No internet connection or DNS issue"
-                is java.net.ConnectException -> "Connection refused - Check server status"
-                is java.net.SocketTimeoutException -> "Connection timeout - Slow network"
-                is kotlinx.serialization.SerializationException -> "Data format error - Database schema mismatch"
-                else -> "Unknown error: ${e.message}"
-            }
-            errorMessage = "❌ Connection failed: $errorDetail\n\nError type: ${e.javaClass.simpleName}"
+            errorMessage = "Failed to load data: ${e.message}"
         } finally {
             isLoading = false
-            android.util.Log.d("SupabaseTest", "Fragment: Data loading completed. Loading: $isLoading, Error: $errorMessage")
         }
     }
 
