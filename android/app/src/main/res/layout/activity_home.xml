@@ -689,6 +689,7 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+
     <!-- Tabel Panduan Huruf Hijaiyah dengan Bahasa Isyarat - Dipindahkan ke bawah -->
                 <LinearLayout
                     android:id="@+id/tabel_hijaiyah_section"
@@ -1122,6 +1123,14 @@
                                 android:elevation="2dp"
                                 android:clickable="true"
                                 android:focusable="true" />
+                            <Button
+                                android:id="@+id/btnDaftarHurufHijaiyah"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Daftar Huruf Hijaiyah"
+                                android:layout_marginTop="16dp"
+                                android:layout_gravity="center_horizontal" />
+
                     </LinearLayout>
                         </LinearLayout>
                         

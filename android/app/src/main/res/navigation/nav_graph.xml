@@ -87,5 +87,11 @@
             app:destination="@id/camera_fragment" />
 
     </fragment>
+    <fragment
+    android:id="@+id/hijaiyah_db_fragment"
+    android:name="com.google.mediapipe.examples.gesturerecognizer.ui.hijaiyahdb.HijaiyahDbFragment"
+    android:label="HijaiyahDbFragment" />
+
+
 
 </navigation>
