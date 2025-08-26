@@ -86,7 +86,17 @@
                     supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
                 navController = navHostFragment.navController
 
-                // Always use default start destination (hijaiyah_fragment with green header)
+                // Check if we need to navigate to a specific destination
+                val navigateTo = intent.getStringExtra("navigate_to")
+                when (navigateTo) {
+                    "hijaiyah_list" -> {
+                        navController.navigate(R.id.hijaiyah_list_fragment)
+                    }
+                    "latihan" -> {
+                        navController.navigate(R.id.latihan_fragment)
+                    }
+                    // Default stays at hijaiyah_fragment (camera)
+                }
 
                 // Handle back press with modern API
                 onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {

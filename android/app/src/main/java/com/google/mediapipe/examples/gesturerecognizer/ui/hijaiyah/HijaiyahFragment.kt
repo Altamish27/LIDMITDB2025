@@ -25,6 +25,7 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.mediapipe.examples.gesturerecognizer.R
@@ -32,6 +33,7 @@ import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahLetter
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentHijaiyahBinding
+
 
 class HijaiyahFragment : Fragment() {
 
@@ -131,12 +133,13 @@ class HijaiyahFragment : Fragment() {
     private fun loadLetters() {
         allLetters = progressManager.getLettersWithProgress()
         adapter.updateLetters(allLetters)
+        updateProgress()
     }
     
     private fun updateProgress() {
-        val completedCount = progressManager.getCompletedCount()
-        val totalCount = 28
-        val percentage = (completedCount * 100) / totalCount
+        val completedCount = allLetters.count { it.isCompleted }
+        val totalCount = allLetters.size.takeIf { it > 0 } ?: 28
+        val percentage = if (totalCount > 0) (completedCount * 100) / totalCount else 0
         
         binding.tvProgress.text = "$completedCount / $totalCount Huruf"
         binding.progressBar.progress = percentage

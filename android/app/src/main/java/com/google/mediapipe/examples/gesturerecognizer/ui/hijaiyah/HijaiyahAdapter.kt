@@ -65,10 +65,10 @@ class HijaiyahAdapter(
                 arabicText.setTextColor(ContextCompat.getColor(context, R.color.hijaiyah_navy))
                 transliterationText.setTextColor(ContextCompat.getColor(context, R.color.hijaiyah_navy))
             } else {
-                // Grey for not completed letters
-                container.background = ContextCompat.getDrawable(context, R.drawable.letter_container_default)
-                arabicText.setTextColor(ContextCompat.getColor(context, R.color.hijaiyah_navy))
-                transliterationText.setTextColor(ContextCompat.getColor(context, R.color.hijaiyah_navy))
+                // Dark navy (#2C3E50) background with white text for not completed letters
+                container.background = ContextCompat.getDrawable(context, R.drawable.letter_container_navy)
+                arabicText.setTextColor(ContextCompat.getColor(context, android.R.color.white))
+                transliterationText.setTextColor(ContextCompat.getColor(context, android.R.color.white))
             }
             
             itemView.setOnClickListener {

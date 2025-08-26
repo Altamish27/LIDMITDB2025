@@ -92,6 +92,9 @@
     android:name="com.google.mediapipe.examples.gesturerecognizer.ui.hijaiyahdb.HijaiyahDbFragment"
     android:label="HijaiyahDbFragment" />
 
-
+    <fragment
+        android:id="@+id/latihan_fragment"
+        android:name="com.google.mediapipe.examples.gesturerecognizer.ui.latihan.LatihanFragment"
+        android:label="LatihanFragment" />
 
 </navigation>

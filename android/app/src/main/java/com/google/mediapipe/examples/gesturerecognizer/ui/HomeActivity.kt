@@ -87,7 +87,7 @@ class HomeActivity : AppCompatActivity() {
             animateButtonClick(it) {
                 try {
                     val intent = Intent(this, MainActivity::class.java)
-                    intent.putExtra("navigate_to", "hijaiyah_list")
+                    // Navigate to default hijaiyah_fragment (header hijau dengan search bar)
                     startActivity(intent)
                 } catch (e: Exception) {
                     Log.e("HomeActivity", "Failed to start Hijaiyah learning: ${e.message}", e)
@@ -116,6 +116,20 @@ class HomeActivity : AppCompatActivity() {
                 } catch (e: Exception) {
                     Log.e("HomeActivity", "Failed to open Hijaiyah List: ${e.message}", e)
                     Toast.makeText(this, "Error opening list: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        // Navigate to Latihan (Quiz renamed)
+        binding.cardQuiz?.setOnClickListener {
+            animateButtonClick(it) {
+                try {
+                    val intent = Intent(this, MainActivity::class.java)
+                    intent.putExtra("navigate_to", "latihan")
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Failed to start Latihan: ${e.message}", e)
+                    Toast.makeText(this, "Error starting latihan: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }

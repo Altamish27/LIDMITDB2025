@@ -3,8 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    
-
 
 <ScrollView
     android:layout_width="match_parent"
@@ -40,7 +38,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/btnBack"
             android:layout_alignParentStart="true"
-            android:text="HIJAIYAH HURUF"
+            android:text="Latihan"
             android:textColor="@color/white"
             android:textSize="24sp"
             android:textStyle="bold"
@@ -53,7 +51,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/tvTitle"
             android:layout_alignParentStart="true"
-            android:text="3 / 28 Huruf"
+            android:text="3 / 6 Jilid"
             android:textColor="@color/white"
             android:textSize="14sp"
             android:layout_marginTop="4dp"/>
@@ -76,7 +74,7 @@
                 android:layout_height="20dp"
                 android:layout_weight="1"
                 android:layout_marginEnd="16dp"
-                android:progress="33"
+                android:progress="50"
                 android:progressTint="@color/hijaiyah_yellow"
                 android:progressBackgroundTint="@color/white"
                 android:progressDrawable="@drawable/progress_bar_custom"/>
@@ -86,7 +84,7 @@
             android:id="@+id/tvPercentage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="33%"
+            android:text="50%"
             android:textColor="@color/white"
             android:textSize="16sp"
             android:textStyle="bold"
@@ -95,16 +93,28 @@
                 
         </LinearLayout>
 
-        <!-- Lamp Icon - Top Right -->
+        <!-- Level Badge -->
+        <TextView
+            android:id="@+id/tvLevelBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/progressContainer"
+            android:layout_marginTop="16dp"
+            android:text="🌟 Level 3"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"/>
+
+        <!-- Book Icon - Top Right -->
         <ImageView
-            android:id="@+id/ivLampIcon"
+            android:id="@+id/ivBookIcon"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_alignParentTop="true"
             android:layout_alignParentEnd="true"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
-            android:src="@drawable/huruf_hijaiyah"
+            android:src="@drawable/quiz"
             android:scaleType="fitCenter"
             android:adjustViewBounds="true"
             android:clickable="true"
@@ -115,7 +125,7 @@
             android:id="@+id/cardCategoryDropdown"
             android:layout_width="200dp"
             android:layout_height="45dp"
-            android:layout_below="@id/progressContainer"
+            android:layout_below="@id/tvLevelBadge"
             android:layout_marginTop="16dp"
             android:layout_centerHorizontal="true"
             app:cardCornerRadius="12dp"
@@ -132,36 +142,6 @@
                 
         </androidx.cardview.widget.CardView>
 
-        <!-- Current Letter Card -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardCurrentLetter"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:layout_below="@id/cardCategoryDropdown"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/white"
-                android:padding="16dp">
-
-                <TextView
-                    android:id="@+id/tvCurrentLetter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:text="Hijaiyah"
-                    android:textColor="@color/hijaiyah_navy"
-                    android:textSize="18sp"
-                    android:textStyle="bold"/>
-
-            </RelativeLayout>
-
-        </androidx.cardview.widget.CardView>
-
     </RelativeLayout>
 
     <!-- Main Content Section -->
@@ -171,12 +151,13 @@
         android:orientation="vertical"
         android:background="@android:color/transparent"
         android:padding="16dp">
-        <!-- "Mulai Belajar" Title -->
+        
+        <!-- "Mulai Belajar Jilid" Title -->
         <TextView
             android:id="@+id/tvMulaiBelajar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Mulai Belajar"
+            android:text="Mulai Belajar Jilid"
             android:textColor="@color/hijaiyah_navy"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -196,7 +177,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@android:color/transparent"
-                android:hint="Cari Huruf Hijaiyah"
+                android:hint="Cari Jilid"
                 android:textColorHint="#2C3E50"
                 android:textColor="#2C3E50"
                 android:textSize="13sp"
@@ -208,7 +189,7 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Letters Grid -->
+        <!-- Exercise Grid -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
