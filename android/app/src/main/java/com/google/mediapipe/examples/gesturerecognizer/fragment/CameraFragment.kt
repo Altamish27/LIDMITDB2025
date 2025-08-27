@@ -366,7 +366,7 @@ class CameraFragment : Fragment(),
                 Log.d(TAG, "Letter $letterPosition ($targetLetterName) marked as completed")
             }
             
-            // Auto navigate back to hijaiyah learning page after success
+            // Auto navigate back to hijaiyah learning page after success (only when not embedded)
             fragmentCameraBinding.textInstruction.text = "Berhasil! Kembali ke halaman belajar dalam 3 detik..."
             
             // Show option to stay or go back
@@ -379,7 +379,28 @@ class CameraFragment : Fragment(),
                 fragmentCameraBinding.textInstruction.text = "Tekan tombol untuk mencoba huruf lain"
             }
             
-            // Show countdown
+            // If embedded inside `LatihanPracticeActivity`, return result via FragmentResult
+            val isEmbedded = arguments?.getBoolean("embedded", false) ?: false
+            if (isEmbedded) {
+                val letterPosition = arguments?.getInt("letterPosition", -1) ?: -1
+                val result = Bundle().apply {
+                    putBoolean("success", true)
+                    putInt("letterPosition", letterPosition)
+                }
+                parentFragmentManager.setFragmentResult("camera_result", result)
+
+                // Remove self from container
+                activity?.runOnUiThread {
+                    try {
+                        parentFragmentManager.beginTransaction().remove(this@CameraFragment).commitAllowingStateLoss()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to remove embedded CameraFragment: ${e.message}")
+                    }
+                }
+                return
+            }
+
+            // Show countdown for non-embedded mode
             var countdown = 3
             countdownTimer?.cancel() // Cancel any existing countdown
             countdownTimer = object : CountDownTimer(3000, 1000) {
@@ -388,7 +409,7 @@ class CameraFragment : Fragment(),
                     fragmentCameraBinding.textInstruction.text = 
                         "Berhasil! Kembali ke halaman belajar dalam $countdown detik..."
                 }
-                
+
                 override fun onFinish() {
                     // Navigate back after countdown
                     try {
