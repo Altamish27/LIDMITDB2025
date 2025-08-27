@@ -60,20 +60,20 @@ class HurufGridAdapter(
             
             when {
                 huruf.isCompleted -> {
-                    // Orange/Yellow for completed
-                    container.setBackgroundColor(ContextCompat.getColor(context, android.R.color.holo_orange_light))
+                    // Orange/Yellow for completed with rounded corners
+                    container.background = ContextCompat.getDrawable(context, R.drawable.letter_container_completed_orange)
                     arabicText.setTextColor(ContextCompat.getColor(context, android.R.color.white))
                     latinText.setTextColor(ContextCompat.getColor(context, android.R.color.white))
                 }
                 huruf.isActive -> {
-                    // Highlighted for active
-                    container.setBackgroundColor(ContextCompat.getColor(context, R.color.hijaiyah_yellow))
+                    // Highlighted for active with rounded corners
+                    container.background = ContextCompat.getDrawable(context, R.drawable.letter_container_completed)
                     arabicText.setTextColor(ContextCompat.getColor(context, R.color.hijaiyah_navy))
                     latinText.setTextColor(ContextCompat.getColor(context, R.color.hijaiyah_navy))
                 }
                 else -> {
-                    // Dark navy for default
-                    container.setBackgroundColor(ContextCompat.getColor(context, R.color.hijaiyah_navy))
+                    // Dark navy for default with rounded corners
+                    container.background = ContextCompat.getDrawable(context, R.drawable.letter_container_navy)
                     arabicText.setTextColor(ContextCompat.getColor(context, android.R.color.white))
                     latinText.setTextColor(ContextCompat.getColor(context, android.R.color.white))
                 }

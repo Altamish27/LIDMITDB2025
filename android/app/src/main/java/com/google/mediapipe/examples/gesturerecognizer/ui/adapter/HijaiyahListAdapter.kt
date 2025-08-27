@@ -34,17 +34,33 @@ class HijaiyahListAdapter(
         holder.arabicLetter.text = letter.arabic
         holder.romanLetter.text = letter.transliteration
 
-        // Set background based on completion status
+        // Set background based on completion status with rounded corners (same as Latihan page)
         if (isCompleted) {
-            holder.itemView.background = ContextCompat.getDrawable(
+            holder.container.background = ContextCompat.getDrawable(
                 holder.itemView.context, 
-                R.drawable.yellow_button_ripple
+                R.drawable.letter_container_completed_orange
             )
+            holder.arabicLetter.setTextColor(ContextCompat.getColor(
+                holder.itemView.context, 
+                android.R.color.white
+            ))
+            holder.romanLetter.setTextColor(ContextCompat.getColor(
+                holder.itemView.context, 
+                android.R.color.white
+            ))
         } else {
-            holder.itemView.background = ContextCompat.getDrawable(
+            holder.container.background = ContextCompat.getDrawable(
                 holder.itemView.context, 
-                R.drawable.grey_button_ripple
+                R.drawable.letter_container_navy
             )
+            holder.arabicLetter.setTextColor(ContextCompat.getColor(
+                holder.itemView.context, 
+                android.R.color.white
+            ))
+            holder.romanLetter.setTextColor(ContextCompat.getColor(
+                holder.itemView.context, 
+                android.R.color.white
+            ))
         }
 
         holder.itemView.setOnClickListener {
