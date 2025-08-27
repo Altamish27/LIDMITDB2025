@@ -36,10 +36,12 @@ import com.google.mediapipe.examples.gesturerecognizer.GestureRecognizerHelper
 import com.google.mediapipe.examples.gesturerecognizer.HijaiyahData
 import com.google.mediapipe.examples.gesturerecognizer.MainViewModel
 import com.google.mediapipe.examples.gesturerecognizer.R
-import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentCameraBinding
 import com.google.mediapipe.examples.gesturerecognizer.ui.adapter.GestureRecognizerResultsAdapter
 import com.google.mediapipe.examples.gesturerecognizer.ui.permissions.PermissionsFragment
+import com.google.mediapipe.examples.gesturerecognizer.ui.overlay.TrajectoryOverlayView
+import com.google.mediapipe.examples.gesturerecognizer.ui.overlay.TrajectoryRingBuffer
+import com.google.mediapipe.examples.gesturerecognizer.ui.overlay.TrajectoryAnalyzer
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -77,19 +79,20 @@ class CameraFragment : Fragment(),
     /** Blocking ML operations are performed using this executor */
     private lateinit var backgroundExecutor: ExecutorService
     
+    // Trajectory system components
+    private lateinit var trajectoryBuffer: TrajectoryRingBuffer
+    private lateinit var trajectoryOverlay: TrajectoryOverlayView
+    private lateinit var trajectoryAnalyzer: TrajectoryAnalyzer
+    
     // Hijaiyah practice properties
     private var targetLetter: String? = null
     private var targetLetterName: String? = null
     private var practiceTimer: CountDownTimer? = null
     private var resetTimer: CountDownTimer? = null
-    private var countdownTimer: CountDownTimer? = null
     private var isDetecting = false
     private var currentGesture: String? = null
     private var gestureStartTime = 0L
     private var consecutiveCorrectCount = 0
-    
-    // Progress tracking
-    private lateinit var progressManager: HijaiyahProgressManager
 
     override fun onResume() {
         super.onResume()
@@ -121,11 +124,6 @@ class CameraFragment : Fragment(),
             // Close the Gesture Recognizer helper and release resources
             backgroundExecutor.execute { gestureRecognizerHelper.clearGestureRecognizer() }
         }
-        
-        // Cancel all timers to prevent memory leaks
-        practiceTimer?.cancel()
-        resetTimer?.cancel()
-        countdownTimer?.cancel()
     }
 
     override fun onDestroyView() {
@@ -158,16 +156,15 @@ class CameraFragment : Fragment(),
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // Initialize progress manager
-        progressManager = HijaiyahProgressManager(requireContext())
-        
         // Get target letter from arguments
-        targetLetter = arguments?.getString("selectedLetter")
-        targetLetterName = arguments?.getString("letterName")
+        targetLetter = arguments?.getString("selectedLetter") ?: arguments?.getString("target_letter")
+        targetLetterName = arguments?.getString("letterName") ?: arguments?.getString("target_letter_name")
         
-        // Debug logs to check received parameters
-        Log.d(TAG, "Received arguments - Letter: $targetLetter, Name: $targetLetterName")
-        Log.d(TAG, "All arguments: ${arguments?.keySet()?.map { "$it = ${arguments?.get(it)}" }}")
+        // Debug logging for received arguments
+        Log.d(TAG, "Received arguments:")
+        Log.d(TAG, "- targetLetter: $targetLetter")
+        Log.d(TAG, "- targetLetterName: $targetLetterName")
+        Log.d(TAG, "- all arguments: ${arguments?.keySet()?.joinToString { "$it=${arguments?.get(it)}" }}")
         
         // Setup UI with target letter
         setupHijaiyahUI()
@@ -179,6 +176,16 @@ class CameraFragment : Fragment(),
 
         // Initialize our background executor
         backgroundExecutor = Executors.newSingleThreadExecutor()
+        
+        // Initialize trajectory system
+        trajectoryBuffer = TrajectoryRingBuffer()
+        trajectoryOverlay = TrajectoryOverlayView(requireContext())
+        
+        // Add trajectory overlay to the camera container programmatically
+        val cameraContainer = fragmentCameraBinding.cameraContainer
+        cameraContainer.addView(trajectoryOverlay)
+        
+        trajectoryAnalyzer = TrajectoryAnalyzer(trajectoryBuffer, trajectoryOverlay)
 
         // Wait for the views to be properly laid out
         fragmentCameraBinding.viewFinder.post {
@@ -208,20 +215,12 @@ class CameraFragment : Fragment(),
         // Setup target letter display
         targetLetter?.let { letter ->
             fragmentCameraBinding.textTargetLetter.text = letter
-        } ?: run {
-            fragmentCameraBinding.textTargetLetter.text = "?"
         }
         
         targetLetterName?.let { name ->
             fragmentCameraBinding.textLetterName.text = "Huruf $name"
             fragmentCameraBinding.textInstruction.text = "Peragakan huruf $name selama 2 detik berturut-turut"
-        } ?: run {
-            fragmentCameraBinding.textLetterName.text = "Huruf Tidak Dikenali"
-            fragmentCameraBinding.textInstruction.text = "Error: Target huruf tidak diterima dengan benar"
         }
-        
-        // Debug log to check received parameters
-        Log.d(TAG, "Setup UI - Target Letter: $targetLetter, Letter Name: $targetLetterName")
         
         // Setup back button
         fragmentCameraBinding.buttonBack.setOnClickListener {
@@ -259,26 +258,40 @@ class CameraFragment : Fragment(),
         
         val currentTime = System.currentTimeMillis()
         
-        // Safety check: if targetLetterName is null, stop detection
-        if (targetLetterName == null) {
-            updatePredictionText("Error: Tidak ada huruf target")
-            resetGestureDetection()
-            return
+        // Debug logging for gesture detection
+        Log.d(TAG, "Gesture Detection:")
+        Log.d(TAG, "- detectedGesture: '$detectedGesture'")
+        Log.d(TAG, "- targetLetterName: '$targetLetterName'")
+        Log.d(TAG, "- targetLetter: '$targetLetter'")
+        
+        // Check if this is the target gesture
+        // Try multiple matching strategies:
+        // 1. Direct match with targetLetterName (transliteration)
+        // 2. Match with gesture name from HijaiyahData
+        // 3. Case-insensitive matching
+        
+        val isCorrectGesture = when {
+            // Direct match with targetLetterName
+            detectedGesture.equals(targetLetterName, ignoreCase = true) -> true
+            // Try to find the target letter in HijaiyahData and match with its gesture name
+            targetLetter != null -> {
+                val hijaiyahLetter = HijaiyahData.letters.find { it.arabic == targetLetter }
+                hijaiyahLetter?.gestureName?.equals(detectedGesture, ignoreCase = true) == true
+            }
+            // Try to find by targetLetterName and match gesture name
+            targetLetterName != null -> {
+                val hijaiyahLetter = HijaiyahData.letters.find { it.transliteration.equals(targetLetterName, ignoreCase = true) }
+                hijaiyahLetter?.gestureName?.equals(detectedGesture, ignoreCase = true) == true
+            }
+            else -> false
         }
         
-        // Find the letter data to get the correct gesture name
-        val targetLetter = HijaiyahData.letters.find { 
-            it.transliteration.equals(targetLetterName, ignoreCase = true) 
-        }
+        Log.d(TAG, "- isCorrectGesture: $isCorrectGesture")
         
-        val expectedGestureName = targetLetter?.gestureName
-        
-        // Check if this is the target gesture - compare with gesture name format
-        val isCorrectGesture = if (expectedGestureName != null) {
-            detectedGesture.equals(expectedGestureName, ignoreCase = true)
-        } else {
-            // Fallback to transliteration comparison
-            detectedGesture.equals(targetLetterName, ignoreCase = true)
+        // Additional debug: show all possible matches
+        if (targetLetter != null) {
+            val hijaiyahLetter = HijaiyahData.letters.find { it.arabic == targetLetter }
+            Log.d(TAG, "- HijaiyahData for '$targetLetter': $hijaiyahLetter")
         }
         
         if (isCorrectGesture) {
@@ -306,15 +319,17 @@ class CameraFragment : Fragment(),
                 }
             }
         } else {
-            // Wrong gesture or no gesture detected
+            // Wrong gesture or no gesture
             if (detectedGesture.isNotEmpty() && detectedGesture != "Unknown") {
-                updatePredictionText("$detectedGesture - tidak cocok (target: ${expectedGestureName ?: targetLetterName})")
+                updatePredictionText("$detectedGesture - tidak cocok")
             } else {
                 updatePredictionText("Tidak ada gesture")
             }
             
-            // ALWAYS reset if gesture is wrong or no gesture (fix for progress bar issue)
-            resetGestureDetection()
+            // Reset if there was a previous correct sequence
+            if (currentGesture != null) {
+                resetGestureDetection()
+            }
         }
     }
     
@@ -327,7 +342,7 @@ class CameraFragment : Fragment(),
         gestureStartTime = 0L
         consecutiveCorrectCount = 0
         fragmentCameraBinding.progressTimer.progress = 0
-        updatePredictionText("Reset - siap deteksi")
+        updatePredictionText("Reset - coba lagi")
         
         // Brief pause before allowing new detection
         resetTimer?.cancel()
@@ -358,64 +373,19 @@ class CameraFragment : Fragment(),
             fragmentCameraBinding.iconResult.setImageResource(R.drawable.ic_check_circle)
             fragmentCameraBinding.textResult.text = "Bagus!"
             fragmentCameraBinding.textResultDetail.text = "Anda berhasil memperagakan huruf ${targetLetterName}"
-            
-            // Mark letter as completed
-            val letterPosition = arguments?.getInt("letterPosition", -1) ?: -1
-            if (letterPosition > 0) {
-                progressManager.markLetterCompleted(letterPosition)
-                Log.d(TAG, "Letter $letterPosition ($targetLetterName) marked as completed")
-            }
-            
-            // Auto navigate back to hijaiyah learning page after success
-            fragmentCameraBinding.textInstruction.text = "Berhasil! Kembali ke halaman belajar dalam 3 detik..."
-            
-            // Show option to stay or go back
-            fragmentCameraBinding.buttonStart.visibility = View.VISIBLE
-            fragmentCameraBinding.buttonStart.text = "Tetap Di Sini"
-            fragmentCameraBinding.buttonStart.setOnClickListener {
-                countdownTimer?.cancel()
-                fragmentCameraBinding.overlayResult.visibility = View.GONE
-                fragmentCameraBinding.buttonStart.visibility = View.GONE
-                fragmentCameraBinding.textInstruction.text = "Tekan tombol untuk mencoba huruf lain"
-            }
-            
-            // Show countdown
-            var countdown = 3
-            countdownTimer?.cancel() // Cancel any existing countdown
-            countdownTimer = object : CountDownTimer(3000, 1000) {
-                override fun onTick(millisUntilFinished: Long) {
-                    countdown--
-                    fragmentCameraBinding.textInstruction.text = 
-                        "Berhasil! Kembali ke halaman belajar dalam $countdown detik..."
-                }
-                
-                override fun onFinish() {
-                    // Navigate back after countdown
-                    try {
-                        Navigation.findNavController(requireActivity(), R.id.fragment_container)
-                            .navigateUp()
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Navigation error: ${e.message}")
-                        // Fallback navigation
-                        requireActivity().onBackPressed()
-                    }
-                }
-            }
-            countdownTimer?.start()
-            
         } else {
             fragmentCameraBinding.iconResult.setImageResource(R.drawable.ic_error_circle)
             fragmentCameraBinding.textResult.text = "Coba Lagi"
             fragmentCameraBinding.textResultDetail.text = "Gesture belum tepat. Silakan coba lagi!"
-            
-            // Show start button again for retry
-            fragmentCameraBinding.buttonStart.visibility = View.VISIBLE
-            fragmentCameraBinding.buttonStart.text = "Coba Lagi"
-            fragmentCameraBinding.buttonStart.setOnClickListener {
-                startAutomaticDetection()
-            }
-            fragmentCameraBinding.textInstruction.text = "Tekan tombol untuk mencoba lagi"
         }
+        
+        // Show start button again
+        fragmentCameraBinding.buttonStart.visibility = View.VISIBLE
+        fragmentCameraBinding.buttonStart.text = "Coba Lagi"
+        fragmentCameraBinding.buttonStart.setOnClickListener {
+            startAutomaticDetection()
+        }
+        fragmentCameraBinding.textInstruction.text = "Tekan tombol untuk mencoba lagi"
     }
 
     private fun initBottomSheetControls() {
@@ -620,6 +590,28 @@ class CameraFragment : Fragment(),
     ) {
         activity?.runOnUiThread {
             if (_fragmentCameraBinding != null) {
+                // Process trajectory from hand landmarks
+                try {
+                    val viewSize = android.util.Size(
+                        fragmentCameraBinding.viewFinder.width,
+                        fragmentCameraBinding.viewFinder.height
+                    )
+                    val imageSize = android.util.Size(
+                        resultBundle.inputImageWidth,
+                        resultBundle.inputImageHeight
+                    )
+                    
+                    trajectoryAnalyzer.processResult(
+                        resultBundle.results.first(),
+                        viewSize,
+                        imageSize,
+                        cameraFacing == CameraSelector.LENS_FACING_FRONT,
+                        0 // rotation degrees
+                    )
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error processing trajectory", e)
+                }
+                
                 // Show result of recognized gesture
                 val gestureCategories = resultBundle.results.first().gestures()
                 if (gestureCategories.isNotEmpty()) {

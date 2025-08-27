@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+ENHANCED fragment_camera.xml dengan trajectory controls
+Add this section to your existing fragment_camera.xml 
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res/auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragment.CameraFragment">
+
+    <!-- Existing PreviewView dan components... -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/view_finder"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Existing OverlayView -->
+    <com.google.mediapipe.examples.gesturerecognizer.OverlayView
+        android:id="@+id/overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- NEW: TrajectoryOverlayView will be added programmatically -->
+    <!-- This is just placeholder for reference -->
+    <!--
+    <com.google.mediapipe.examples.gesturerecognizer.ui.overlay.TrajectoryOverlayView
+        android:id="@+id/trajectory_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent" />
+    -->
+
+    <!-- NEW: Trajectory Control Panel -->
+    <LinearLayout
+        android:id="@+id/trajectory_controls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="80dp"
+        android:background="@drawable/control_panel_background"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:elevation="4dp">
+
+        <!-- Record/Stop Button -->
+        <Button
+            android:id="@+id/btn_trajectory_record"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/circle_button_record"
+            android:text="●"
+            android:textColor="@android:color/white"
+            android:textSize="24sp"
+            android:contentDescription="Record trajectory" />
+
+        <!-- Clear Button -->
+        <Button
+            android:id="@+id/btn_trajectory_clear"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/circle_button_clear"
+            android:text="✕"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:contentDescription="Clear trajectory" />
+
+        <!-- Toggle Visibility Button -->
+        <Button
+            android:id="@+id/btn_trajectory_toggle"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/circle_button_toggle"
+            android:text="👁"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:contentDescription="Toggle trajectory visibility" />
+
+        <!-- Export Button -->
+        <Button
+            android:id="@+id/btn_trajectory_export"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/circle_button_export"
+            android:text="↗"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:contentDescription="Export trajectory data" />
+
+    </LinearLayout>
+
+    <!-- Trajectory Info Panel -->
+    <LinearLayout
+        android:id="@+id/trajectory_info_panel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="60dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/info_panel_background"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:elevation="2dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tv_trajectory_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Recording: OFF"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_trajectory_points"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Points: 0"
+            android:textColor="@android:color/white"
+            android:textSize="11sp"
+            android:layout_marginTop="2dp" />
+
+        <TextView
+            android:id="@+id/tv_trajectory_fps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="FPS: 0"
+            android:textColor="@android:color/white"
+            android:textSize="11sp"
+            android:layout_marginTop="2dp" />
+
+        <TextView
+            android:id="@+id/tv_trajectory_direction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Direction: NONE"
+            android:textColor="@android:color/white"
+            android:textSize="11sp"
+            android:layout_marginTop="2dp" />
+
+    </LinearLayout>
+
+    <!-- Existing bottom sheet layout... -->
+    <include layout="@layout/info_bottom_sheet" />
+
+</FrameLayout>
