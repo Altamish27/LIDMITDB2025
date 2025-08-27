@@ -42,15 +42,18 @@ import com.google.mediapipe.examples.gesturerecognizer.ui.permissions.Permission
 import com.google.mediapipe.examples.gesturerecognizer.ui.overlay.TrajectoryOverlayView
 import com.google.mediapipe.examples.gesturerecognizer.ui.overlay.TrajectoryRingBuffer
 import com.google.mediapipe.examples.gesturerecognizer.ui.overlay.TrajectoryAnalyzer
+import com.google.mediapipe.examples.gesturerecognizer.ui.overlay.MovementDetectionListener
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager
+import com.google.mediapipe.examples.gesturerecognizer.data.FathahData
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class CameraFragment : Fragment(),
-    GestureRecognizerHelper.GestureRecognizerListener {
+    GestureRecognizerHelper.GestureRecognizerListener,
+    MovementDetectionListener {
 
     companion object {
         private const val TAG = "Hand gesture recognizer"
@@ -88,6 +91,8 @@ class CameraFragment : Fragment(),
     // Hijaiyah practice properties
     private var targetLetter: String? = null
     private var targetLetterName: String? = null
+    private var letterType: String? = null
+    private var diacritic: String? = null
     private var practiceTimer: CountDownTimer? = null
     private var resetTimer: CountDownTimer? = null
     private var countdownTimer: CountDownTimer? = null
@@ -96,6 +101,11 @@ class CameraFragment : Fragment(),
     private var currentGesture: String? = null
     private var gestureStartTime = 0L
     private var consecutiveCorrectCount = 0
+    
+    // Fathah specific properties
+    private var isFathahMode = false
+    private var hijaiyahGestureDetected = false
+    private var isWaitingForLeftMovement = false
 
     override fun onResume() {
         super.onResume()
@@ -162,11 +172,19 @@ class CameraFragment : Fragment(),
         // Get target letter from arguments
         targetLetter = arguments?.getString("selectedLetter") ?: arguments?.getString("target_letter")
         targetLetterName = arguments?.getString("letterName") ?: arguments?.getString("target_letter_name")
+        letterType = arguments?.getString("letterType")
+        diacritic = arguments?.getString("diacritic")
+        
+        // Set Fathah mode
+        isFathahMode = diacritic == "fathah"
         
         // Debug logging for received arguments
         Log.d(TAG, "Received arguments:")
         Log.d(TAG, "- targetLetter: $targetLetter")
         Log.d(TAG, "- targetLetterName: $targetLetterName")
+        Log.d(TAG, "- letterType: $letterType")
+        Log.d(TAG, "- diacritic: $diacritic")
+        Log.d(TAG, "- isFathahMode: $isFathahMode")
         Log.d(TAG, "- all arguments: ${arguments?.keySet()?.joinToString { "$it=${arguments?.get(it)}" }}")
         
         // Setup UI with target letter
@@ -191,6 +209,11 @@ class CameraFragment : Fragment(),
         cameraContainer.addView(trajectoryOverlay)
         
         trajectoryAnalyzer = TrajectoryAnalyzer(trajectoryBuffer, trajectoryOverlay)
+        
+        // Set movement listener for Fathah detection
+        if (isFathahMode) {
+            trajectoryAnalyzer.setMovementListener(this)
+        }
 
         // Wait for the views to be properly laid out
         fragmentCameraBinding.viewFinder.post {
@@ -268,7 +291,18 @@ class CameraFragment : Fragment(),
         Log.d(TAG, "- detectedGesture: '$detectedGesture'")
         Log.d(TAG, "- targetLetterName: '$targetLetterName'")
         Log.d(TAG, "- targetLetter: '$targetLetter'")
+        Log.d(TAG, "- isFathahMode: $isFathahMode")
+        Log.d(TAG, "- hijaiyahGestureDetected: $hijaiyahGestureDetected")
+        Log.d(TAG, "- isWaitingForLeftMovement: $isWaitingForLeftMovement")
         
+        if (isFathahMode) {
+            handleFathahGestureDetection(detectedGesture, currentTime)
+        } else {
+            handleHijaiyahGestureDetection(detectedGesture, currentTime)
+        }
+    }
+    
+    private fun handleHijaiyahGestureDetection(detectedGesture: String, currentTime: Long) {
         // Check if this is the target gesture
         // Try multiple matching strategies:
         // 1. Direct match with targetLetterName (transliteration)
@@ -336,6 +370,101 @@ class CameraFragment : Fragment(),
                 resetGestureDetection()
             }
         }
+    }
+    
+    private fun handleFathahGestureDetection(detectedGesture: String, currentTime: Long) {
+        // Get the Fathah letter data for gesture matching
+        val fathahLetter = when {
+            targetLetter != null -> FathahData.getLetterByArabic(targetLetter!!)
+            targetLetterName != null -> FathahData.getAllLetters().find { 
+                it.transliteration.equals(targetLetterName, ignoreCase = true) 
+            }
+            else -> null
+        }
+        
+        // Get base hijaiyah letter for gesture matching (remove fathah diacritic)
+        val baseArabic = targetLetter?.replace("َ", "") ?: ""
+        val baseHijaiyahLetter = HijaiyahData.letters.find { it.arabic == baseArabic }
+        
+        val isCorrectHijaiyahGesture = baseHijaiyahLetter?.gestureName?.equals(detectedGesture, ignoreCase = true) == true
+        
+        Log.d(TAG, "Fathah detection - target: $targetLetter, base: $baseArabic, gesture: $detectedGesture, correct: $isCorrectHijaiyahGesture")
+        
+        if (!hijaiyahGestureDetected && !isWaitingForLeftMovement) {
+            // Phase 1: Detect the correct Hijaiyah gesture
+            if (isCorrectHijaiyahGesture) {
+                if (currentGesture != detectedGesture) {
+                    // New correct gesture sequence starts
+                    currentGesture = detectedGesture
+                    gestureStartTime = currentTime
+                    consecutiveCorrectCount = 1
+                    updatePredictionText("$detectedGesture (mulai hitung)")
+                } else {
+                    // Continue correct gesture sequence
+                    consecutiveCorrectCount++
+                    val elapsedTime = currentTime - gestureStartTime
+                    val progress = (elapsedTime * 100 / REQUIRED_DURATION).toInt().coerceAtMost(100)
+                    
+                    fragmentCameraBinding.progressTimer.progress = progress
+                    fragmentCameraBinding.textCountdown.text = "${(REQUIRED_DURATION - elapsedTime) / 1000 + 1}"
+                    
+                    updatePredictionText("$detectedGesture (${elapsedTime}ms)")
+                    
+                    // Check if 2 seconds completed
+                    if (elapsedTime >= REQUIRED_DURATION) {
+                        onHijaiyahGestureSuccess()
+                    }
+                }
+            } else {
+                // Wrong gesture or no gesture
+                if (detectedGesture.isNotEmpty() && detectedGesture != "Unknown") {
+                    updatePredictionText("$detectedGesture - tidak cocok dengan ${baseHijaiyahLetter?.gestureName}")
+                } else {
+                    updatePredictionText("Tidak ada gesture - coba ${baseHijaiyahLetter?.gestureName}")
+                }
+                
+                // Reset if there was a previous correct sequence
+                if (currentGesture != null) {
+                    resetGestureDetection()
+                }
+            }
+        } else if (hijaiyahGestureDetected && isWaitingForLeftMovement) {
+            // Phase 2: Wait for left movement while maintaining correct gesture
+            if (isCorrectHijaiyahGesture) {
+                updatePredictionText("Gerakkan tangan ke kiri sambil mempertahankan gesture $detectedGesture")
+                // Movement detection will be handled by trajectory analyzer
+            } else {
+                updatePredictionText("Pertahankan gesture ${baseHijaiyahLetter?.gestureName} sambil bergerak ke kiri")
+                // Don't reset completely, just encourage to maintain gesture
+            }
+        }
+    }
+    
+    private fun onHijaiyahGestureSuccess() {
+        hijaiyahGestureDetected = true
+        isWaitingForLeftMovement = true
+        
+        // Reset gesture detection variables for movement phase
+        currentGesture = null
+        gestureStartTime = 0L
+        consecutiveCorrectCount = 0
+        fragmentCameraBinding.progressTimer.progress = 0
+        
+        // Update UI to show next instruction
+        updatePredictionText("Bagus! Sekarang gerakkan tangan ke KIRI sambil mempertahankan gesture")
+        
+        // Show instruction overlay or update text
+        fragmentCameraBinding.textLetterName.text = "Gerakkan ke KIRI untuk Fathah"
+        
+        Log.d(TAG, "Hijaiyah gesture detected successfully. Waiting for left movement.")
+    }
+    
+    private fun resetToWaitingForMovement() {
+        // Keep hijaiyahGestureDetected = true but reset movement waiting
+        currentGesture = null
+        gestureStartTime = 0L
+        consecutiveCorrectCount = 0
+        fragmentCameraBinding.progressTimer.progress = 0
     }
     
     private fun updatePredictionText(text: String) {
@@ -731,6 +860,75 @@ class CameraFragment : Fragment(),
                     GestureRecognizerHelper.DELEGATE_CPU, false
                 )
             }
+        }
+    }
+    
+    // MovementDetectionListener implementation
+    override fun onLeftMovementDetected() {
+        activity?.runOnUiThread {
+            if (isFathahMode && hijaiyahGestureDetected && isWaitingForLeftMovement) {
+                onFathahSuccess()
+            }
+        }
+    }
+    
+    override fun onRightMovementDetected() {
+        activity?.runOnUiThread {
+            Log.d(TAG, "Right movement detected - not relevant for Fathah")
+        }
+    }
+    
+    override fun onMovementStarted() {
+        activity?.runOnUiThread {
+            Log.d(TAG, "Movement tracking started")
+        }
+    }
+    
+    override fun onMovementStopped() {
+        activity?.runOnUiThread {
+            Log.d(TAG, "Movement tracking stopped")
+        }
+    }
+    
+    private fun onFathahSuccess() {
+        // Success! User performed correct Hijaiyah gesture + left movement for Fathah
+        updatePredictionText("BERHASIL! Fathah $targetLetterName terdeteksi!")
+        
+        // Update UI to show success
+        fragmentCameraBinding.textLetterName.text = "Berhasil: Fathah $targetLetterName"
+        fragmentCameraBinding.progressTimer.progress = 100
+        
+        // Mark as completed and save progress
+        val letterPosition = arguments?.getInt("letterPosition", -1) ?: -1
+        if (letterPosition >= 0) {
+            progressManager.markLetterCompleted(letterPosition)
+        }
+        
+        // Stop detection
+        isDetecting = false
+        isWaitingForLeftMovement = false
+        
+        // Show success dialog or navigate back
+        showFathahSuccessDialog()
+        
+        Log.d(TAG, "Fathah gesture completed successfully!")
+    }
+    
+    private fun showFathahSuccessDialog() {
+        try {
+            // Simple success message, could be enhanced with dialog
+            Toast.makeText(requireContext(), "Berhasil! Fathah $targetLetterName telah selesai!", Toast.LENGTH_LONG).show()
+            
+            // Auto navigate back after delay
+            view?.postDelayed({
+                try {
+                    Navigation.findNavController(requireView()).navigateUp()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error navigating back", e)
+                }
+            }, 2000)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error showing success dialog", e)
         }
     }
 }

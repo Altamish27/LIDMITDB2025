@@ -6,6 +6,16 @@ import android.util.Size
 import com.google.mediapipe.tasks.vision.gesturerecognizer.GestureRecognizerResult
 
 /**
+ * Interface for movement detection callbacks
+ */
+interface MovementDetectionListener {
+    fun onLeftMovementDetected()
+    fun onRightMovementDetected()
+    fun onMovementStarted()
+    fun onMovementStopped()
+}
+
+/**
  * Trajectory Analyzer - Processes MediaPipe results and converts finger landmarks to trajectory points
  * with coordinate validation and clamping to handle out-of-bounds values
  */
@@ -17,6 +27,17 @@ class TrajectoryAnalyzer(
         private const val TAG = "TrajectoryAnalyzer"
         private const val WRIST = 0 // MediaPipe landmark index for wrist
         private const val COORDINATE_TOLERANCE = 0.1f // Allow slight out-of-bounds coordinates
+        private const val MOVEMENT_THRESHOLD = 0.05f // Minimum movement distance to register
+        private const val LEFT_MOVEMENT_THRESHOLD = 0.1f // Minimum left movement for Fathah
+    }
+    
+    private var movementListener: MovementDetectionListener? = null
+    private var lastPosition: PointF? = null
+    private var movementStartPosition: PointF? = null
+    private var isTracking = false
+    
+    fun setMovementListener(listener: MovementDetectionListener?) {
+        this.movementListener = listener
     }
     
     /**
@@ -73,6 +94,9 @@ class TrajectoryAnalyzer(
                             rotationDegrees
                         )
                         
+                        // Track movement for Fathah detection
+                        trackMovement(clampedX, clampedY)
+                        
                         Log.d(TAG, "Added wrist trajectory point: normalized ($clampedX, $clampedY)")
                     } else {
                         Log.w(TAG, "Invalid normalized coordinates: ($normalizedX, $normalizedY) - outside tolerance range")
@@ -85,6 +109,64 @@ class TrajectoryAnalyzer(
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error processing trajectory result", e)
+        }
+    }
+    
+    /**
+     * Track movement for Fathah detection
+     */
+    private fun trackMovement(x: Float, y: Float) {
+        val currentPosition = PointF(x, y)
+        
+        lastPosition?.let { lastPos ->
+            val deltaX = currentPosition.x - lastPos.x
+            val deltaY = currentPosition.y - lastPos.y
+            val distance = kotlin.math.sqrt(deltaX * deltaX + deltaY * deltaY)
+            
+            // Start tracking if significant movement detected
+            if (!isTracking && distance > MOVEMENT_THRESHOLD) {
+                isTracking = true
+                movementStartPosition = lastPos
+                movementListener?.onMovementStarted()
+                Log.d(TAG, "Movement tracking started at ($lastPos)")
+            }
+            
+            // If tracking, check for left movement
+            if (isTracking) {
+                movementStartPosition?.let { startPos ->
+                    val totalDeltaX = currentPosition.x - startPos.x
+                    val totalDistance = kotlin.math.abs(totalDeltaX)
+                    
+                    // For front camera (mirrored), left movement appears as positive deltaX
+                    // For back camera (normal), left movement appears as negative deltaX
+                    // Since we're using front camera, we check for positive deltaX for left movement
+                    if (totalDeltaX > LEFT_MOVEMENT_THRESHOLD) {
+                        Log.d(TAG, "Left movement detected (mirrored camera)! Delta: $totalDeltaX, Distance: $totalDistance")
+                        movementListener?.onLeftMovementDetected()
+                        resetMovementTracking()
+                    } 
+                    // Check for right movement (negative deltaX in mirrored camera)
+                    else if (totalDeltaX < -LEFT_MOVEMENT_THRESHOLD) {
+                        Log.d(TAG, "Right movement detected (mirrored camera)! Delta: $totalDeltaX, Distance: $totalDistance")
+                        movementListener?.onRightMovementDetected()
+                        resetMovementTracking()
+                    }
+                }
+            }
+        }
+        
+        lastPosition = currentPosition
+    }
+    
+    /**
+     * Reset movement tracking state
+     */
+    private fun resetMovementTracking() {
+        if (isTracking) {
+            isTracking = false
+            movementStartPosition = null
+            movementListener?.onMovementStopped()
+            Log.d(TAG, "Movement tracking reset")
         }
     }
     
@@ -105,6 +187,8 @@ class TrajectoryAnalyzer(
         try {
             trajectoryBuffer.clear()
             trajectoryOverlay.clearTrajectory()
+            resetMovementTracking()
+            lastPosition = null
             Log.d(TAG, "Trajectory cleared")
         } catch (e: Exception) {
             Log.e(TAG, "Error clearing trajectory", e)

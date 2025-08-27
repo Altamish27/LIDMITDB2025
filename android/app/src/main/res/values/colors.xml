@@ -47,4 +47,7 @@
     <color name="teal_primary">#147E7E</color>
     <color name="teal_secondary">#2C5F5F</color>
     <color name="hijaiyah_navy_secondary">#205080</color>
+    
+    <!-- Fathah colors -->
+    <color name="fathah_card_color">#E74C3C</color> <!-- Red color for Fathah -->
 </resources>

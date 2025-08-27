@@ -97,4 +97,15 @@
         android:name="com.google.mediapipe.examples.gesturerecognizer.ui.latihan.LatihanFragment"
         android:label="LatihanFragment" />
 
+    <fragment
+        android:id="@+id/fathah_list_fragment"
+        android:name="com.google.mediapipe.examples.gesturerecognizer.ui.fathah.FathahListFragment"
+        android:label="FathahListFragment">
+
+        <action
+            android:id="@+id/action_fathah_list_to_camera"
+            app:destination="@id/camera_fragment" />
+
+    </fragment>
+
 </navigation>

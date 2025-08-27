@@ -29,9 +29,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.mediapipe.examples.gesturerecognizer.R
+import com.google.mediapipe.examples.gesturerecognizer.data.ArabicLetter
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahLetter
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager
+import com.google.mediapipe.examples.gesturerecognizer.data.FathahData
+import com.google.mediapipe.examples.gesturerecognizer.data.FathahLetter
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentHijaiyahBinding
 
 
@@ -40,9 +43,10 @@ class HijaiyahFragment : Fragment() {
     private var _binding: FragmentHijaiyahBinding? = null
     private val binding get() = _binding!!
     
-    private lateinit var adapter: HijaiyahAdapter
+    private lateinit var adapter: ArabicLetterAdapter
     private lateinit var progressManager: HijaiyahProgressManager
-    private var allLetters: List<HijaiyahLetter> = emptyList()
+    private var allLetters: List<ArabicLetter> = emptyList()
+    private var currentCategory = 0 // 0 = Hijaiyah, 1 = Fathah, 2 = Kasrah, 3 = Dhammah
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -84,12 +88,13 @@ class HijaiyahFragment : Fragment() {
             
             binding.spinnerCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    currentCategory = position
                     when (position) {
                         0 -> { // Hijaiyah
-                            loadLetters()
+                            loadHijaiyahLetters()
                         }
                         1 -> { // Fathah
-                            adapter.updateLetters(emptyList())
+                            loadFathahLetters()
                         }
                         2 -> { // Kasrah
                             adapter.updateLetters(emptyList())
@@ -110,7 +115,7 @@ class HijaiyahFragment : Fragment() {
     }
     
     private fun setupRecyclerView() {
-        adapter = HijaiyahAdapter { letter ->
+        adapter = ArabicLetterAdapter { letter ->
             navigateToGestureRecognition(letter)
         }
         
@@ -131,7 +136,7 @@ class HijaiyahFragment : Fragment() {
                     allLetters.filter { letter ->
                         letter.arabic.contains(query, ignoreCase = true) ||
                         letter.transliteration.contains(query, ignoreCase = true) ||
-                        letter.pronunciation.contains(query, ignoreCase = true)
+                        letter.gestureName.contains(query, ignoreCase = true)
                     }
                 }
                 adapter.updateLetters(filteredLetters)
@@ -139,10 +144,31 @@ class HijaiyahFragment : Fragment() {
         })
     }
     
-    private fun loadLetters() {
-        allLetters = progressManager.getLettersWithProgress()
+    private fun loadHijaiyahLetters() {
+        val hijaiyahLetters = progressManager.getLettersWithProgress()
+        allLetters = hijaiyahLetters.map { hijaiyahLetter ->
+            object : ArabicLetter {
+                override val arabic = hijaiyahLetter.arabic
+                override val transliteration = hijaiyahLetter.transliteration
+                override val gestureName = hijaiyahLetter.transliteration.lowercase()
+                override val position = hijaiyahLetter.position
+                override var isCompleted = hijaiyahLetter.isCompleted
+            }
+        }
         adapter.updateLetters(allLetters)
         updateProgress()
+    }
+    
+    private fun loadFathahLetters() {
+        val fathahLetters = FathahData.getAllLetters()
+        allLetters = fathahLetters.map { it as ArabicLetter }
+        adapter.updateLetters(allLetters)
+        updateProgress()
+    }
+    
+    private fun loadLetters() {
+        // Keep original method for backward compatibility
+        loadHijaiyahLetters()
     }
     
     private fun updateProgress() {
@@ -161,11 +187,26 @@ class HijaiyahFragment : Fragment() {
         }
     }
     
-    private fun navigateToGestureRecognition(letter: HijaiyahLetter) {
+    private fun navigateToGestureRecognition(letter: ArabicLetter) {
         val bundle = Bundle().apply {
             putString("selectedLetter", letter.arabic)
             putString("letterName", letter.transliteration)
             putInt("letterPosition", letter.position)
+            putString("letterType", when (currentCategory) {
+                0 -> "hijaiyah"
+                1 -> "fathah"
+                2 -> "kasrah"
+                3 -> "dhammah"
+                else -> "hijaiyah"
+            })
+            // Add diacritic parameter - null for Hijaiyah, specific diacritic for others
+            putString("diacritic", when (currentCategory) {
+                0 -> null // Hijaiyah without diacritics
+                1 -> "fathah"
+                2 -> "kasrah"
+                3 -> "dhammah"
+                else -> null
+            })
         }
         findNavController().navigate(R.id.action_hijaiyah_to_camera, bundle)
     }

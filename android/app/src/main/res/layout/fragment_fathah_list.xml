@@ -1,0 +1,1130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    
+    <!-- Background Layer 1 - Top -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/bgatashome"
+        android:scaleType="centerCrop" />
+    
+    <!-- Background Layer 2 - Middle with opacity -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="150dp"
+        android:src="@drawable/bgtengah"
+        android:scaleType="centerCrop"
+        android:alpha="0.4" />
+    
+    <!-- Background Layer 3 - Bottom -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="300dp"
+        android:src="@drawable/bgbawah"
+        android:scaleType="centerCrop" />
+    
+    <ScrollView 
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+            
+            <!-- Header Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="20dp"
+                android:paddingBottom="24dp"
+                android:orientation="vertical">
+                
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Belajar Fathah"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/dark_blue_gray"
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp" />
+                
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Pilih huruf Fathah yang ingin dipelajari"
+                    android:textSize="16sp"
+                    android:textColor="@color/dark_blue_gray"
+                    android:gravity="center" />
+                    
+            </LinearLayout>
+            
+            <!-- Grid Container untuk Huruf Fathah -->
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="4"
+                android:rowCount="7"
+                android:alignmentMode="alignMargins"
+                android:useDefaultMargins="false">
+                
+                <!-- Row 1: أَ بَ تَ ثَ -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_alif_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="أَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="A"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_ba_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="بَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ba"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_ta_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="تَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ta"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_tsa_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ثَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tsa"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <!-- Row 2: جَ حَ خَ دَ -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_jim_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="جَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ja"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_ha_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="حَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ha"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_kha_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="خَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Kha"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_dal_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="دَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Da"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <!-- Continue with remaining letters... -->
+                <!-- Row 3: ذَ رَ زَ سَ -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_dzal_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ذَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Dza"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_ra_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="رَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ra"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_zai_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="زَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Za"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_sin_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="سَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sa"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <!-- Row 4: شَ صَ ضَ طَ -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_syin_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="شَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sya"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_shod_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="صَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sha"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_dhod_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ضَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Dha"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_tho_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="طَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tha"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <!-- Row 5: ظَ عَ غَ فَ -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_dzho_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ظَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Dzha"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_ain_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="عَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="A"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_ghoin_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="غَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Gha"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_fa_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="فَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Fa"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <!-- Row 6: قَ كَ لَ مَ -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_qof_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="قَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Qa"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_kaf_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="كَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ka"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_lam_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="لَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="La"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_mim_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="مَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ma"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <!-- Row 7: نَ وَ هَ يَ -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_nun_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="نَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Na"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_waw_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="وَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Wa"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_ha_end_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="هَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ha"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/letter_ya_fathah"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/fathah_card_color">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="يَ"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/dark_blue_gray"
+                            android:fontFamily="@font/hijaiyah_font_family" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ya"
+                            android:textSize="12sp"
+                            android:textColor="@color/dark_blue_gray"
+                            android:textStyle="bold" />
+                            
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                
+            </GridLayout>
+            
+        </LinearLayout>
+        
+    </ScrollView>
+    
+</FrameLayout>
