@@ -46,6 +46,8 @@ class LatihanPracticeActivity : AppCompatActivity() {
     private var sequenceMode = false
     // Track completed letter positions in this activity session
     private val completedPositions = mutableSetOf<Int>()
+    // Auto-start camera on first launch of this activity
+    private var firstLaunch = true
     
     // Data huruf untuk setiap baris
     private val hurufData = listOf(
@@ -130,9 +132,7 @@ class LatihanPracticeActivity : AppCompatActivity() {
             finish()
         }
         
-        binding.btnCamera.setOnClickListener {
-            openCamera()
-        }
+    // Camera button removed; camera auto-starts on first resume
         
         binding.btnNext.setOnClickListener {
             nextRow()
@@ -265,5 +265,10 @@ class LatihanPracticeActivity : AppCompatActivity() {
         super.onResume()
         // Reload data when returning from camera
         loadCurrentRow()
+        // Automatically start camera on first resume so user doesn't need to press the button
+        if (firstLaunch) {
+            firstLaunch = false
+            openCamera()
+        }
     }
 }
