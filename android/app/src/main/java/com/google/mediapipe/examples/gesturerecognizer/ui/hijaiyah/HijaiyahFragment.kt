@@ -74,10 +74,13 @@ class HijaiyahFragment : Fragment() {
     
     private fun setupSpinner() {
         try {
-            val categories = arrayOf("Hijaiyah", "Tanda Baca")
+            val categories = arrayOf("Hijaiyah", "Fathah", "Kasrah", "Dhammah")
             val spinnerAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, categories)
             spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             binding.spinnerCategory.adapter = spinnerAdapter
+            
+            // Set dropdown to show below spinner with extra margin
+            binding.spinnerCategory.dropDownVerticalOffset = binding.spinnerCategory.height + 100
             
             binding.spinnerCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
@@ -85,7 +88,13 @@ class HijaiyahFragment : Fragment() {
                         0 -> { // Hijaiyah
                             loadLetters()
                         }
-                        1 -> { // Tanda Baca
+                        1 -> { // Fathah
+                            adapter.updateLetters(emptyList())
+                        }
+                        2 -> { // Kasrah
+                            adapter.updateLetters(emptyList())
+                        }
+                        3 -> { // Dhammah
                             adapter.updateLetters(emptyList())
                         }
                     }
