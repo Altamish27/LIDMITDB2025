@@ -15,7 +15,7 @@ class TrajectoryAnalyzer(
 ) {
     companion object {
         private const val TAG = "TrajectoryAnalyzer"
-        private const val INDEX_FINGER_TIP = 8 // MediaPipe landmark index for finger tip
+        private const val WRIST = 0 // MediaPipe landmark index for wrist
         private const val COORDINATE_TOLERANCE = 0.1f // Allow slight out-of-bounds coordinates
     }
     
@@ -34,15 +34,15 @@ class TrajectoryAnalyzer(
             if (result.landmarks().isNotEmpty()) {
                 val landmarks = result.landmarks()[0] // First hand
                 
-                if (landmarks.size > INDEX_FINGER_TIP) {
-                    val fingerTip = landmarks[INDEX_FINGER_TIP]
+                if (landmarks.size > WRIST) {
+                    val wrist = landmarks[WRIST]
                     
                     // Get normalized coordinates from MediaPipe
-                    val normalizedX = fingerTip.x()
-                    val normalizedY = fingerTip.y()
+                    val normalizedX = wrist.x()
+                    val normalizedY = wrist.y()
                     
                     // Log original coordinates for debugging
-                    Log.d(TAG, "Original coordinates: ($normalizedX, $normalizedY)")
+                    Log.d(TAG, "Wrist coordinates: ($normalizedX, $normalizedY)")
                     
                     // Validate and clamp coordinates with tolerance
                     if (isValidCoordinate(normalizedX, normalizedY)) {
@@ -73,13 +73,15 @@ class TrajectoryAnalyzer(
                             rotationDegrees
                         )
                         
-                        Log.d(TAG, "Added trajectory point: normalized ($clampedX, $clampedY)")
+                        Log.d(TAG, "Added wrist trajectory point: normalized ($clampedX, $clampedY)")
                     } else {
                         Log.w(TAG, "Invalid normalized coordinates: ($normalizedX, $normalizedY) - outside tolerance range")
                     }
                 }
             } else {
-                Log.d(TAG, "No hand landmarks detected")
+                // No hand landmarks detected - reset trajectory
+                Log.d(TAG, "No hand landmarks detected - resetting trajectory")
+                clearTrajectory()
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error processing trajectory result", e)
