@@ -60,10 +60,10 @@ class HijaiyahAdapter(
             // Set colors based on completion status
             val context = itemView.context
             if (letter.isCompleted) {
-                // Yellow for completed letters
-                container.background = ContextCompat.getDrawable(context, R.drawable.letter_container_completed)
-                arabicText.setTextColor(ContextCompat.getColor(context, R.color.hijaiyah_navy))
-                transliterationText.setTextColor(ContextCompat.getColor(context, R.color.hijaiyah_navy))
+                // Orange/Yellow for completed letters with rounded corners (same as Latihan page)
+                container.background = ContextCompat.getDrawable(context, R.drawable.letter_container_completed_orange)
+                arabicText.setTextColor(ContextCompat.getColor(context, android.R.color.white))
+                transliterationText.setTextColor(ContextCompat.getColor(context, android.R.color.white))
             } else {
                 // Dark navy (#2C3E50) background with white text for not completed letters
                 container.background = ContextCompat.getDrawable(context, R.drawable.letter_container_navy)
