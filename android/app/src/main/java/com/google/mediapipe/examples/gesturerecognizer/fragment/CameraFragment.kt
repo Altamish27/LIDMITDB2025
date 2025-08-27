@@ -43,6 +43,7 @@ import com.google.mediapipe.examples.gesturerecognizer.ui.overlay.TrajectoryOver
 import com.google.mediapipe.examples.gesturerecognizer.ui.overlay.TrajectoryRingBuffer
 import com.google.mediapipe.examples.gesturerecognizer.ui.overlay.TrajectoryAnalyzer
 import com.google.mediapipe.tasks.vision.core.RunningMode
+import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -89,6 +90,8 @@ class CameraFragment : Fragment(),
     private var targetLetterName: String? = null
     private var practiceTimer: CountDownTimer? = null
     private var resetTimer: CountDownTimer? = null
+    private var countdownTimer: CountDownTimer? = null
+    private lateinit var progressManager: HijaiyahProgressManager
     private var isDetecting = false
     private var currentGesture: String? = null
     private var gestureStartTime = 0L
@@ -176,6 +179,8 @@ class CameraFragment : Fragment(),
 
         // Initialize our background executor
         backgroundExecutor = Executors.newSingleThreadExecutor()
+    // Initialize progress manager for marking letters completed
+    progressManager = HijaiyahProgressManager(requireContext())
         
         // Initialize trajectory system
         trajectoryBuffer = TrajectoryRingBuffer()
