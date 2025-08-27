@@ -77,6 +77,11 @@
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer">
         </activity>
+            <activity
+                android:name=".ui.LoginActivity"
+                android:exported="false"
+                android:theme="@style/Theme.GestureRecognizer">
+            </activity>
         <activity
             android:name=".ui.hijaiyahdb.HijaiyahDBListActivity"
             android:exported="false"
