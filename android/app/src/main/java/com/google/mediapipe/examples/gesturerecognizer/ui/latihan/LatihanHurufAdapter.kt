@@ -24,6 +24,8 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.mediapipe.examples.gesturerecognizer.R
+import android.graphics.drawable.GradientDrawable
+
 
 class LatihanHurufAdapter(
     private val onHurufClick: (LatihanHuruf) -> Unit
@@ -76,9 +78,18 @@ class LatihanHurufAdapter(
             when (huruf.status) {
                 "Selesai" -> {
                     // Green background for completed
-                    container.setBackgroundColor(ContextCompat.getColor(context, android.R.color.holo_green_light))
+                     val colors = intArrayOf(
+                        ContextCompat.getColor(context, R.color.yellow_secondary), // kiri bawah
+                        ContextCompat.getColor(context, R.color.yellow_primary)    // kanan atas
+                    )
+                    val gradient = GradientDrawable(
+                        GradientDrawable.Orientation.BL_TR, // BL = Bottom Left, TR = Top Right
+                        colors
+                    )
+                    gradient.cornerRadius = 12f // jika mau bulat sesuai card corner radius
+                    container.background = gradient
                     statusButton.text = "Selesai"
-                    statusButton.setBackgroundColor(ContextCompat.getColor(context, android.R.color.holo_green_dark))
+                    statusButton.setBackgroundColor(ContextCompat.getColor(context, R.color.hijaiyah_green))
                     statusButton.setTextColor(ContextCompat.getColor(context, android.R.color.white))
                     playIcon.visibility = View.VISIBLE
                     lockIcon.visibility = View.GONE
@@ -87,9 +98,18 @@ class LatihanHurufAdapter(
                 }
                 "Aktif" -> {
                     // Orange background for active
-                    container.setBackgroundColor(ContextCompat.getColor(context, android.R.color.holo_orange_light))
+                    val colors = intArrayOf(
+                        ContextCompat.getColor(context, R.color.hijaiyah_navy), // kiri bawah
+                        ContextCompat.getColor(context, R.color.hijaiyah_navy_secondary)    // kanan atas
+                    )
+                    val gradient = GradientDrawable(
+                        GradientDrawable.Orientation.BL_TR, // BL = Bottom Left, TR = Top Right
+                        colors
+                    )
+                    gradient.cornerRadius = 12f // jika mau bulat sesuai card corner radius
+                    container.background = gradient
                     statusButton.text = "Aktif"
-                    statusButton.setBackgroundColor(ContextCompat.getColor(context, android.R.color.holo_red_dark))
+                    statusButton.setBackgroundColor(ContextCompat.getColor(context, R.color.yellow_primary))
                     statusButton.setTextColor(ContextCompat.getColor(context, android.R.color.white))
                     playIcon.visibility = View.VISIBLE
                     lockIcon.visibility = View.GONE
