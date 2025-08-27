@@ -108,17 +108,6 @@ class HomeActivity : AppCompatActivity() {
                 }
             }
         }
-        binding.btnDaftarHurufHijaiyah?.setOnClickListener {
-            animateButtonClick(it) {
-                try {
-                    val intent = Intent(this, com.google.mediapipe.examples.gesturerecognizer.ui.hijaiyahdb.HijaiyahDBListActivity::class.java)
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    Log.e("HomeActivity", "Failed to open Hijaiyah List: ${e.message}", e)
-                    Toast.makeText(this, "Error opening list: ${e.message}", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
 
         // Navigate to Latihan (Quiz renamed)
         binding.cardQuiz?.setOnClickListener {
