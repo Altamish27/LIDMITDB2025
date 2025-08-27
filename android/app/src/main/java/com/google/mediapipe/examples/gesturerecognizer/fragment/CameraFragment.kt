@@ -247,7 +247,7 @@ class CameraFragment : Fragment(),
         
         targetLetterName?.let { name ->
             fragmentCameraBinding.textLetterName.text = "Huruf $name"
-            fragmentCameraBinding.textInstruction.text = "Peragakan huruf $name selama 2 detik berturut-turut"
+            // instruction text removed from layout to avoid overlaying camera preview
         }
         
         // Setup back button
@@ -277,8 +277,7 @@ class CameraFragment : Fragment(),
         fragmentCameraBinding.progressTimer.progress = 0
         fragmentCameraBinding.textCountdown.text = "Mulai gesture..."
         
-        // Update instruction
-        fragmentCameraBinding.textInstruction.text = "Deteksi otomatis aktif - peragakan gesture!"
+    // Instruction text removed; no UI update here
     }
     
     private fun handleGestureDetection(detectedGesture: String) {
@@ -516,7 +515,7 @@ class CameraFragment : Fragment(),
             }
             
             // Auto navigate back to hijaiyah learning page after success (only when not embedded)
-            fragmentCameraBinding.textInstruction.text = "Berhasil! Kembali ke halaman belajar dalam 3 detik..."
+            // Instruction text removed; handled via overlayResult and navigation
             
             // Show option to stay or go back
             fragmentCameraBinding.buttonStart.visibility = View.VISIBLE
@@ -525,7 +524,7 @@ class CameraFragment : Fragment(),
                 countdownTimer?.cancel()
                 fragmentCameraBinding.overlayResult.visibility = View.GONE
                 fragmentCameraBinding.buttonStart.visibility = View.GONE
-                fragmentCameraBinding.textInstruction.text = "Tekan tombol untuk mencoba huruf lain"
+                // instruction TextView removed; no action needed here
             }
             
             // If embedded inside `LatihanPracticeActivity`, return result via FragmentResult
@@ -554,9 +553,8 @@ class CameraFragment : Fragment(),
             countdownTimer?.cancel() // Cancel any existing countdown
             countdownTimer = object : CountDownTimer(3000, 1000) {
                 override fun onTick(millisUntilFinished: Long) {
+                    // countdown tick; UI instruction removed
                     countdown--
-                    fragmentCameraBinding.textInstruction.text = 
-                        "Berhasil! Kembali ke halaman belajar dalam $countdown detik..."
                 }
 
                 override fun onFinish() {
@@ -585,7 +583,7 @@ class CameraFragment : Fragment(),
         fragmentCameraBinding.buttonStart.setOnClickListener {
             startAutomaticDetection()
         }
-        fragmentCameraBinding.textInstruction.text = "Tekan tombol untuk mencoba lagi"
+    // instruction text removed from layout
     }
 
     private fun initBottomSheetControls() {
