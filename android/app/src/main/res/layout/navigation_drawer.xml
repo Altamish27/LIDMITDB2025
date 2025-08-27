@@ -19,10 +19,9 @@
         <!-- Profile Image -->
         <ImageView
             android:id="@+id/iv_profile"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:background="@drawable/profile_circle_background"
-            android:src="@drawable/ic_profile"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+                android:src="@drawable/profileust"
             android:padding="20dp"
             android:layout_marginBottom="12dp" />
 
@@ -31,7 +30,7 @@
             android:id="@+id/tv_username"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Pengguna SIBI"
+            android:text="Pengguna SIGN Quran"
             android:textColor="#147E7E"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -212,6 +211,7 @@
                     android:textSize="16sp"
                     android:textStyle="bold" />
             </LinearLayout>
+                <!-- login removed from menu list; moved to footer as a button -->
 
             <!-- About Menu -->
             <LinearLayout
@@ -258,10 +258,21 @@
             android:background="#E0E0E0"
             android:layout_marginBottom="12dp" />
 
+        <!-- Login button at bottom of drawer (no icon) -->
+        <Button
+            android:id="@+id/menu_button_login"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:text="Masuk"
+            android:backgroundTint="#009688"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="SIBI Quran Learning"
+            android:text="SIGN Quran Learning"
             android:textColor="#147E7E"
             android:textSize="12sp"
             android:textStyle="bold"

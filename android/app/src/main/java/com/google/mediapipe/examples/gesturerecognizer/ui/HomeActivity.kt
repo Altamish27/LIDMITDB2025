@@ -216,6 +216,18 @@ class HomeActivity : AppCompatActivity() {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
             Toast.makeText(this, "Pengaturan - Akan segera tersedia", Toast.LENGTH_SHORT).show()
         }
+
+            // Footer login button (no icon)
+            navigationDrawer.findViewById<View>(R.id.menu_button_login)?.setOnClickListener {
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
+                try {
+                    val intent = Intent(this, LoginActivity::class.java)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Failed to start LoginActivity: ${e.message}", e)
+                    Toast.makeText(this, "Error opening login: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
         
         navigationDrawer.findViewById<View>(R.id.menu_about)?.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)

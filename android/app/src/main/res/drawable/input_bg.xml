@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- Fill: white with slight transparency so background pattern shows lightly -->
+    <solid android:color="#F9FFFFFF" />
+
+    <!-- Border stroke (dark teal similar to app colors) -->
+    <stroke
+        android:width="2dp"
+        android:color="#274B56" />
+
+    <!-- Rounded corners -->
+    <corners android:radius="18dp" />
+
+    <!-- Internal padding to keep text away from border -->
+    <padding
+        android:left="12dp"
+        android:top="8dp"
+        android:right="12dp"
+        android:bottom="8dp" />
+
+</shape>
