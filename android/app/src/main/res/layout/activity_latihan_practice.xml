@@ -9,7 +9,7 @@
     <!-- Header Section -->
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="100dp"
         android:background="@drawable/header_gradient_background"
         android:padding="16dp">
 
