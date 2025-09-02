@@ -10,8 +10,10 @@ import kotlin.math.*
  * Thread-safe untuk concurrent access dari analyzer dan UI thread
  */
 class TrajectoryRingBuffer(
-    private val capacity: Int = 48,
-    private val smoothingAlpha: Float = 0.25f
+    private val capacity: Int = 24,                 // Lebih pendek agar ekor cepat hilang
+    private val smoothingAlpha: Float = 0.25f,      // Minimal smoothing (low speed)
+    private val maxSmoothingAlpha: Float = 0.75f,   // Smoothing efektif saat kecepatan tinggi (lebih responsif)
+    private val adaptiveSmoothing: Boolean = true   // Aktifkan adaptive smoothing
 ) {
     
     // Internal storage - menggunakan array untuk performance
@@ -44,9 +46,18 @@ class TrajectoryRingBuffer(
                 PointF(x, y)
             } else {
                 val last = lastSmoothedPoint!!
+                // Hitung kecepatan raw (berbasis koordinat normalized 0..1)
+                val rawVelocity = sqrt((x - last.x).pow(2) + (y - last.y).pow(2))
+                // Normalisasi kecepatan terhadap ambang (semakin besar semakin mendekati 1)
+                val velocityScale = 0.15f // ~gerakan besar antar frame dalam ruang normalized
+                val vNorm = (rawVelocity / velocityScale).coerceIn(0f, 1f)
+                val alphaEff = if (adaptiveSmoothing) {
+                    // Saat kecepatan tinggi kita ingin smoothing lebih agresif (alpha tinggi mendekati 1 artinya mengejar raw point lebih cepat)
+                    smoothingAlpha + (maxSmoothingAlpha - smoothingAlpha) * vNorm
+                } else smoothingAlpha
                 PointF(
-                    last.x + smoothingAlpha * (x - last.x),
-                    last.y + smoothingAlpha * (y - last.y)
+                    last.x + alphaEff * (x - last.x),
+                    last.y + alphaEff * (y - last.y)
                 )
             }
             

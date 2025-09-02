@@ -21,7 +21,7 @@ class TrajectoryOverlayView @JvmOverloads constructor(
     companion object {
         private const val TAG = "TrajectoryOverlayView"
         private const val MAX_ALPHA = 255
-        private const val MIN_ALPHA = 50
+    private const val MIN_ALPHA = 0            // Biarkan ekor benar-benar hilang
         private const val STROKE_WIDTH = 8f
         private const val TIP_RADIUS = 12f
         private const val ARROW_SIZE = 20f
@@ -62,6 +62,7 @@ class TrajectoryOverlayView @JvmOverloads constructor(
 
     // Data trajectory
     private var trajectoryPoints: List<PointF> = emptyList()
+    private val pointAgesMs: MutableList<Long> = mutableListOf()  // Paralel dgn trajectoryPoints (umur)
     private var globalDirection: String = ""
     private var isRecording: Boolean = false
 
@@ -82,13 +83,22 @@ class TrajectoryOverlayView @JvmOverloads constructor(
         rotationDegrees: Int
     ) {
         // Map normalized coordinates ke view coordinates
-        trajectoryPoints = points.map { point ->
+        val now = System.currentTimeMillis()
+        val mapped = points.map { p ->
             CoordinateMapper.mapNormalizedToView(
-                point.x, point.y,
+                p.x, p.y,
                 imageSize, Size(width, height),
                 rotationDegrees, isFrontCamera
             )
         }
+
+        trajectoryPoints = mapped
+        // Rebuild ages: jika ukuran stabil kita bisa shift, namun sederhana rebuild sinkron panjang baru
+        pointAgesMs.clear()
+        repeat(mapped.size) { pointAgesMs.add(now) }
+
+        // Trim berdasarkan usia (misal > 900ms dibuang dari depan)
+        trimOldPoints(now)
         
         // Update global direction
         if (trajectoryPoints.size >= 2) {
@@ -126,46 +136,40 @@ class TrajectoryOverlayView @JvmOverloads constructor(
 
     private fun drawTrajectoryPath(canvas: Canvas) {
         trajectoryPath.reset()
-        
         if (trajectoryPoints.isEmpty()) return
-        
         val pointCount = trajectoryPoints.size
-        
-        // Create smooth path
         trajectoryPath.moveTo(trajectoryPoints[0].x, trajectoryPoints[0].y)
-        
+
+        // Build full smooth path sekali, lalu gambar multiple strokes dengan clipping alpha gradient
         for (i in 1 until pointCount) {
-            val currentPoint = trajectoryPoints[i]
-            val prevPoint = trajectoryPoints[i - 1]
-            
-            // Smooth curve menggunakan quadratic bezier
-            val midX = (prevPoint.x + currentPoint.x) / 2
-            val midY = (prevPoint.y + currentPoint.y) / 2
-            
+            val c = trajectoryPoints[i]
+            val p = trajectoryPoints[i - 1]
+            val midX = (p.x + c.x) / 2
+            val midY = (p.y + c.y) / 2
+            if (i == 1) trajectoryPath.lineTo(midX, midY) else trajectoryPath.quadTo(p.x, p.y, midX, midY)
+        }
+
+        // Gambar segmen secara incremental untuk gradient tanpa alokasi Path baru
+        var prevMidX = trajectoryPoints[0].x
+        var prevMidY = trajectoryPoints[0].y
+        for (i in 1 until pointCount) {
+            val c = trajectoryPoints[i]
+            val p = trajectoryPoints[i - 1]
+            val midX = (p.x + c.x) / 2
+            val midY = (p.y + c.y) / 2
+            val segPath = Path()
             if (i == 1) {
-                trajectoryPath.lineTo(midX, midY)
+                segPath.moveTo(prevMidX, prevMidY)
             } else {
-                trajectoryPath.quadTo(prevPoint.x, prevPoint.y, midX, midY)
+                segPath.moveTo(prevMidX, prevMidY)
             }
-            
-            // Calculate alpha berdasarkan posisi dalam trajectory
-            val alpha = calculateAlpha(i, pointCount)
-            trajectoryPaint.alpha = alpha
-            trajectoryPaint.color = Color.argb(alpha, 0, 255, 255) // Cyan dengan fade
-            
-            // Draw segment
-            val segmentPath = Path()
-            if (i == 1) {
-                segmentPath.moveTo(trajectoryPoints[0].x, trajectoryPoints[0].y)
-                segmentPath.lineTo(midX, midY)
-            } else {
-                val prevMidX = (trajectoryPoints[i - 2].x + prevPoint.x) / 2
-                val prevMidY = (trajectoryPoints[i - 2].y + prevPoint.y) / 2
-                segmentPath.moveTo(prevMidX, prevMidY)
-                segmentPath.quadTo(prevPoint.x, prevPoint.y, midX, midY)
-            }
-            
-            canvas.drawPath(segmentPath, trajectoryPaint)
+            segPath.quadTo(p.x, p.y, midX, midY)
+
+            val alpha = if (isFadeEnabled) calculateAlpha(i, pointCount) else 255
+            trajectoryPaint.color = Color.argb(alpha, 0, 255, 255)
+            canvas.drawPath(segPath, trajectoryPaint)
+            prevMidX = midX
+            prevMidY = midY
         }
     }
 
@@ -232,8 +236,9 @@ class TrajectoryOverlayView @JvmOverloads constructor(
     }
 
     private fun calculateAlpha(index: Int, totalPoints: Int): Int {
-        val ratio = index.toFloat() / totalPoints.toFloat()
-        return (MIN_ALPHA + (MAX_ALPHA - MIN_ALPHA) * ratio).toInt()
+    if (totalPoints <= 1) return MAX_ALPHA
+    val ratio = index.toFloat() / (totalPoints - 1).toFloat()
+    return (MIN_ALPHA + (MAX_ALPHA - MIN_ALPHA) * ratio).toInt()
     }
 
     private fun calculateGlobalDirection(start: PointF, end: PointF): String {
@@ -304,4 +309,15 @@ class TrajectoryOverlayView @JvmOverloads constructor(
     
     private var isFadeEnabled = true
     private var isArrowEnabled = true
+
+    private fun trimOldPoints(now: Long) {
+        if (trajectoryPoints.isEmpty()) return
+        val maxAgeMs = 900L
+        val keepStart = pointAgesMs.indexOfFirst { now - it <= maxAgeMs }.let { if (it == -1) pointAgesMs.size - 1 else it }
+        if (keepStart > 0 && keepStart < trajectoryPoints.size) {
+            trajectoryPoints = trajectoryPoints.subList(keepStart, trajectoryPoints.size)
+            val newAges = pointAgesMs.subList(keepStart, pointAgesMs.size).toMutableList()
+            pointAgesMs.clear(); pointAgesMs.addAll(newAges)
+        }
+    }
 }

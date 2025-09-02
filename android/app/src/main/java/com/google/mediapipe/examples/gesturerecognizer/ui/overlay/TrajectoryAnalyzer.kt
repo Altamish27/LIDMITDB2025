@@ -35,6 +35,8 @@ class TrajectoryAnalyzer(
     private var lastPosition: PointF? = null
     private var movementStartPosition: PointF? = null
     private var isTracking = false
+    private var lastLogTime = 0L
+    private val logIntervalMs = 500L
     
     fun setMovementListener(listener: MovementDetectionListener?) {
         this.movementListener = listener
@@ -63,7 +65,11 @@ class TrajectoryAnalyzer(
                     val normalizedY = wrist.y()
                     
                     // Log original coordinates for debugging
-                    Log.d(TAG, "Wrist coordinates: ($normalizedX, $normalizedY)")
+                    val now = System.currentTimeMillis()
+                    if (now - lastLogTime > logIntervalMs) {
+                        Log.d(TAG, "Wrist coordinates: ($normalizedX, $normalizedY)")
+                        lastLogTime = now
+                    }
                     
                     // Validate and clamp coordinates with tolerance
                     if (isValidCoordinate(normalizedX, normalizedY)) {
@@ -97,7 +103,9 @@ class TrajectoryAnalyzer(
                         // Track movement for Fathah detection
                         trackMovement(clampedX, clampedY)
                         
-                        Log.d(TAG, "Added wrist trajectory point: normalized ($clampedX, $clampedY)")
+                        if (System.currentTimeMillis() - lastLogTime > logIntervalMs) {
+                            Log.d(TAG, "Added wrist trajectory point: ($clampedX, $clampedY)")
+                        }
                     } else {
                         Log.w(TAG, "Invalid normalized coordinates: ($normalizedX, $normalizedY) - outside tolerance range")
                     }
