@@ -49,6 +49,11 @@ class CameraFragment : Fragment(),
         private const val TAG = "Hand gesture recognizer"
         private const val REQUIRED_DURATION = 2000L // 2 seconds
         private const val RESET_DELAY = 500L // Reset after 0.5s of wrong gesture
+    private const val STATIC_THRESHOLD = 0.007f // Lebih ketat: delta antar frame maksimum
+    private const val REQUIRED_STATIC_DURATION = 800L // Harus diam 0.8 detik sebelum mulai hitung
+    private const val STATIC_WINDOW_SIZE = 15 // Frame window untuk analisis variansi
+    private const val STATIC_BBOX_THRESHOLD = 0.010f // Bounding box max-min dalam window harus < nilai ini
+    private const val STATIC_RESTART_ON_MOVE = true // Reset progres bila bergerak saat penghitung berjalan
     }
 
     private var _fragmentCameraBinding: FragmentCameraBinding? = null
@@ -82,6 +87,14 @@ class CameraFragment : Fragment(),
     private var currentGesture: String? = null
     private var gestureStartTime = 0L
     private var consecutiveCorrectCount = 0
+    // Static hand tracking
+    private var lastCenterX: Float? = null
+    private var lastCenterY: Float? = null
+    private var staticStartTime: Long = 0L
+    private var isStaticReady: Boolean = false
+    private var lastStaticFeedbackTime: Long = 0L
+    private val centerWindowX: ArrayDeque<Float> = ArrayDeque()
+    private val centerWindowY: ArrayDeque<Float> = ArrayDeque()
 
     override fun onResume() {
         super.onResume()
@@ -226,7 +239,7 @@ class CameraFragment : Fragment(),
         fragmentCameraBinding.textInstruction.text = "Deteksi otomatis aktif - peragakan gesture!"
     }
     
-    private fun handleGestureDetection(detectedGesture: String) {
+    private fun handleGestureDetection(detectedGesture: String, handIsStatic: Boolean, staticElapsed: Long) {
         if (!isDetecting) return
         
         val currentTime = System.currentTimeMillis()
@@ -234,6 +247,18 @@ class CameraFragment : Fragment(),
         // Check if this is the target gesture
         val isCorrectGesture = detectedGesture.equals(targetLetterName, ignoreCase = true)
         
+        // Jika gesture benar tetapi tangan belum statis siap, tampilkan instruksi dan jangan hitung waktu
+        if (isCorrectGesture && !handIsStatic) {
+            fragmentCameraBinding.progressTimer.progress = 0
+            updatePredictionText("$detectedGesture - jaga tangan tetap diam...")
+            // Reset hitungan gesture jika sebelumnya mulai
+            currentGesture = null
+            gestureStartTime = 0L
+            consecutiveCorrectCount = 0
+            return
+        }
+
+        // Jika gesture salah tapi tangan statis, tetap perlakukan sebagai salah
         if (isCorrectGesture) {
             // Correct gesture detected
             if (currentGesture != detectedGesture) {
@@ -241,8 +266,17 @@ class CameraFragment : Fragment(),
                 currentGesture = detectedGesture
                 gestureStartTime = currentTime
                 consecutiveCorrectCount = 1
-                updatePredictionText("$detectedGesture (mulai hitung)")
+                updatePredictionText("$detectedGesture (mulai hitung, statis OK)")
             } else {
+                // Jika bergerak saat sedang menghitung dan aturan restart aktif -> reset
+                if (!handIsStatic && STATIC_RESTART_ON_MOVE) {
+                    updatePredictionText("$detectedGesture - bergerak, reset penghitung")
+                    currentGesture = null
+                    gestureStartTime = 0L
+                    consecutiveCorrectCount = 0
+                    fragmentCameraBinding.progressTimer.progress = 0
+                    return
+                }
                 // Continue correct gesture sequence
                 consecutiveCorrectCount++
                 val elapsedTime = currentTime - gestureStartTime
@@ -251,7 +285,8 @@ class CameraFragment : Fragment(),
                 fragmentCameraBinding.progressTimer.progress = progress
                 fragmentCameraBinding.textCountdown.text = "${(REQUIRED_DURATION - elapsedTime) / 1000 + 1}"
                 
-                updatePredictionText("$detectedGesture (${elapsedTime}ms)")
+                updatePredictionText("$detectedGesture (${elapsedTime}ms, statis ${staticElapsed}ms)")
+                updatePredictionText("$detectedGesture (${elapsedTime}ms / ${REQUIRED_DURATION}ms, statis ${staticElapsed}ms)")
                 
                 // Check if 2 seconds completed
                 if (elapsedTime >= REQUIRED_DURATION) {
@@ -261,9 +296,11 @@ class CameraFragment : Fragment(),
         } else {
             // Wrong gesture or no gesture
             if (detectedGesture.isNotEmpty() && detectedGesture != "Unknown") {
-                updatePredictionText("$detectedGesture - tidak cocok")
+                updatePredictionText(
+                    if (handIsStatic) "$detectedGesture - tidak cocok (statis)" else "$detectedGesture - tidak cocok"
+                )
             } else {
-                updatePredictionText("Tidak ada gesture")
+                updatePredictionText(if (handIsStatic) "Tangan diam - belum ada gesture" else "Tidak ada gesture")
             }
             
             // Reset if there was a previous correct sequence
@@ -532,6 +569,79 @@ class CameraFragment : Fragment(),
             if (_fragmentCameraBinding != null) {
                 // Show result of recognized gesture
                 val gestureCategories = resultBundle.results.first().gestures()
+                // Evaluasi statis: gunakan landmarks tangan pertama jika ada
+                val result = resultBundle.results.first()
+                val handLandmarksList = result.landmarks()
+                var staticElapsed = 0L
+                if (handLandmarksList.isNotEmpty()) {
+                    val landmarks = handLandmarksList[0]
+                    var sumX = 0f
+                    var sumY = 0f
+                    for (lm in landmarks) {
+                        sumX += lm.x()
+                        sumY += lm.y()
+                    }
+                    val centerX = sumX / landmarks.size
+                    val centerY = sumY / landmarks.size
+                    val prevX = lastCenterX
+                    val prevY = lastCenterY
+                    val now = System.currentTimeMillis()
+                    if (prevX != null && prevY != null) {
+                        val dx = centerX - prevX
+                        val dy = centerY - prevY
+                        val dist = kotlin.math.sqrt(dx * dx + dy * dy)
+                        // Update sliding window
+                        centerWindowX.addLast(centerX)
+                        centerWindowY.addLast(centerY)
+                        while (centerWindowX.size > STATIC_WINDOW_SIZE) centerWindowX.removeFirst()
+                        while (centerWindowY.size > STATIC_WINDOW_SIZE) centerWindowY.removeFirst()
+
+                        // Hitung bounding box movement dalam window
+                        val minX = centerWindowX.minOrNull() ?: centerX
+                        val maxX = centerWindowX.maxOrNull() ?: centerX
+                        val minY = centerWindowY.minOrNull() ?: centerY
+                        val maxY = centerWindowY.maxOrNull() ?: centerY
+                        val bboxSize = max(maxX - minX, maxY - minY)
+
+                        val withinInstantThreshold = dist < STATIC_THRESHOLD
+                        val withinWindowThreshold = bboxSize < STATIC_BBOX_THRESHOLD && centerWindowX.size >= STATIC_WINDOW_SIZE / 2
+                        if (withinInstantThreshold && withinWindowThreshold) {
+                            if (staticStartTime == 0L) staticStartTime = now
+                            staticElapsed = now - staticStartTime
+                            if (staticElapsed >= REQUIRED_STATIC_DURATION) {
+                                isStaticReady = true
+                            }
+                        } else {
+                            staticStartTime = 0L
+                            isStaticReady = false
+                            staticElapsed = 0L
+                        }
+                    } else {
+                        staticStartTime = 0L
+                        isStaticReady = false
+                    }
+                    lastCenterX = centerX
+                    lastCenterY = centerY
+                } else {
+                    // Tidak ada tangan
+                    isStaticReady = false
+                    staticStartTime = 0L
+                    lastCenterX = null
+                    lastCenterY = null
+                    centerWindowX.clear()
+                    centerWindowY.clear()
+                }
+                val handIsStatic = isStaticReady
+                // Reset progres jika sedang menghitung dan tangan bergerak (aturan baru)
+                if (!handIsStatic && currentGesture != null && fragmentCameraBinding.progressTimer.progress > 0) {
+                    updatePredictionText("Bergerak - progres direset")
+                    resetGestureDetection()
+                }
+
+                if (gestureCategories.isNotEmpty()) {
+                if (gestureCategories.isNotEmpty()) {
+                if (gestureCategories.isNotEmpty()) {
+                if (gestureCategories.isNotEmpty()) {
                 if (gestureCategories.isNotEmpty()) {
                     gestureRecognizerResultAdapter.updateResults(
                         gestureCategories.first()
@@ -542,13 +652,13 @@ class CameraFragment : Fragment(),
                     val detectedGestureName = topGesture.categoryName()
                     
                     // Handle the detected gesture
-                    handleGestureDetection(detectedGestureName)
+                    handleGestureDetection(detectedGestureName, handIsStatic, staticElapsed)
                     
                 } else {
                     gestureRecognizerResultAdapter.updateResults(emptyList())
                     
                     // No gesture detected
-                    handleGestureDetection("")
+                    handleGestureDetection("", handIsStatic, 0L)
                 }
 
                 fragmentCameraBinding.bottomSheetLayout.inferenceTimeVal.text =

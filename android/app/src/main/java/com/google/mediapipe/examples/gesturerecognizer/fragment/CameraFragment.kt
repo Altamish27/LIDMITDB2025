@@ -280,14 +280,36 @@ class CameraFragment : Fragment(),
     // Instruction text removed; no UI update here
     }
     
+    private fun checkHandStaticStatus(): Boolean {
+        // Use trajectory overlay logic to check if hand is static
+        val trajectoryPoints = trajectoryBuffer.asList()
+        if (trajectoryPoints.size < 2) return false
+        
+        val start = trajectoryPoints.first()
+        val end = trajectoryPoints.last()
+        val dx = end.x - start.x
+        val dy = end.y - start.y
+        
+        // Convert to screen coordinates for threshold comparison
+        val screenDx = dx * fragmentCameraBinding.viewFinder.width
+        val screenDy = dy * fragmentCameraBinding.viewFinder.height
+        
+        // Static if movement is less than 20 pixels (same as TrajectoryOverlayView)
+        return (kotlin.math.abs(screenDx) < 20 && kotlin.math.abs(screenDy) < 20)
+    }
+    
     private fun handleGestureDetection(detectedGesture: String) {
         if (!isDetecting) return
+        
+        // Check hand static status first
+        val isHandStatic = checkHandStaticStatus()
         
         val currentTime = System.currentTimeMillis()
         
         // Debug logging for gesture detection
         Log.d(TAG, "Gesture Detection:")
         Log.d(TAG, "- detectedGesture: '$detectedGesture'")
+        Log.d(TAG, "- isHandStatic: $isHandStatic")
         Log.d(TAG, "- targetLetterName: '$targetLetterName'")
         Log.d(TAG, "- targetLetter: '$targetLetter'")
         Log.d(TAG, "- isFathahMode: $isFathahMode")
@@ -295,13 +317,13 @@ class CameraFragment : Fragment(),
         Log.d(TAG, "- isWaitingForLeftMovement: $isWaitingForLeftMovement")
         
         if (isFathahMode) {
-            handleFathahGestureDetection(detectedGesture, currentTime)
+            handleFathahGestureDetection(detectedGesture, currentTime, isHandStatic)
         } else {
-            handleHijaiyahGestureDetection(detectedGesture, currentTime)
+            handleHijaiyahGestureDetection(detectedGesture, currentTime, isHandStatic)
         }
     }
     
-    private fun handleHijaiyahGestureDetection(detectedGesture: String, currentTime: Long) {
+    private fun handleHijaiyahGestureDetection(detectedGesture: String, currentTime: Long, isHandStatic: Boolean) {
         // Check if this is the target gesture
         // Try multiple matching strategies:
         // 1. Direct match with targetLetterName (transliteration)
@@ -332,14 +354,27 @@ class CameraFragment : Fragment(),
             Log.d(TAG, "- HijaiyahData for '$targetLetter': $hijaiyahLetter")
         }
         
-        if (isCorrectGesture) {
-            // Correct gesture detected
+        // Enforce static hand requirement
+        if (isCorrectGesture && !isHandStatic) {
+            updatePredictionText("$detectedGesture - jaga tangan tetap diam...")
+            // Reset progress if already started
+            if (currentGesture != null) {
+                currentGesture = null
+                gestureStartTime = 0L
+                consecutiveCorrectCount = 0
+                fragmentCameraBinding.progressTimer.progress = 0
+            }
+            return
+        }
+        
+        if (isCorrectGesture && isHandStatic) {
+            // Correct gesture detected with static hand
             if (currentGesture != detectedGesture) {
                 // New correct gesture sequence starts
                 currentGesture = detectedGesture
                 gestureStartTime = currentTime
                 consecutiveCorrectCount = 1
-                updatePredictionText("$detectedGesture (mulai hitung)")
+                updatePredictionText("$detectedGesture (mulai hitung - tangan diam)")
             } else {
                 // Continue correct gesture sequence
                 consecutiveCorrectCount++
@@ -349,7 +384,7 @@ class CameraFragment : Fragment(),
                 fragmentCameraBinding.progressTimer.progress = progress
                 fragmentCameraBinding.textCountdown.text = "${(REQUIRED_DURATION - elapsedTime) / 1000 + 1}"
                 
-                updatePredictionText("$detectedGesture (${elapsedTime}ms)")
+                updatePredictionText("$detectedGesture (${elapsedTime}ms / ${REQUIRED_DURATION}ms - statis)")
                 
                 // Check if 2 seconds completed
                 if (elapsedTime >= REQUIRED_DURATION) {
@@ -359,9 +394,11 @@ class CameraFragment : Fragment(),
         } else {
             // Wrong gesture or no gesture
             if (detectedGesture.isNotEmpty() && detectedGesture != "Unknown") {
-                updatePredictionText("$detectedGesture - tidak cocok")
+                updatePredictionText(
+                    if (isHandStatic) "$detectedGesture - tidak cocok (tangan diam)" else "$detectedGesture - tidak cocok (tangan bergerak)"
+                )
             } else {
-                updatePredictionText("Tidak ada gesture")
+                updatePredictionText(if (isHandStatic) "Tidak ada gesture (tangan diam)" else "Tidak ada gesture (tangan bergerak)")
             }
             
             // Reset if there was a previous correct sequence
@@ -371,7 +408,7 @@ class CameraFragment : Fragment(),
         }
     }
     
-    private fun handleFathahGestureDetection(detectedGesture: String, currentTime: Long) {
+    private fun handleFathahGestureDetection(detectedGesture: String, currentTime: Long, isHandStatic: Boolean) {
         // Get the Fathah letter data for gesture matching
         val fathahLetter = when {
             targetLetter != null -> FathahData.getLetterByArabic(targetLetter!!)
@@ -391,13 +428,27 @@ class CameraFragment : Fragment(),
         
         if (!hijaiyahGestureDetected && !isWaitingForLeftMovement) {
             // Phase 1: Detect the correct Hijaiyah gesture
-            if (isCorrectHijaiyahGesture) {
+            
+            // Enforce static hand requirement for Hijaiyah gesture
+            if (isCorrectHijaiyahGesture && !isHandStatic) {
+                updatePredictionText("$detectedGesture - jaga tangan tetap diam...")
+                // Reset progress if already started
+                if (currentGesture != null) {
+                    currentGesture = null
+                    gestureStartTime = 0L
+                    consecutiveCorrectCount = 0
+                    fragmentCameraBinding.progressTimer.progress = 0
+                }
+                return
+            }
+            
+            if (isCorrectHijaiyahGesture && isHandStatic) {
                 if (currentGesture != detectedGesture) {
                     // New correct gesture sequence starts
                     currentGesture = detectedGesture
                     gestureStartTime = currentTime
                     consecutiveCorrectCount = 1
-                    updatePredictionText("$detectedGesture (mulai hitung)")
+                    updatePredictionText("$detectedGesture (mulai hitung - tangan diam)")
                 } else {
                     // Continue correct gesture sequence
                     consecutiveCorrectCount++
@@ -407,7 +458,7 @@ class CameraFragment : Fragment(),
                     fragmentCameraBinding.progressTimer.progress = progress
                     fragmentCameraBinding.textCountdown.text = "${(REQUIRED_DURATION - elapsedTime) / 1000 + 1}"
                     
-                    updatePredictionText("$detectedGesture (${elapsedTime}ms)")
+                    updatePredictionText("$detectedGesture (${elapsedTime}ms / ${REQUIRED_DURATION}ms - statis)")
                     
                     // Check if 2 seconds completed
                     if (elapsedTime >= REQUIRED_DURATION) {
@@ -417,9 +468,19 @@ class CameraFragment : Fragment(),
             } else {
                 // Wrong gesture or no gesture
                 if (detectedGesture.isNotEmpty() && detectedGesture != "Unknown") {
-                    updatePredictionText("$detectedGesture - tidak cocok dengan ${baseHijaiyahLetter?.gestureName}")
+                    updatePredictionText(
+                        if (isHandStatic) 
+                            "$detectedGesture - tidak cocok dengan ${baseHijaiyahLetter?.gestureName} (tangan diam)" 
+                        else 
+                            "$detectedGesture - tidak cocok dengan ${baseHijaiyahLetter?.gestureName} (tangan bergerak)"
+                    )
                 } else {
-                    updatePredictionText("Tidak ada gesture - coba ${baseHijaiyahLetter?.gestureName}")
+                    updatePredictionText(
+                        if (isHandStatic) 
+                            "Tidak ada gesture - coba ${baseHijaiyahLetter?.gestureName} (tangan diam)" 
+                        else 
+                            "Tidak ada gesture - coba ${baseHijaiyahLetter?.gestureName} (tangan bergerak)"
+                    )
                 }
                 
                 // Reset if there was a previous correct sequence
@@ -429,11 +490,23 @@ class CameraFragment : Fragment(),
             }
         } else if (hijaiyahGestureDetected && isWaitingForLeftMovement) {
             // Phase 2: Wait for left movement while maintaining correct gesture
+            Log.d(TAG, "Phase 2 - isCorrectGesture: $isCorrectHijaiyahGesture, isStatic: $isHandStatic")
+            
             if (isCorrectHijaiyahGesture) {
-                updatePredictionText("Gerakkan tangan ke kiri sambil mempertahankan gesture $detectedGesture")
+                updatePredictionText(
+                    if (isHandStatic) 
+                        "Gerakkan tangan ke kiri sambil mempertahankan gesture $detectedGesture (tangan diam)" 
+                    else 
+                        "Gerakkan tangan ke kiri sambil mempertahankan gesture $detectedGesture (tangan bergerak)"
+                )
                 // Movement detection will be handled by trajectory analyzer
             } else {
-                updatePredictionText("Pertahankan gesture ${baseHijaiyahLetter?.gestureName} sambil bergerak ke kiri")
+                updatePredictionText(
+                    if (isHandStatic) 
+                        "Pertahankan gesture ${baseHijaiyahLetter?.gestureName} sambil bergerak ke kiri (tangan diam)" 
+                    else 
+                        "Pertahankan gesture ${baseHijaiyahLetter?.gestureName} sambil bergerak ke kiri (tangan bergerak)"
+                )
                 // Don't reset completely, just encourage to maintain gesture
             }
         }
@@ -806,6 +879,16 @@ class CameraFragment : Fragment(),
                         cameraFacing == CameraSelector.LENS_FACING_FRONT,
                         0 // rotation degrees
                     )
+                    
+                    // Check if hand is static using trajectory overlay logic
+                    val isHandStatic = checkHandStaticStatus()
+                    
+                    // Apply static hand requirement for gesture detection
+                    if (isDetecting && !isHandStatic && currentGesture != null && fragmentCameraBinding.progressTimer.progress > 0) {
+                        updatePredictionText("Tangan bergerak - progres direset")
+                        resetGestureDetection()
+                        return@runOnUiThread // Skip gesture processing when hand is moving
+                    }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error processing trajectory", e)
                 }
