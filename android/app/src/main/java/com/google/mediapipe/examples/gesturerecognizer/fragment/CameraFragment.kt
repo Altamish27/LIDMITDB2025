@@ -17,6 +17,7 @@ package com.google.mediapipe.examples.gesturerecognizer.fragment
 
 import android.annotation.SuppressLint
 import android.content.res.Configuration
+import android.graphics.PointF
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
@@ -43,6 +44,7 @@ import com.google.mediapipe.examples.gesturerecognizer.ui.overlay.TrajectoryOver
 import com.google.mediapipe.examples.gesturerecognizer.ui.overlay.TrajectoryRingBuffer
 import com.google.mediapipe.examples.gesturerecognizer.ui.overlay.TrajectoryAnalyzer
 import com.google.mediapipe.examples.gesturerecognizer.ui.overlay.MovementDetectionListener
+import com.google.mediapipe.examples.gesturerecognizer.ui.overlay.MovementType
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager
 import com.google.mediapipe.examples.gesturerecognizer.data.FathahData
@@ -106,6 +108,21 @@ class CameraFragment : Fragment(),
     private var isFathahMode = false
     private var hijaiyahGestureDetected = false
     private var isWaitingForLeftMovement = false
+    private var fathahPatternDetected = false // Prevent multiple detection
+    
+    // Movement history tracking for diacritics (Fathah, Dhammah, etc.)
+    enum class MovementDirection {
+        STATIC, LEFT, RIGHT, UP, DOWN, DIAGONAL_UP_LEFT, DIAGONAL_UP_RIGHT, 
+        DIAGONAL_DOWN_LEFT, DIAGONAL_DOWN_RIGHT, UNKNOWN
+    }
+    
+    private val movementHistory = mutableListOf<MovementDirection>()
+    private val MAX_MOVEMENT_HISTORY = 5
+    private var lastHandPosition: PointF? = null
+    private val MOVEMENT_THRESHOLD = 30.0f // pixels threshold for movement detection
+    
+    // Track current static state from unified movement detection
+    private var isCurrentlyStatic: Boolean = true
 
     override fun onResume() {
         super.onResume()
@@ -204,16 +221,19 @@ class CameraFragment : Fragment(),
         trajectoryBuffer = TrajectoryRingBuffer()
         trajectoryOverlay = TrajectoryOverlayView(requireContext())
         
+        // Set up unified movement detection listener
+        trajectoryOverlay.setMovementDetectionListener(this)
+        
         // Add trajectory overlay to the camera container programmatically
         val cameraContainer = fragmentCameraBinding.cameraContainer
         cameraContainer.addView(trajectoryOverlay)
         
         trajectoryAnalyzer = TrajectoryAnalyzer(trajectoryBuffer, trajectoryOverlay)
         
-        // Set movement listener for Fathah detection
-        if (isFathahMode) {
-            trajectoryAnalyzer.setMovementListener(this)
-        }
+        // DEPRECATED: Old movement detection listener - now using unified detection via TrajectoryOverlayView
+        // if (isFathahMode) {
+        //     trajectoryAnalyzer.setMovementListener(this)
+        // }
 
         // Wait for the views to be properly laid out
         fragmentCameraBinding.viewFinder.post {
@@ -298,18 +318,242 @@ class CameraFragment : Fragment(),
         return (kotlin.math.abs(screenDx) < 20 && kotlin.math.abs(screenDy) < 20)
     }
     
+    private fun checkStaticDurationForMovement(isHandStatic: Boolean, currentTime: Long): Boolean {
+        // This method is deprecated - using movement history instead
+        return true
+    }
+    
+    private fun resetStaticTracking() {
+        // This method is deprecated - using movement history instead
+        movementHistory.clear()
+    }
+    
+    private fun detectMovementDirection(currentHandPosition: PointF): MovementDirection {
+        if (lastHandPosition == null) {
+            lastHandPosition = currentHandPosition
+            Log.d(TAG, "🎯 Initial hand position set: (${"%.3f".format(currentHandPosition.x)}, ${"%.3f".format(currentHandPosition.y)})")
+            return MovementDirection.STATIC
+        }
+        
+        val dx = currentHandPosition.x - lastHandPosition!!.x
+        val dy = currentHandPosition.y - lastHandPosition!!.y
+        
+        // Convert to screen coordinates for threshold comparison
+        val screenDx = dx * fragmentCameraBinding.viewFinder.width
+        val screenDy = dy * fragmentCameraBinding.viewFinder.height
+        
+        val absDx = kotlin.math.abs(screenDx)
+        val absDy = kotlin.math.abs(screenDy)
+        
+        // Debug coordinate information
+        Log.d(TAG, "👆 Hand position: (${"%.3f".format(currentHandPosition.x)}, ${"%.3f".format(currentHandPosition.y)})")
+        Log.d(TAG, "📏 Delta: dx=${"%.1f".format(screenDx)}px, dy=${"%.1f".format(screenDy)}px")
+        Log.d(TAG, "📐 Abs values: absDx=${"%.1f".format(absDx)}px, absDy=${"%.1f".format(absDy)}px")
+        Log.d(TAG, "🎚️ Threshold: ${MOVEMENT_THRESHOLD}px")
+        
+        // Update last position
+        lastHandPosition = currentHandPosition
+        
+        // Check if movement is significant enough
+        if (absDx < MOVEMENT_THRESHOLD && absDy < MOVEMENT_THRESHOLD) {
+            Log.d(TAG, "⏸️ Movement below threshold → STATIC")
+            return MovementDirection.STATIC
+        }
+        
+        // Determine direction based on dx and dy
+        val direction = when {
+            // Diagonal movements (check first for more precise detection)
+            screenDx < -MOVEMENT_THRESHOLD && screenDy < -MOVEMENT_THRESHOLD -> {
+                Log.d(TAG, "↖️ Diagonal up-left detected")
+                MovementDirection.DIAGONAL_UP_LEFT
+            }
+            screenDx > MOVEMENT_THRESHOLD && screenDy < -MOVEMENT_THRESHOLD -> {
+                Log.d(TAG, "↗️ Diagonal up-right detected")
+                MovementDirection.DIAGONAL_UP_RIGHT
+            }
+            screenDx < -MOVEMENT_THRESHOLD && screenDy > MOVEMENT_THRESHOLD -> {
+                Log.d(TAG, "↙️ Diagonal down-left detected")
+                MovementDirection.DIAGONAL_DOWN_LEFT
+            }
+            screenDx > MOVEMENT_THRESHOLD && screenDy > MOVEMENT_THRESHOLD -> {
+                Log.d(TAG, "↘️ Diagonal down-right detected")
+                MovementDirection.DIAGONAL_DOWN_RIGHT
+            }
+            
+            // Primary directions
+            absDx > absDy && screenDx > MOVEMENT_THRESHOLD -> {
+                Log.d(TAG, "➡️ RIGHT movement detected (dx > dy)")
+                MovementDirection.RIGHT
+            }
+            absDx > absDy && screenDx < -MOVEMENT_THRESHOLD -> {
+                Log.d(TAG, "⬅️ LEFT movement detected (dx > dy)")
+                MovementDirection.LEFT
+            }
+            absDy > absDx && screenDy > MOVEMENT_THRESHOLD -> {
+                Log.d(TAG, "⬇️ DOWN movement detected (dy > dx)")
+                MovementDirection.DOWN
+            }
+            absDy > absDx && screenDy < -MOVEMENT_THRESHOLD -> {
+                Log.d(TAG, "⬆️ UP movement detected (dy > dx)")
+                MovementDirection.UP
+            }
+            
+            else -> {
+                Log.d(TAG, "❓ Unknown movement pattern")
+                MovementDirection.UNKNOWN
+            }
+        }
+        
+        Log.d(TAG, "🎯 Final direction: $direction")
+        return direction
+    }
+    
+    private fun addMovementToHistory(movement: MovementDirection) {
+        // IMPROVED: Only add movement if it's different from the last movement
+        // This prevents repeated movements like LEFT->LEFT->LEFT->LEFT->LEFT
+        if (movementHistory.isNotEmpty() && movementHistory.last() == movement) {
+            Log.d(TAG, "🚫 Skipping duplicate movement: $movement (same as previous)")
+            return
+        }
+        
+        movementHistory.add(movement)
+        
+        // Keep only last MAX_MOVEMENT_HISTORY movements
+        if (movementHistory.size > MAX_MOVEMENT_HISTORY) {
+            val removedMovement = movementHistory.removeAt(0)
+            Log.d(TAG, "🗑️ Removed oldest movement: $removedMovement")
+        }
+        
+        // Enhanced logging untuk debugging
+        val currentSize = movementHistory.size
+        val fullHistory = movementHistory.joinToString(" → ")
+        val lastThree = movementHistory.takeLast(3).joinToString(" → ")
+        
+        Log.d(TAG, "📋 MOVEMENT ADDED: $movement (unique)")
+        Log.d(TAG, "📊 History size: $currentSize/$MAX_MOVEMENT_HISTORY")
+        Log.d(TAG, "🔄 Last 3: $lastThree")
+        Log.d(TAG, "📜 Full history: [$fullHistory]")
+        
+        // Check for Fathah pattern in last 3 movements using regex
+        checkFathahPatternInHistory()
+        
+        Log.d(TAG, "═══════════════════════════════════")
+    }
+    
+    /**
+     * Check for Fathah pattern (STATIC → LEFT) in movement history using regex
+     * This checks the last 3 movements for any occurrence of STATIC → LEFT
+     */
+    private fun checkFathahPatternInHistory() {
+        if (movementHistory.size < 2) return
+        
+        // Get last 3 movements as string for regex matching
+        val last3 = movementHistory.takeLast(3).joinToString("→")
+        val last2 = movementHistory.takeLast(2).joinToString("→")
+        
+        // Regex pattern to match STATIC → LEFT anywhere in the sequence
+        val fathahPattern = Regex("STATIC→LEFT")
+        
+        val hasFathahPattern = fathahPattern.containsMatchIn(last3) || fathahPattern.containsMatchIn(last2)
+        
+        Log.d(TAG, "🔍 REGEX PATTERN CHECK:")
+        Log.d(TAG, "📝 Last 3: '$last3'")
+        Log.d(TAG, "📝 Last 2: '$last2'") 
+        Log.d(TAG, "🎯 Pattern 'STATIC→LEFT' found: $hasFathahPattern")
+        
+        if (hasFathahPattern) {
+            Log.d(TAG, "🎉 ✅ FATHAH PATTERN DETECTED IN HISTORY!")
+            Log.d(TAG, "🏆 Regex match successful for STATIC→LEFT")
+        }
+    }
+
+    // Debug helper method untuk manual inspection
+    private fun debugMovementHistory() {
+        Log.d(TAG, "🔬 DEBUG MOVEMENT HISTORY DUMP")
+        Log.d(TAG, "📊 Total movements stored: ${movementHistory.size}/$MAX_MOVEMENT_HISTORY")
+        
+        if (movementHistory.isEmpty()) {
+            Log.d(TAG, "📝 History is empty")
+        } else {
+            movementHistory.forEachIndexed { index, movement ->
+                val position = if (index == movementHistory.size - 1) "CURRENT" 
+                              else if (index == movementHistory.size - 2) "PREVIOUS"
+                              else "[$index]"
+                Log.d(TAG, "📋 $position: $movement")
+            }
+            
+            Log.d(TAG, "🔄 Full sequence: ${movementHistory.joinToString(" → ")}")
+            Log.d(TAG, "🎯 Last 3: ${movementHistory.takeLast(3).joinToString(" → ")}")
+            
+            // Check current pattern potential
+            if (movementHistory.size >= 2) {
+                val current = movementHistory.last()
+                val previous = movementHistory[movementHistory.size - 2]
+                val isFathahPattern = current == MovementDirection.LEFT && previous == MovementDirection.STATIC
+                Log.d(TAG, "🎯 Current pattern ($previous → $current): ${if (isFathahPattern) "✅ FATHAH MATCH" else "❌ No match"}")
+            }
+        }
+        Log.d(TAG, "🔬 DEBUG DUMP END")
+        Log.d(TAG, "═══════════════════════════════════")
+    }
+    
+    private fun checkFathahMovementPattern(): Boolean {
+        // IMPROVED: Check for STATIC → LEFT pattern using regex in movement history
+        // This is more flexible and handles various scenarios
+        
+        if (movementHistory.size < 2) {
+            Log.d(TAG, "🚫 Fathah pattern check: insufficient history (${movementHistory.size}/2 required)")
+            return false
+        }
+        
+        // Convert movement history to string for regex matching
+        val historyString = movementHistory.joinToString("→")
+        val last3String = movementHistory.takeLast(3).joinToString("→")
+        val last2String = movementHistory.takeLast(2).joinToString("→")
+        
+        // Regex pattern to find STATIC → LEFT anywhere in recent movements
+        val fathahPattern = Regex("STATIC→LEFT")
+        
+        // Check for pattern in last 3 and last 2 movements
+        val foundInLast3 = fathahPattern.containsMatchIn(last3String)
+        val foundInLast2 = fathahPattern.containsMatchIn(last2String)
+        val hasFathahPattern = foundInLast3 || foundInLast2
+        
+        Log.d(TAG, "🔍 IMPROVED FATHAH PATTERN CHECK")
+        Log.d(TAG, "📋 Full history: [$historyString]")
+        Log.d(TAG, "🎯 Last 3: '$last3String'")
+        Log.d(TAG, "🎯 Last 2: '$last2String'")
+        Log.d(TAG, "� Searching for: 'STATIC→LEFT'")
+        Log.d(TAG, "✅ Found in last 3: $foundInLast3")
+        Log.d(TAG, "✅ Found in last 2: $foundInLast2")
+        Log.d(TAG, "📊 Final result: $hasFathahPattern")
+        
+        if (hasFathahPattern) {
+            Log.d(TAG, "🎉 ✅ FATHAH PATTERN MATCHED using regex!")
+            Log.d(TAG, "🏆 Pattern 'STATIC→LEFT' found in movement history")
+        } else {
+            Log.d(TAG, "❌ FATHAH PATTERN NOT FOUND")
+            Log.d(TAG, "📝 Expected: Pattern containing 'STATIC→LEFT'")
+        }
+        
+        Log.d(TAG, "🔍 FATHAH PATTERN CHECK END")
+        Log.d(TAG, "═══════════════════════════════════")
+        
+        return hasFathahPattern
+    }
+    
     private fun handleGestureDetection(detectedGesture: String) {
         if (!isDetecting) return
         
-        // Check hand static status first
-        val isHandStatic = checkHandStaticStatus()
+        // Note: Hand static status is now checked via unified movement detection
+        // val isHandStatic = checkHandStaticStatus() // DEPRECATED - using unified detection
         
         val currentTime = System.currentTimeMillis()
         
         // Debug logging for gesture detection
         Log.d(TAG, "Gesture Detection:")
         Log.d(TAG, "- detectedGesture: '$detectedGesture'")
-        Log.d(TAG, "- isHandStatic: $isHandStatic")
+        Log.d(TAG, "- isHandStatic: $isCurrentlyStatic")
         Log.d(TAG, "- targetLetterName: '$targetLetterName'")
         Log.d(TAG, "- targetLetter: '$targetLetter'")
         Log.d(TAG, "- isFathahMode: $isFathahMode")
@@ -317,9 +561,9 @@ class CameraFragment : Fragment(),
         Log.d(TAG, "- isWaitingForLeftMovement: $isWaitingForLeftMovement")
         
         if (isFathahMode) {
-            handleFathahGestureDetection(detectedGesture, currentTime, isHandStatic)
+            handleFathahGestureDetection(detectedGesture, currentTime, isCurrentlyStatic)
         } else {
-            handleHijaiyahGestureDetection(detectedGesture, currentTime, isHandStatic)
+            handleHijaiyahGestureDetection(detectedGesture, currentTime, isCurrentlyStatic)
         }
     }
     
@@ -488,26 +732,41 @@ class CameraFragment : Fragment(),
                     resetGestureDetection()
                 }
             }
-        } else if (hijaiyahGestureDetected && isWaitingForLeftMovement) {
-            // Phase 2: Wait for left movement while maintaining correct gesture
-            Log.d(TAG, "Phase 2 - isCorrectGesture: $isCorrectHijaiyahGesture, isStatic: $isHandStatic")
+        } else if (hijaiyahGestureDetected && isWaitingForLeftMovement && !fathahPatternDetected) {
+            // Phase 2: Wait for Fathah movement pattern (STATIC then LEFT)
+            Log.d(TAG, "🔍 Phase 2 - Gesture: '$detectedGesture', isCorrect: $isCorrectHijaiyahGesture, target: ${baseHijaiyahLetter?.gestureName}")
+            
+            // Debug current state
+            debugMovementHistory()
+            
+            // Check for Fathah movement pattern
+            val isFathahPattern = checkFathahMovementPattern()
+            
+            Log.d(TAG, "🎯 Pattern check result: isFathahPattern=$isFathahPattern, isCorrectGesture=$isCorrectHijaiyahGesture")
+            
+            if (isCorrectHijaiyahGesture && isFathahPattern) {
+                // Fathah pattern detected with correct gesture!
+                Log.d(TAG, "🎉 Fathah pattern confirmed! Success!")
+                Log.d(TAG, "✅ BOTH CONDITIONS MET: Correct gesture + Fathah pattern")
+                fathahPatternDetected = true // Prevent multiple detections
+                onFathahSuccess()
+                return
+            }
             
             if (isCorrectHijaiyahGesture) {
-                updatePredictionText(
-                    if (isHandStatic) 
-                        "Gerakkan tangan ke kiri sambil mempertahankan gesture $detectedGesture (tangan diam)" 
-                    else 
-                        "Gerakkan tangan ke kiri sambil mempertahankan gesture $detectedGesture (tangan bergerak)"
-                )
-                // Movement detection will be handled by trajectory analyzer
+                // Correct gesture but waiting for movement pattern
+                val lastMovements = if (movementHistory.size >= 2) {
+                    "${movementHistory[movementHistory.size - 2]} → ${movementHistory.last()}"
+                } else {
+                    movementHistory.joinToString(" → ")
+                }
+                
+                updatePredictionText("Gerak: $lastMovements. Untuk Fathah: diam dulu, lalu ke KIRI")
             } else {
+                // Wrong gesture, reset movement tracking for this attempt
                 updatePredictionText(
-                    if (isHandStatic) 
-                        "Pertahankan gesture ${baseHijaiyahLetter?.gestureName} sambil bergerak ke kiri (tangan diam)" 
-                    else 
-                        "Pertahankan gesture ${baseHijaiyahLetter?.gestureName} sambil bergerak ke kiri (tangan bergerak)"
+                    "Pertahankan gesture ${baseHijaiyahLetter?.gestureName} dan lakukan gerakan: diam → kiri"
                 )
-                // Don't reset completely, just encourage to maintain gesture
             }
         }
     }
@@ -515,6 +774,7 @@ class CameraFragment : Fragment(),
     private fun onHijaiyahGestureSuccess() {
         hijaiyahGestureDetected = true
         isWaitingForLeftMovement = true
+        fathahPatternDetected = false // Reset pattern detection flag
         
         // Reset gesture detection variables for movement phase
         currentGesture = null
@@ -522,13 +782,22 @@ class CameraFragment : Fragment(),
         consecutiveCorrectCount = 0
         fragmentCameraBinding.progressTimer.progress = 0
         
+        // Clear movement history for fresh tracking
+        movementHistory.clear()
+        lastHandPosition = null
+        
+        // Add initial STATIC movement to establish baseline for pattern detection
+        movementHistory.add(MovementDirection.STATIC)
+        Log.d(TAG, "Added initial STATIC to movement history. History[0] = STATIC")
+        
         // Update UI to show next instruction
-        updatePredictionText("Bagus! Sekarang gerakkan tangan ke KIRI sambil mempertahankan gesture")
+        updatePredictionText("Bagus! Sekarang untuk Fathah: diam dulu, lalu gerak ke KIRI")
         
         // Show instruction overlay or update text
-        fragmentCameraBinding.textLetterName.text = "Gerakkan ke KIRI untuk Fathah"
+        fragmentCameraBinding.textLetterName.text = "Fathah: DIAM → KIRI"
         
-        Log.d(TAG, "Hijaiyah gesture detected successfully. Waiting for left movement.")
+        Log.d(TAG, "Hijaiyah gesture detected successfully. Waiting for Fathah movement pattern.")
+        Log.d(TAG, "Movement history initialized with STATIC baseline: ${movementHistory.joinToString(" → ")}")
     }
     
     private fun resetToWaitingForMovement() {
@@ -549,6 +818,10 @@ class CameraFragment : Fragment(),
         consecutiveCorrectCount = 0
         fragmentCameraBinding.progressTimer.progress = 0
         updatePredictionText("Reset - coba lagi")
+        
+        // Reset movement pattern tracking
+        resetStaticTracking()
+        fathahPatternDetected = false
         
         // Brief pause before allowing new detection
         resetTimer?.cancel()
@@ -880,15 +1153,36 @@ class CameraFragment : Fragment(),
                         0 // rotation degrees
                     )
                     
-                    // Check if hand is static using trajectory overlay logic
-                    val isHandStatic = checkHandStaticStatus()
-                    
-                    // Apply static hand requirement for gesture detection
-                    if (isDetecting && !isHandStatic && currentGesture != null && fragmentCameraBinding.progressTimer.progress > 0) {
-                        updatePredictionText("Tangan bergerak - progres direset")
-                        resetGestureDetection()
-                        return@runOnUiThread // Skip gesture processing when hand is moving
+                    // Track hand movement direction for diacritics detection
+                    val landmarks = resultBundle.results.first().landmarks()
+                    if (landmarks.isNotEmpty()) {
+                        val handLandmarks = landmarks.first()
+                        if (handLandmarks.isNotEmpty()) {
+                            // Use index finger tip (landmark 8) for movement tracking
+                            val indexTip = handLandmarks[8]
+                            val currentHandPosition = PointF(indexTip.x(), indexTip.y())
+                            
+                            Log.d(TAG, "🎬 Frame processing - Hand detected, tracking movement...")
+                            // DEPRECATED: Movement detection now handled by unified TrajectoryOverlayView listener
+                            // val movement = detectMovementDirection(currentHandPosition)
+                            // addMovementToHistory(movement)
+                        } else {
+                            Log.d(TAG, "⚠️ Hand landmarks empty")
+                        }
+                    } else {
+                        Log.d(TAG, "⚠️ No landmarks detected")
                     }
+                    
+                    // DEPRECATED: Static detection now handled by unified system
+                    // val isHandStatic = checkHandStaticStatus()
+                    
+                    // NOTE: Static hand validation is now handled through unified movement detection
+                    // The movement listener will handle static detection and gesture progress reset
+                    // if (isDetecting && !isHandStatic && currentGesture != null && fragmentCameraBinding.progressTimer.progress > 0) {
+                    //     updatePredictionText("Tangan bergerak - progres direset")
+                    //     resetGestureDetection()
+                    //     return@runOnUiThread // Skip gesture processing when hand is moving
+                    // }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error processing trajectory", e)
                 }
@@ -944,31 +1238,78 @@ class CameraFragment : Fragment(),
         }
     }
     
-    // MovementDetectionListener implementation
-    override fun onLeftMovementDetected() {
+    // DEPRECATED: Legacy MovementDetectionListener methods - kept for reference but no longer used
+    // These were part of the old TrajectoryAnalyzer movement detection system
+    
+    /*
+    private fun onLeftMovementDetected() {
         activity?.runOnUiThread {
-            if (isFathahMode && hijaiyahGestureDetected && isWaitingForLeftMovement) {
-                onFathahSuccess()
-            }
+            Log.d(TAG, "Left movement detected via trajectory analyzer")
+            // Note: Fathah detection is now handled via movement pattern checking in handleFathahGestureDetection
+            // This listener is kept for potential future use or debugging
         }
     }
     
-    override fun onRightMovementDetected() {
+    private fun onRightMovementDetected() {
         activity?.runOnUiThread {
             Log.d(TAG, "Right movement detected - not relevant for Fathah")
         }
     }
     
-    override fun onMovementStarted() {
+    private fun onMovementStarted() {
         activity?.runOnUiThread {
             Log.d(TAG, "Movement tracking started")
         }
     }
     
-    override fun onMovementStopped() {
+    private fun onMovementStopped() {
         activity?.runOnUiThread {
             Log.d(TAG, "Movement tracking stopped")
         }
+    }
+    */
+    
+    // New unified movement detection method
+    override fun onMovementDetected(movementType: MovementType, isStatic: Boolean) {
+        activity?.runOnUiThread {
+            Log.d(TAG, "Unified movement detected: type=$movementType, static=$isStatic")
+            
+            // Update current static state
+            isCurrentlyStatic = isStatic
+            
+            // Convert MovementType to MovementDirection for existing history system
+            val movementDirection = convertMovementTypeToDirection(movementType)
+            addMovementToHistory(movementDirection)
+        }
+    }
+    
+    /**
+     * Convert MovementType (from unified detection) to MovementDirection (legacy enum)
+     */
+    private fun convertMovementTypeToDirection(movementType: MovementType): MovementDirection {
+        return when (movementType) {
+            MovementType.STATIC -> MovementDirection.STATIC
+            MovementType.LEFT -> MovementDirection.LEFT
+            MovementType.RIGHT -> MovementDirection.RIGHT
+            MovementType.UP -> MovementDirection.UP
+            MovementType.DOWN -> MovementDirection.DOWN
+            MovementType.DIAGONAL_UP_LEFT -> MovementDirection.DIAGONAL_UP_LEFT
+            MovementType.DIAGONAL_UP_RIGHT -> MovementDirection.DIAGONAL_UP_RIGHT
+            MovementType.DIAGONAL_DOWN_LEFT -> MovementDirection.DIAGONAL_DOWN_LEFT
+            MovementType.DIAGONAL_DOWN_RIGHT -> MovementDirection.DIAGONAL_DOWN_RIGHT
+            MovementType.UNKNOWN -> MovementDirection.UNKNOWN
+        }
+    }
+    
+    // Legacy methods - will be deprecated once fully migrated to unified detection
+    override fun onMovementDirectionChanged(direction: String, movementType: MovementType) {
+        // Optional: can be used for additional direction-specific handling
+        Log.d(TAG, "Movement direction changed: $direction -> $movementType")
+    }
+    
+    override fun onStaticStatusChanged(isStatic: Boolean) {
+        // Optional: can be used for additional static status handling  
+        Log.d(TAG, "Static status changed: $isStatic")
     }
     
     private fun onFathahSuccess() {
@@ -985,9 +1326,10 @@ class CameraFragment : Fragment(),
             progressManager.markLetterCompleted(letterPosition)
         }
         
-        // Stop detection
+        // Stop detection and reset all states
         isDetecting = false
         isWaitingForLeftMovement = false
+        resetStaticTracking()
         
         // Show success dialog or navigate back
         showFathahSuccessDialog()

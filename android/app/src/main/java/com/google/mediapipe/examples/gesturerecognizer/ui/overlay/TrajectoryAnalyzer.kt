@@ -6,16 +6,6 @@ import android.util.Size
 import com.google.mediapipe.tasks.vision.gesturerecognizer.GestureRecognizerResult
 
 /**
- * Interface for movement detection callbacks
- */
-interface MovementDetectionListener {
-    fun onLeftMovementDetected()
-    fun onRightMovementDetected()
-    fun onMovementStarted()
-    fun onMovementStopped()
-}
-
-/**
  * Trajectory Analyzer - Processes MediaPipe results and converts finger landmarks to trajectory points
  * with coordinate validation and clamping to handle out-of-bounds values
  */
@@ -135,8 +125,9 @@ class TrajectoryAnalyzer(
             if (!isTracking && distance > MOVEMENT_THRESHOLD) {
                 isTracking = true
                 movementStartPosition = lastPos
-                movementListener?.onMovementStarted()
-                Log.d(TAG, "Movement tracking started at ($lastPos)")
+                // DEPRECATED: Movement detection is now handled by unified TrajectoryOverlayView system
+                // movementListener?.onMovementStarted()
+                Log.d(TAG, "Movement tracking started at ($lastPos) - legacy system deprecated")
             }
             
             // If tracking, check for left movement
@@ -149,14 +140,16 @@ class TrajectoryAnalyzer(
                     // For back camera (normal), left movement appears as negative deltaX
                     // Since we're using front camera, we check for positive deltaX for left movement
                     if (totalDeltaX > LEFT_MOVEMENT_THRESHOLD) {
-                        Log.d(TAG, "Left movement detected (mirrored camera)! Delta: $totalDeltaX, Distance: $totalDistance")
-                        movementListener?.onLeftMovementDetected()
+                        Log.d(TAG, "Left movement detected (mirrored camera)! Delta: $totalDeltaX, Distance: $totalDistance - legacy system deprecated")
+                        // DEPRECATED: Movement detection is now handled by unified TrajectoryOverlayView system
+                        // movementListener?.onLeftMovementDetected()
                         resetMovementTracking()
                     } 
                     // Check for right movement (negative deltaX in mirrored camera)
                     else if (totalDeltaX < -LEFT_MOVEMENT_THRESHOLD) {
-                        Log.d(TAG, "Right movement detected (mirrored camera)! Delta: $totalDeltaX, Distance: $totalDistance")
-                        movementListener?.onRightMovementDetected()
+                        Log.d(TAG, "Right movement detected (mirrored camera)! Delta: $totalDeltaX, Distance: $totalDistance - legacy system deprecated")
+                        // DEPRECATED: Movement detection is now handled by unified TrajectoryOverlayView system
+                        // movementListener?.onRightMovementDetected()
                         resetMovementTracking()
                     }
                 }
@@ -173,8 +166,9 @@ class TrajectoryAnalyzer(
         if (isTracking) {
             isTracking = false
             movementStartPosition = null
-            movementListener?.onMovementStopped()
-            Log.d(TAG, "Movement tracking reset")
+            // DEPRECATED: Movement detection is now handled by unified TrajectoryOverlayView system
+            // movementListener?.onMovementStopped()
+            Log.d(TAG, "Movement tracking reset - legacy system deprecated")
         }
     }
     

@@ -3,6 +3,7 @@ package com.google.mediapipe.examples.gesturerecognizer.ui.overlay
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.util.Log
 import android.util.Size
 import android.view.View
 import androidx.annotation.MainThread
@@ -65,6 +66,12 @@ class TrajectoryOverlayView @JvmOverloads constructor(
     private val pointAgesMs: MutableList<Long> = mutableListOf()  // Paralel dgn trajectoryPoints (umur)
     private var globalDirection: String = ""
     private var isRecording: Boolean = false
+    
+    // Movement detection
+    private var movementDetectionListener: MovementDetectionListener? = null
+    private var lastDirection: String = ""
+    private var lastMovementType: MovementType = MovementType.STATIC
+    private var lastIsStatic: Boolean = true
 
     // Callback listeners
     private var onTrajectorySegmented: ((startIdx: Int, endIdx: Int) -> Unit)? = null
@@ -105,6 +112,13 @@ class TrajectoryOverlayView @JvmOverloads constructor(
             val start = trajectoryPoints.first()
             val end = trajectoryPoints.last()
             globalDirection = calculateGlobalDirection(start, end)
+            
+            // Notify movement detection listener if direction changed
+            notifyMovementChange()
+        } else {
+            // No trajectory, assume static
+            globalDirection = "●"
+            notifyMovementChange()
         }
         
         // Trigger redraw
@@ -268,9 +282,34 @@ class TrajectoryOverlayView @JvmOverloads constructor(
         invalidate()
     }
 
+    /**
+     * Notify the listener when movement direction or static status changes
+     */
+    private fun notifyMovementChange() {
+        movementDetectionListener?.let { listener ->
+            val currentDirection = globalDirection
+            val currentMovementType = MovementConverter.toMovementType(currentDirection)
+            val currentIsStatic = (currentDirection == "●" || currentDirection == "STATIC")
+            
+            // Check if direction changed
+            if (currentDirection != lastDirection) {
+                lastDirection = currentDirection
+                lastMovementType = currentMovementType
+                lastIsStatic = currentIsStatic
+                
+                Log.d("TrajectoryOverlay", "Movement detected: direction=$currentDirection, type=$currentMovementType, static=$currentIsStatic")
+                listener.onMovementDetected(currentMovementType, currentIsStatic)
+            }
+        }
+    }
+
     fun clearTrajectory() {
         trajectoryPoints = emptyList()
         globalDirection = ""
+        // Reset movement tracking variables
+        lastDirection = ""
+        lastMovementType = MovementType.STATIC
+        lastIsStatic = true
         invalidate()
     }
 
@@ -280,6 +319,13 @@ class TrajectoryOverlayView @JvmOverloads constructor(
 
     fun setOnDirectionChangedListener(listener: (direction: String) -> Unit) {
         onDirectionChanged = listener
+    }
+    
+    /**
+     * Set the movement detection listener for unified movement detection
+     */
+    fun setMovementDetectionListener(listener: MovementDetectionListener?) {
+        movementDetectionListener = listener
     }
 
     fun getCurrentDirection(): String = globalDirection
