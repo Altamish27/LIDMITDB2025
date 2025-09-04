@@ -101,9 +101,12 @@ class TrajectoryAnalyzer(
                     }
                 }
             } else {
-                // No hand landmarks detected - reset trajectory
-                Log.d(TAG, "No hand landmarks detected - resetting trajectory")
+                // No hand landmarks detected - reset trajectory and notify hand lost
+                Log.d(TAG, "No hand landmarks detected - clearing trajectory and notifying hand lost")
                 clearTrajectory()
+                
+                // Notify movement listener about hand lost (untuk clear movement history)
+                movementListener?.onHandLost()
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error processing trajectory result", e)

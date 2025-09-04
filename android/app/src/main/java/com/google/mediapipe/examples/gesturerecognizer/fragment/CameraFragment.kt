@@ -59,7 +59,7 @@ class CameraFragment : Fragment(),
 
     companion object {
         private const val TAG = "Hand gesture recognizer"
-        private const val REQUIRED_DURATION = 2000L // 2 seconds
+        private const val REQUIRED_DURATION = 1000L // 1 second (reduced from 2 seconds)
         private const val RESET_DELAY = 500L // Reset after 0.5s of wrong gesture
     }
 
@@ -229,6 +229,9 @@ class CameraFragment : Fragment(),
         cameraContainer.addView(trajectoryOverlay)
         
         trajectoryAnalyzer = TrajectoryAnalyzer(trajectoryBuffer, trajectoryOverlay)
+        
+        // Set up TrajectoryAnalyzer movement listener for hand lost detection
+        trajectoryAnalyzer.setMovementListener(this)
         
         // DEPRECATED: Old movement detection listener - now using unified detection via TrajectoryOverlayView
         // if (isFathahMode) {
@@ -1310,6 +1313,28 @@ class CameraFragment : Fragment(),
     override fun onStaticStatusChanged(isStatic: Boolean) {
         // Optional: can be used for additional static status handling  
         Log.d(TAG, "Static status changed: $isStatic")
+    }
+    
+    override fun onHandLost() {
+        activity?.runOnUiThread {
+            Log.d(TAG, "🚨 HAND LOST - Clearing movement history completely")
+            
+            // Clear movement history completely when hand is lost
+            val previousHistorySize = movementHistory.size
+            movementHistory.clear()
+            
+            Log.d(TAG, "📋 Movement history cleared: $previousHistorySize movements removed")
+            Log.d(TAG, "📊 New history size: ${movementHistory.size}")
+            Log.d(TAG, "🔄 Full history now: [${movementHistory.joinToString(" → ")}]")
+            
+            // Reset movement tracking state
+            isCurrentlyStatic = true
+            
+            // Optionally update UI to reflect hand lost state
+            if (isWaitingForLeftMovement && hijaiyahGestureDetected) {
+                updatePredictionText("Tangan hilang - letakkan kembali untuk melanjutkan")
+            }
+        }
     }
     
     private fun onFathahSuccess() {

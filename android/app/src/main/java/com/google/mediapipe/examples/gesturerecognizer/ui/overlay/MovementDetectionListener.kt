@@ -25,6 +25,12 @@ interface MovementDetectionListener {
      * @param isStatic true jika tangan dalam keadaan static
      */
     fun onStaticStatusChanged(isStatic: Boolean)
+    
+    /**
+     * Dipanggil ketika tangan tidak terdeteksi (hand lost)
+     * Implementor harus clear movement history dan reset state
+     */
+    fun onHandLost()
 }
 
 /**

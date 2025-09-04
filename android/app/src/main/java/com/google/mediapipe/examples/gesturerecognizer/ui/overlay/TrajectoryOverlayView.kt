@@ -72,6 +72,7 @@ class TrajectoryOverlayView @JvmOverloads constructor(
     private var lastDirection: String = ""
     private var lastMovementType: MovementType = MovementType.STATIC
     private var lastIsStatic: Boolean = true
+    private var lastLogTime: Long = 0L // For throttling debug logs
 
     // Callback listeners
     private var onTrajectorySegmented: ((startIdx: Int, endIdx: Int) -> Unit)? = null
@@ -259,7 +260,18 @@ class TrajectoryOverlayView @JvmOverloads constructor(
         val dx = end.x - start.x
         val dy = end.y - start.y
         
-        if (abs(dx) < 20 && abs(dy) < 20) return "●" // Static
+        // Calculate movement threshold as 10% of view width for responsive detection
+        val movementThreshold = width * 0.10f // 10% of screen width
+        
+        // Debug logging (throttled to avoid spam)
+        val now = System.currentTimeMillis()
+        if (now - lastLogTime > 1000) { // Log every 1 second
+            Log.d("TrajectoryOverlay", "Movement threshold: ${movementThreshold.toInt()}px (10% of ${width}px width)")
+            Log.d("TrajectoryOverlay", "Current movement: dx=${dx.toInt()}px, dy=${dy.toInt()}px")
+            lastLogTime = now
+        }
+        
+        if (abs(dx) < movementThreshold && abs(dy) < movementThreshold) return "●" // Static
         
         val angle = atan2(dy, dx) * 180 / PI
         
