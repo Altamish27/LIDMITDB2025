@@ -11,7 +11,7 @@ data class KasrahLetter(
 
 object KasrahData {
     val letters = listOf(
-        KasrahLetter("أِ", "Hi", 1),
+        KasrahLetter("اِ", "I", 1),
         KasrahLetter("بِ", "Bi", 2),
         KasrahLetter("تِ", "Ti", 3),
         KasrahLetter("ثِ", "Tsi", 4),

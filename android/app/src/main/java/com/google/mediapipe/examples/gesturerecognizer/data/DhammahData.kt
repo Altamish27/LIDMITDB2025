@@ -11,7 +11,7 @@ data class DhammahLetter(
 
 object DhammahData {
     val letters = listOf(
-        DhammahLetter("أُ", "Hu", 1),
+        DhammahLetter("اُ", "U", 1),
         DhammahLetter("بُ", "Bu", 2),
         DhammahLetter("تُ", "Tu", 3),
         DhammahLetter("ثُ", "Tsu", 4),
