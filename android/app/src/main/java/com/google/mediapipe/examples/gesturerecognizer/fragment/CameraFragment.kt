@@ -34,7 +34,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.mediapipe.examples.gesturerecognizer.GestureRecognizerHelper
-import com.google.mediapipe.examples.gesturerecognizer.HijaiyahData
+import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
 import com.google.mediapipe.examples.gesturerecognizer.MainViewModel
 import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentCameraBinding
@@ -48,6 +48,8 @@ import com.google.mediapipe.examples.gesturerecognizer.ui.overlay.MovementType
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager
 import com.google.mediapipe.examples.gesturerecognizer.data.FathahData
+import com.google.mediapipe.examples.gesturerecognizer.data.KasrahData
+import com.google.mediapipe.examples.gesturerecognizer.data.DhammahData
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -110,6 +112,16 @@ class CameraFragment : Fragment(),
     private var isWaitingForLeftMovement = false
     private var fathahPatternDetected = false // Prevent multiple detection
     
+    // Kasrah specific properties
+    private var isKasrahMode = false
+    private var isWaitingForDownMovement = false
+    private var kasrahPatternDetected = false // Prevent multiple detection
+    
+    // Dhammah specific properties
+    private var isDhammahMode = false
+    private var isWaitingForUpMovement = false
+    private var dhammahPatternDetected = false // Prevent multiple detection
+    
     // Movement history tracking for diacritics (Fathah, Dhammah, etc.)
     enum class MovementDirection {
         STATIC, LEFT, RIGHT, UP, DOWN, DIAGONAL_UP_LEFT, DIAGONAL_UP_RIGHT, 
@@ -117,7 +129,7 @@ class CameraFragment : Fragment(),
     }
     
     private val movementHistory = mutableListOf<MovementDirection>()
-    private val MAX_MOVEMENT_HISTORY = 5
+    private val MAX_MOVEMENT_HISTORY = 10
     private var lastHandPosition: PointF? = null
     private val MOVEMENT_THRESHOLD = 30.0f // pixels threshold for movement detection
     
@@ -192,8 +204,10 @@ class CameraFragment : Fragment(),
         letterType = arguments?.getString("letterType")
         diacritic = arguments?.getString("diacritic")
         
-        // Set Fathah mode
+        // Set Fathah, Kasrah, and Dhammah mode
         isFathahMode = diacritic == "fathah"
+        isKasrahMode = diacritic == "kasrah"
+        isDhammahMode = diacritic == "dhammah"
         
         // Debug logging for received arguments
         Log.d(TAG, "Received arguments:")
@@ -202,6 +216,8 @@ class CameraFragment : Fragment(),
         Log.d(TAG, "- letterType: $letterType")
         Log.d(TAG, "- diacritic: $diacritic")
         Log.d(TAG, "- isFathahMode: $isFathahMode")
+        Log.d(TAG, "- isKasrahMode: $isKasrahMode")
+        Log.d(TAG, "- isDhammahMode: $isDhammahMode")
         Log.d(TAG, "- all arguments: ${arguments?.keySet()?.joinToString { "$it=${arguments?.get(it)}" }}")
         
         // Setup UI with target letter
@@ -437,36 +453,37 @@ class CameraFragment : Fragment(),
         Log.d(TAG, "🔄 Last 3: $lastThree")
         Log.d(TAG, "📜 Full history: [$fullHistory]")
         
-        // Check for Fathah pattern in last 3 movements using regex
+        // Check for Fathah pattern in last 3-4 movements using regex
         checkFathahPatternInHistory()
         
         Log.d(TAG, "═══════════════════════════════════")
     }
     
     /**
-     * Check for Fathah pattern (STATIC → LEFT) in movement history using regex
-     * This checks the last 3 movements for any occurrence of STATIC → LEFT
+     * Check for Fathah pattern (STATIC → LEFT → STATIC) in movement history using regex
+     * This checks the last 3 movements for any occurrence of STATIC → LEFT → STATIC
      */
     private fun checkFathahPatternInHistory() {
-        if (movementHistory.size < 2) return
+        if (movementHistory.size < 3) return
         
         // Get last 3 movements as string for regex matching
         val last3 = movementHistory.takeLast(3).joinToString("→")
-        val last2 = movementHistory.takeLast(2).joinToString("→")
+        val last4 = if (movementHistory.size >= 4) movementHistory.takeLast(4).joinToString("→") else ""
         
-        // Regex pattern to match STATIC → LEFT anywhere in the sequence
-        val fathahPattern = Regex("STATIC→LEFT")
+        // Regex pattern to match STATIC → LEFT → STATIC anywhere in the sequence
+        val fathahPattern = Regex("STATIC→LEFT→STATIC")
         
-        val hasFathahPattern = fathahPattern.containsMatchIn(last3) || fathahPattern.containsMatchIn(last2)
+        val hasFathahPattern = fathahPattern.containsMatchIn(last3) || 
+                               (last4.isNotEmpty() && fathahPattern.containsMatchIn(last4))
         
         Log.d(TAG, "🔍 REGEX PATTERN CHECK:")
         Log.d(TAG, "📝 Last 3: '$last3'")
-        Log.d(TAG, "📝 Last 2: '$last2'") 
-        Log.d(TAG, "🎯 Pattern 'STATIC→LEFT' found: $hasFathahPattern")
+        if (last4.isNotEmpty()) Log.d(TAG, "📝 Last 4: '$last4'")
+        Log.d(TAG, "🎯 Pattern 'STATIC→LEFT→STATIC' found: $hasFathahPattern")
         
         if (hasFathahPattern) {
             Log.d(TAG, "🎉 ✅ FATHAH PATTERN DETECTED IN HISTORY!")
-            Log.d(TAG, "🏆 Regex match successful for STATIC→LEFT")
+            Log.d(TAG, "🏆 Regex match successful for STATIC→LEFT→STATIC")
         }
     }
 
@@ -488,12 +505,19 @@ class CameraFragment : Fragment(),
             Log.d(TAG, "🔄 Full sequence: ${movementHistory.joinToString(" → ")}")
             Log.d(TAG, "🎯 Last 3: ${movementHistory.takeLast(3).joinToString(" → ")}")
             
-            // Check current pattern potential
-            if (movementHistory.size >= 2) {
+            // Check current pattern potential for STATIC → LEFT → STATIC
+            if (movementHistory.size >= 3) {
                 val current = movementHistory.last()
                 val previous = movementHistory[movementHistory.size - 2]
-                val isFathahPattern = current == MovementDirection.LEFT && previous == MovementDirection.STATIC
-                Log.d(TAG, "🎯 Current pattern ($previous → $current): ${if (isFathahPattern) "✅ FATHAH MATCH" else "❌ No match"}")
+                val beforePrevious = movementHistory[movementHistory.size - 3]
+                val isFathahPattern = current == MovementDirection.STATIC && 
+                                    previous == MovementDirection.LEFT && 
+                                    beforePrevious == MovementDirection.STATIC
+                Log.d(TAG, "🎯 Current pattern ($beforePrevious → $previous → $current): ${if (isFathahPattern) "✅ FATHAH MATCH" else "❌ No match"}")
+            } else if (movementHistory.size >= 2) {
+                val current = movementHistory.last()
+                val previous = movementHistory[movementHistory.size - 2]
+                Log.d(TAG, "🎯 Partial pattern ($previous → $current): Building towards STATIC→LEFT→STATIC")
             }
         }
         Log.d(TAG, "🔬 DEBUG DUMP END")
@@ -501,48 +525,138 @@ class CameraFragment : Fragment(),
     }
     
     private fun checkFathahMovementPattern(): Boolean {
-        // IMPROVED: Check for STATIC → LEFT pattern using regex in movement history
-        // This is more flexible and handles various scenarios
+        // IMPROVED: Check for STATIC → LEFT → STATIC pattern using regex in movement history
+        // This is more specific and requires complete fathah gesture sequence
         
-        if (movementHistory.size < 2) {
-            Log.d(TAG, "🚫 Fathah pattern check: insufficient history (${movementHistory.size}/2 required)")
+        if (movementHistory.size < 3) {
+            Log.d(TAG, "🚫 Fathah pattern check: insufficient history (${movementHistory.size}/3 required)")
             return false
         }
         
         // Convert movement history to string for regex matching
         val historyString = movementHistory.joinToString("→")
         val last3String = movementHistory.takeLast(3).joinToString("→")
-        val last2String = movementHistory.takeLast(2).joinToString("→")
+        val last4String = if (movementHistory.size >= 4) movementHistory.takeLast(4).joinToString("→") else ""
         
-        // Regex pattern to find STATIC → LEFT anywhere in recent movements
-        val fathahPattern = Regex("STATIC→LEFT")
+        // Regex pattern to find STATIC → LEFT → STATIC anywhere in recent movements
+        val fathahPattern = Regex("STATIC→LEFT→STATIC")
         
-        // Check for pattern in last 3 and last 2 movements
+        // Check for pattern in last 3 and last 4 movements
         val foundInLast3 = fathahPattern.containsMatchIn(last3String)
-        val foundInLast2 = fathahPattern.containsMatchIn(last2String)
-        val hasFathahPattern = foundInLast3 || foundInLast2
+        val foundInLast4 = last4String.isNotEmpty() && fathahPattern.containsMatchIn(last4String)
+        val hasFathahPattern = foundInLast3 || foundInLast4
         
         Log.d(TAG, "🔍 IMPROVED FATHAH PATTERN CHECK")
         Log.d(TAG, "📋 Full history: [$historyString]")
         Log.d(TAG, "🎯 Last 3: '$last3String'")
-        Log.d(TAG, "🎯 Last 2: '$last2String'")
-        Log.d(TAG, "� Searching for: 'STATIC→LEFT'")
+        if (last4String.isNotEmpty()) Log.d(TAG, "🎯 Last 4: '$last4String'")
+        Log.d(TAG, "🎯 Searching for: 'STATIC→LEFT→STATIC'")
         Log.d(TAG, "✅ Found in last 3: $foundInLast3")
-        Log.d(TAG, "✅ Found in last 2: $foundInLast2")
+        if (last4String.isNotEmpty()) Log.d(TAG, "✅ Found in last 4: $foundInLast4")
         Log.d(TAG, "📊 Final result: $hasFathahPattern")
         
         if (hasFathahPattern) {
             Log.d(TAG, "🎉 ✅ FATHAH PATTERN MATCHED using regex!")
-            Log.d(TAG, "🏆 Pattern 'STATIC→LEFT' found in movement history")
+            Log.d(TAG, "🏆 Pattern 'STATIC→LEFT→STATIC' found in movement history")
         } else {
             Log.d(TAG, "❌ FATHAH PATTERN NOT FOUND")
-            Log.d(TAG, "📝 Expected: Pattern containing 'STATIC→LEFT'")
+            Log.d(TAG, "📝 Expected: Pattern containing 'STATIC→LEFT→STATIC'")
         }
         
         Log.d(TAG, "🔍 FATHAH PATTERN CHECK END")
         Log.d(TAG, "═══════════════════════════════════")
         
         return hasFathahPattern
+    }
+    
+    private fun checkKasrahMovementPattern(): Boolean {
+        // Check for STATIC → DOWN → STATIC pattern using regex in movement history
+        // Similar to Fathah but looking for DOWN movement instead of LEFT
+        
+        if (movementHistory.size < 3) {
+            Log.d(TAG, "🚫 Kasrah pattern check: insufficient history (${movementHistory.size}/3 required)")
+            return false
+        }
+        
+        // Convert movement history to string for regex matching
+        val historyString = movementHistory.joinToString("→")
+        val last3String = movementHistory.takeLast(3).joinToString("→")
+        val last4String = if (movementHistory.size >= 4) movementHistory.takeLast(4).joinToString("→") else ""
+        
+        // Regex pattern to find STATIC → DOWN → STATIC anywhere in recent movements
+        val kasrahPattern = Regex("STATIC→DOWN→STATIC")
+        
+        // Check for pattern in last 3 and last 4 movements
+        val foundInLast3 = kasrahPattern.containsMatchIn(last3String)
+        val foundInLast4 = last4String.isNotEmpty() && kasrahPattern.containsMatchIn(last4String)
+        val hasKasrahPattern = foundInLast3 || foundInLast4
+        
+        Log.d(TAG, "🔍 KASRAH PATTERN CHECK")
+        Log.d(TAG, "📋 Full history: [$historyString]")
+        Log.d(TAG, "🎯 Last 3: '$last3String'")
+        if (last4String.isNotEmpty()) Log.d(TAG, "🎯 Last 4: '$last4String'")
+        Log.d(TAG, "🎯 Searching for: 'STATIC→DOWN→STATIC'")
+        Log.d(TAG, "✅ Found in last 3: $foundInLast3")
+        if (last4String.isNotEmpty()) Log.d(TAG, "✅ Found in last 4: $foundInLast4")
+        Log.d(TAG, "📊 Final result: $hasKasrahPattern")
+        
+        if (hasKasrahPattern) {
+            Log.d(TAG, "🎉 ✅ KASRAH PATTERN MATCHED using regex!")
+            Log.d(TAG, "🏆 Pattern 'STATIC→DOWN→STATIC' found in movement history")
+        } else {
+            Log.d(TAG, "❌ KASRAH PATTERN NOT FOUND")
+            Log.d(TAG, "📝 Expected: Pattern containing 'STATIC→DOWN→STATIC'")
+        }
+        
+        Log.d(TAG, "🔍 KASRAH PATTERN CHECK END")
+        Log.d(TAG, "═══════════════════════════════════")
+        
+        return hasKasrahPattern
+    }
+    
+    private fun checkDhammahMovementPattern(): Boolean {
+        // Check for STATIC → DOWN → DIAGONAL_DOWN_LEFT → LEFT → DIAGONAL_UP_LEFT → UP → STATIC pattern using regex in movement history
+        // This is a complex 7-movement pattern for Dhammah detection
+        
+        if (movementHistory.size < 7) {
+            Log.d(TAG, "🚫 Dhammah pattern check: insufficient history (${movementHistory.size}/7 required)")
+            return false
+        }
+        
+        // Convert movement history to string for regex matching
+        val historyString = movementHistory.joinToString("→")
+        val last7String = movementHistory.takeLast(7).joinToString("→")
+        val last8String = if (movementHistory.size >= 8) movementHistory.takeLast(8).joinToString("→") else ""
+        
+        // Regex pattern to find STATIC → DOWN → DIAGONAL_DOWN_LEFT → LEFT → DIAGONAL_UP_LEFT → UP → STATIC
+        val dhammahPattern = Regex("STATIC→DOWN→DIAGONAL_DOWN_LEFT→LEFT→DIAGONAL_UP_LEFT→UP→STATIC")
+        
+        // Check for pattern in last 7 and last 8 movements
+        val foundInLast7 = dhammahPattern.containsMatchIn(last7String)
+        val foundInLast8 = last8String.isNotEmpty() && dhammahPattern.containsMatchIn(last8String)
+        val hasDhammahPattern = foundInLast7 || foundInLast8
+        
+        Log.d(TAG, "🔍 DHAMMAH PATTERN CHECK")
+        Log.d(TAG, "📋 Full history: [$historyString]")
+        Log.d(TAG, "🎯 Last 7: '$last7String'")
+        if (last8String.isNotEmpty()) Log.d(TAG, "🎯 Last 8: '$last8String'")
+        Log.d(TAG, "🎯 Searching for: 'STATIC→DOWN→DIAGONAL_DOWN_LEFT→LEFT→DIAGONAL_UP_LEFT→UP→STATIC'")
+        Log.d(TAG, "✅ Found in last 7: $foundInLast7")
+        if (last8String.isNotEmpty()) Log.d(TAG, "✅ Found in last 8: $foundInLast8")
+        Log.d(TAG, "📊 Final result: $hasDhammahPattern")
+        
+        if (hasDhammahPattern) {
+            Log.d(TAG, "🎉 ✅ DHAMMAH PATTERN MATCHED using regex!")
+            Log.d(TAG, "🏆 Pattern 'STATIC→DOWN→DIAGONAL_DOWN_LEFT→LEFT→DIAGONAL_UP_LEFT→UP→STATIC' found in movement history")
+        } else {
+            Log.d(TAG, "❌ DHAMMAH PATTERN NOT FOUND")
+            Log.d(TAG, "📝 Expected: Pattern containing 'STATIC→DOWN→DIAGONAL_DOWN_LEFT→LEFT→DIAGONAL_UP_LEFT→UP→STATIC'")
+        }
+        
+        Log.d(TAG, "🔍 DHAMMAH PATTERN CHECK END")
+        Log.d(TAG, "═══════════════════════════════════")
+        
+        return hasDhammahPattern
     }
     
     private fun handleGestureDetection(detectedGesture: String) {
@@ -560,11 +674,19 @@ class CameraFragment : Fragment(),
         Log.d(TAG, "- targetLetterName: '$targetLetterName'")
         Log.d(TAG, "- targetLetter: '$targetLetter'")
         Log.d(TAG, "- isFathahMode: $isFathahMode")
+        Log.d(TAG, "- isKasrahMode: $isKasrahMode")
+        Log.d(TAG, "- isDhammahMode: $isDhammahMode")
         Log.d(TAG, "- hijaiyahGestureDetected: $hijaiyahGestureDetected")
         Log.d(TAG, "- isWaitingForLeftMovement: $isWaitingForLeftMovement")
+        Log.d(TAG, "- isWaitingForDownMovement: $isWaitingForDownMovement")
+        Log.d(TAG, "- isWaitingForUpMovement: $isWaitingForUpMovement")
         
         if (isFathahMode) {
             handleFathahGestureDetection(detectedGesture, currentTime, isCurrentlyStatic)
+        } else if (isKasrahMode) {
+            handleKasrahGestureDetection(detectedGesture, currentTime, isCurrentlyStatic)
+        } else if (isDhammahMode) {
+            handleDhammahGestureDetection(detectedGesture, currentTime, isCurrentlyStatic)
         } else {
             handleHijaiyahGestureDetection(detectedGesture, currentTime, isCurrentlyStatic)
         }
@@ -578,8 +700,6 @@ class CameraFragment : Fragment(),
         // 3. Case-insensitive matching
         
         val isCorrectGesture = when {
-            // Direct match with targetLetterName
-            detectedGesture.equals(targetLetterName, ignoreCase = true) -> true
             // Try to find the target letter in HijaiyahData and match with its gesture name
             targetLetter != null -> {
                 val hijaiyahLetter = HijaiyahData.letters.find { it.arabic == targetLetter }
@@ -660,18 +780,19 @@ class CameraFragment : Fragment(),
         val fathahLetter = when {
             targetLetter != null -> FathahData.getLetterByArabic(targetLetter!!)
             targetLetterName != null -> FathahData.getAllLetters().find { 
-                it.transliteration.equals(targetLetterName, ignoreCase = true) 
+                it.transliteration.equals(targetLetterName, ignoreCase = true)
             }
             else -> null
         }
         
-        // Get base hijaiyah letter for gesture matching (remove fathah diacritic)
-        val baseArabic = targetLetter?.replace("َ", "") ?: ""
-        val baseHijaiyahLetter = HijaiyahData.letters.find { it.arabic == baseArabic }
+        // Get base hijaiyah letter using position from FathahData (more efficient)
+        val baseHijaiyahLetter = fathahLetter?.let { fathah ->
+            HijaiyahData.getLetterById(fathah.position)
+        }
         
         val isCorrectHijaiyahGesture = baseHijaiyahLetter?.gestureName?.equals(detectedGesture, ignoreCase = true) == true
         
-        Log.d(TAG, "Fathah detection - target: $targetLetter, base: $baseArabic, gesture: $detectedGesture, correct: $isCorrectHijaiyahGesture")
+        Log.d(TAG, "Fathah detection - fathahLetter: $fathahLetter, baseHijaiyahLetter: $baseHijaiyahLetter, gesture: $detectedGesture, correct: $isCorrectHijaiyahGesture")
         
         if (!hijaiyahGestureDetected && !isWaitingForLeftMovement) {
             // Phase 1: Detect the correct Hijaiyah gesture
@@ -774,6 +895,246 @@ class CameraFragment : Fragment(),
         }
     }
     
+    private fun handleKasrahGestureDetection(detectedGesture: String, currentTime: Long, isHandStatic: Boolean) {
+        // Get the Kasrah letter data for gesture matching
+        val kasrahLetter = when {
+            targetLetter != null -> KasrahData.getLetterByArabic(targetLetter!!)
+            targetLetterName != null -> KasrahData.getAllLetters().find { 
+                it.transliteration.equals(targetLetterName, ignoreCase = true)
+            }
+            else -> null
+        }
+        
+        // Get base hijaiyah letter using position from KasrahData
+        val baseHijaiyahLetter = kasrahLetter?.let { kasrah ->
+            HijaiyahData.getLetterByPosition(kasrah.position)
+        }
+        
+        val isCorrectHijaiyahGesture = baseHijaiyahLetter?.gestureName?.equals(detectedGesture, ignoreCase = true) == true
+        
+        Log.d(TAG, "Kasrah detection - kasrahLetter: $kasrahLetter, baseHijaiyahLetter: $baseHijaiyahLetter, gesture: $detectedGesture, correct: $isCorrectHijaiyahGesture")
+        
+        if (!hijaiyahGestureDetected && !isWaitingForDownMovement) {
+            // Phase 1: Detect the correct Hijaiyah gesture
+            
+            // Enforce static hand requirement for Hijaiyah gesture
+            if (isCorrectHijaiyahGesture && !isHandStatic) {
+                updatePredictionText("$detectedGesture - jaga tangan tetap diam...")
+                // Reset progress if already started
+                if (currentGesture != null) {
+                    currentGesture = null
+                    gestureStartTime = 0L
+                    consecutiveCorrectCount = 0
+                    fragmentCameraBinding.progressTimer.progress = 0
+                }
+                return
+            }
+            
+            if (isCorrectHijaiyahGesture && isHandStatic) {
+                if (currentGesture != detectedGesture) {
+                    // New correct gesture sequence starts
+                    currentGesture = detectedGesture
+                    gestureStartTime = currentTime
+                    consecutiveCorrectCount = 1
+                    updatePredictionText("$detectedGesture (mulai hitung - tangan diam)")
+                } else {
+                    // Continue correct gesture sequence
+                    consecutiveCorrectCount++
+                    val elapsedTime = currentTime - gestureStartTime
+                    val progress = (elapsedTime * 100 / REQUIRED_DURATION).toInt().coerceAtMost(100)
+                    
+                    fragmentCameraBinding.progressTimer.progress = progress
+                    fragmentCameraBinding.textCountdown.text = "${(REQUIRED_DURATION - elapsedTime) / 1000 + 1}"
+                    
+                    updatePredictionText("$detectedGesture (${elapsedTime}ms / ${REQUIRED_DURATION}ms - statis)")
+                    
+                    // Check if 2 seconds completed
+                    if (elapsedTime >= REQUIRED_DURATION) {
+                        onKasrahHijaiyahGestureSuccess()
+                    }
+                }
+            } else {
+                // Wrong gesture or no gesture
+                if (detectedGesture.isNotEmpty() && detectedGesture != "Unknown") {
+                    updatePredictionText(
+                        if (isHandStatic) 
+                            "$detectedGesture - tidak cocok dengan ${baseHijaiyahLetter?.gestureName} (tangan diam)" 
+                        else 
+                            "$detectedGesture - tidak cocok dengan ${baseHijaiyahLetter?.gestureName} (tangan bergerak)"
+                    )
+                } else {
+                    updatePredictionText(
+                        if (isHandStatic) 
+                            "Tidak ada gesture - coba ${baseHijaiyahLetter?.gestureName} (tangan diam)" 
+                        else 
+                            "Tidak ada gesture - coba ${baseHijaiyahLetter?.gestureName} (tangan bergerak)"
+                    )
+                }
+                
+                // Reset if there was a previous correct sequence
+                if (currentGesture != null) {
+                    resetGestureDetection()
+                }
+            }
+        } else if (hijaiyahGestureDetected && isWaitingForDownMovement && !kasrahPatternDetected) {
+            // Phase 2: Wait for Kasrah movement pattern (STATIC then DOWN)
+            Log.d(TAG, "🔍 Phase 2 Kasrah - Gesture: '$detectedGesture', isCorrect: $isCorrectHijaiyahGesture, target: ${baseHijaiyahLetter?.gestureName}")
+            
+            // Debug current state
+            debugMovementHistory()
+            
+            // Check for Kasrah movement pattern
+            val isKasrahPattern = checkKasrahMovementPattern()
+            
+            Log.d(TAG, "🎯 Kasrah pattern check result: isKasrahPattern=$isKasrahPattern, isCorrectGesture=$isCorrectHijaiyahGesture")
+            
+            if (isCorrectHijaiyahGesture && isKasrahPattern) {
+                // Kasrah pattern detected with correct gesture!
+                Log.d(TAG, "🎉 Kasrah pattern confirmed! Success!")
+                Log.d(TAG, "✅ BOTH CONDITIONS MET: Correct gesture + Kasrah pattern")
+                kasrahPatternDetected = true // Prevent multiple detections
+                onKasrahSuccess()
+                return
+            }
+            
+            if (isCorrectHijaiyahGesture) {
+                // Correct gesture but waiting for movement pattern
+                val lastMovements = if (movementHistory.size >= 2) {
+                    "${movementHistory[movementHistory.size - 2]} → ${movementHistory.last()}"
+                } else {
+                    movementHistory.joinToString(" → ")
+                }
+                
+                updatePredictionText("Gerak: $lastMovements. Untuk Kasrah: diam dulu, lalu ke BAWAH")
+            } else {
+                // Wrong gesture, reset movement tracking for this attempt
+                updatePredictionText(
+                    "Pertahankan gesture ${baseHijaiyahLetter?.gestureName} dan lakukan gerakan: diam → bawah"
+                )
+            }
+        }
+    }
+    
+    private fun handleDhammahGestureDetection(detectedGesture: String, currentTime: Long, isHandStatic: Boolean) {
+        // Get the Dhammah letter data for gesture matching
+        val dhammahLetter = when {
+            targetLetter != null -> DhammahData.getLetterByArabic(targetLetter!!)
+            targetLetterName != null -> DhammahData.getAllLetters().find { 
+                it.transliteration.equals(targetLetterName, ignoreCase = true)
+            }
+            else -> null
+        }
+        
+        // Get base hijaiyah letter using position from DhammahData
+        val baseHijaiyahLetter = dhammahLetter?.let { dhammah ->
+            HijaiyahData.getLetterByPosition(dhammah.position)
+        }
+        
+        val isCorrectHijaiyahGesture = baseHijaiyahLetter?.gestureName?.equals(detectedGesture, ignoreCase = true) == true
+        
+        Log.d(TAG, "Dhammah detection - dhammahLetter: $dhammahLetter, baseHijaiyahLetter: $baseHijaiyahLetter, gesture: $detectedGesture, correct: $isCorrectHijaiyahGesture")
+        
+        if (!hijaiyahGestureDetected && !isWaitingForUpMovement) {
+            // Phase 1: Detect the correct Hijaiyah gesture
+            
+            // Enforce static hand requirement for Hijaiyah gesture
+            if (isCorrectHijaiyahGesture && !isHandStatic) {
+                updatePredictionText("$detectedGesture - jaga tangan tetap diam...")
+                // Reset progress if already started
+                if (currentGesture != null) {
+                    currentGesture = null
+                    gestureStartTime = 0L
+                    consecutiveCorrectCount = 0
+                    fragmentCameraBinding.progressTimer.progress = 0
+                }
+                return
+            }
+            
+            if (isCorrectHijaiyahGesture && isHandStatic) {
+                if (currentGesture != detectedGesture) {
+                    // New correct gesture sequence starts
+                    currentGesture = detectedGesture
+                    gestureStartTime = currentTime
+                    consecutiveCorrectCount = 1
+                    updatePredictionText("$detectedGesture (mulai hitung - tangan diam)")
+                } else {
+                    // Continue correct gesture sequence
+                    consecutiveCorrectCount++
+                    val elapsedTime = currentTime - gestureStartTime
+                    val progress = (elapsedTime * 100 / REQUIRED_DURATION).toInt().coerceAtMost(100)
+                    
+                    fragmentCameraBinding.progressTimer.progress = progress
+                    fragmentCameraBinding.textCountdown.text = "${(REQUIRED_DURATION - elapsedTime) / 1000 + 1}"
+                    
+                    updatePredictionText("$detectedGesture (${elapsedTime}ms / ${REQUIRED_DURATION}ms - statis)")
+                    
+                    // Check if 1 second completed
+                    if (elapsedTime >= REQUIRED_DURATION) {
+                        onDhammahHijaiyahGestureSuccess()
+                    }
+                }
+            } else {
+                // Wrong gesture or no gesture
+                if (detectedGesture.isNotEmpty() && detectedGesture != "Unknown") {
+                    updatePredictionText(
+                        if (isHandStatic) 
+                            "$detectedGesture - tidak cocok dengan ${baseHijaiyahLetter?.gestureName} (tangan diam)" 
+                        else 
+                            "$detectedGesture - tidak cocok dengan ${baseHijaiyahLetter?.gestureName} (tangan bergerak)"
+                    )
+                } else {
+                    updatePredictionText(
+                        if (isHandStatic) 
+                            "Tidak ada gesture - coba ${baseHijaiyahLetter?.gestureName} (tangan diam)" 
+                        else 
+                            "Tidak ada gesture - coba ${baseHijaiyahLetter?.gestureName} (tangan bergerak)"
+                    )
+                }
+                
+                // Reset if there was a previous correct sequence
+                if (currentGesture != null) {
+                    resetGestureDetection()
+                }
+            }
+        } else if (hijaiyahGestureDetected && isWaitingForUpMovement && !dhammahPatternDetected) {
+            // Phase 2: Wait for Dhammah movement pattern (STATIC → DOWN → DIAGONAL_DOWN_LEFT → LEFT → DIAGONAL_UP_LEFT → UP → STATIC)
+            Log.d(TAG, "🔍 Phase 2 Dhammah - Gesture: '$detectedGesture', isCorrect: $isCorrectHijaiyahGesture, target: ${baseHijaiyahLetter?.gestureName}")
+            
+            // Debug current state
+            debugMovementHistory()
+            
+            // Check for Dhammah movement pattern
+            val isDhammahPattern = checkDhammahMovementPattern()
+            
+            Log.d(TAG, "🎯 Dhammah pattern check result: isDhammahPattern=$isDhammahPattern, isCorrectGesture=$isCorrectHijaiyahGesture")
+            
+            if (isCorrectHijaiyahGesture && isDhammahPattern) {
+                // Dhammah pattern detected with correct gesture!
+                Log.d(TAG, "🎉 Dhammah pattern confirmed! Success!")
+                Log.d(TAG, "✅ BOTH CONDITIONS MET: Correct gesture + Dhammah pattern")
+                dhammahPatternDetected = true // Prevent multiple detections
+                onDhammahSuccess()
+                return
+            }
+            
+            if (isCorrectHijaiyahGesture) {
+                // Correct gesture but waiting for movement pattern
+                val lastMovements = if (movementHistory.size >= 2) {
+                    "${movementHistory[movementHistory.size - 2]} → ${movementHistory.last()}"
+                } else {
+                    movementHistory.joinToString(" → ")
+                }
+                
+                updatePredictionText("Gerak: $lastMovements. Untuk Dhammah: diam → bawah → diagonal kiri-bawah → kiri → diagonal kiri-atas → atas")
+            } else {
+                // Wrong gesture, reset movement tracking for this attempt
+                updatePredictionText(
+                    "Pertahankan gesture ${baseHijaiyahLetter?.gestureName} dan lakukan gerakan: diam → bawah → diagonal → kiri → diagonal → atas"
+                )
+            }
+        }
+    }
+    
     private fun onHijaiyahGestureSuccess() {
         hijaiyahGestureDetected = true
         isWaitingForLeftMovement = true
@@ -797,9 +1158,67 @@ class CameraFragment : Fragment(),
         updatePredictionText("Bagus! Sekarang untuk Fathah: diam dulu, lalu gerak ke KIRI")
         
         // Show instruction overlay or update text
-        fragmentCameraBinding.textLetterName.text = "Fathah: DIAM → KIRI"
+        fragmentCameraBinding.textLetterName.text = "Fathah: DIAM → KIRI →"
         
         Log.d(TAG, "Hijaiyah gesture detected successfully. Waiting for Fathah movement pattern.")
+        Log.d(TAG, "Movement history initialized with STATIC baseline: ${movementHistory.joinToString(" → ")}")
+    }
+    
+    private fun onKasrahHijaiyahGestureSuccess() {
+        hijaiyahGestureDetected = true
+        isWaitingForDownMovement = true
+        kasrahPatternDetected = false // Reset pattern detection flag
+        
+        // Reset gesture detection variables for movement phase
+        currentGesture = null
+        gestureStartTime = 0L
+        consecutiveCorrectCount = 0
+        fragmentCameraBinding.progressTimer.progress = 0
+        
+        // Clear movement history for fresh tracking
+        movementHistory.clear()
+        lastHandPosition = null
+        
+        // Add initial STATIC movement to establish baseline for pattern detection
+        movementHistory.add(MovementDirection.STATIC)
+        Log.d(TAG, "Added initial STATIC to movement history for Kasrah. History[0] = STATIC")
+        
+        // Update UI to show next instruction
+        updatePredictionText("Bagus! Sekarang untuk Kasrah: diam dulu, lalu gerak ke BAWAH")
+        
+        // Show instruction overlay or update text
+        fragmentCameraBinding.textLetterName.text = "Kasrah: DIAM → BAWAH →"
+        
+        Log.d(TAG, "Hijaiyah gesture detected successfully. Waiting for Kasrah movement pattern.")
+        Log.d(TAG, "Movement history initialized with STATIC baseline: ${movementHistory.joinToString(" → ")}")
+    }
+    
+    private fun onDhammahHijaiyahGestureSuccess() {
+        hijaiyahGestureDetected = true
+        isWaitingForUpMovement = true
+        dhammahPatternDetected = false // Reset pattern detection flag
+        
+        // Reset gesture detection variables for movement phase
+        currentGesture = null
+        gestureStartTime = 0L
+        consecutiveCorrectCount = 0
+        fragmentCameraBinding.progressTimer.progress = 0
+        
+        // Clear movement history for fresh tracking
+        movementHistory.clear()
+        lastHandPosition = null
+        
+        // Add initial STATIC movement to establish baseline for pattern detection
+        movementHistory.add(MovementDirection.STATIC)
+        Log.d(TAG, "Added initial STATIC to movement history for Dhammah. History[0] = STATIC")
+        
+        // Update UI to show next instruction
+        updatePredictionText("Bagus! Sekarang untuk Dhammah: diam → bawah → diagonal kiri-bawah → kiri → diagonal kiri-atas → atas")
+        
+        // Show instruction overlay or update text
+        fragmentCameraBinding.textLetterName.text = "Dhammah: DIAM → BAWAH → DIAGONAL → KIRI → DIAGONAL → ATAS →"
+        
+        Log.d(TAG, "Hijaiyah gesture detected successfully. Waiting for Dhammah movement pattern.")
         Log.d(TAG, "Movement history initialized with STATIC baseline: ${movementHistory.joinToString(" → ")}")
     }
     
@@ -825,6 +1244,7 @@ class CameraFragment : Fragment(),
         // Reset movement pattern tracking
         resetStaticTracking()
         fathahPatternDetected = false
+        kasrahPatternDetected = false
         
         // Brief pause before allowing new detection
         resetTimer?.cancel()
@@ -1330,9 +1750,59 @@ class CameraFragment : Fragment(),
             // Reset movement tracking state
             isCurrentlyStatic = true
             
-            // Optionally update UI to reflect hand lost state
+            // CHECK: If we're in Phase 2 (movement detection), reset back to Phase 1
             if (isWaitingForLeftMovement && hijaiyahGestureDetected) {
+                Log.d(TAG, "🔄 FATHAH PHASE 2 HAND LOST - Resetting back to Phase 1 (Hijaiyah detection)")
+                
+                // Reset all Phase 2 states for Fathah
+                hijaiyahGestureDetected = false
+                isWaitingForLeftMovement = false
+                fathahPatternDetected = false
+                
+                // Reset gesture detection completely (back to Phase 1)
+                resetGestureDetection()
+                
+                // Update UI to show Phase 1 instruction
+                updatePredictionText("Tangan hilang - ulangi dari awal: tunjukkan gesture ${targetLetterName}")
+                fragmentCameraBinding.textLetterName.text = "Fase 1: Tunjukkan ${targetLetterName}"
+                
+                Log.d(TAG, "✅ Successfully reset to Phase 1 - waiting for Hijaiyah gesture")
+            } else if (isWaitingForDownMovement && hijaiyahGestureDetected) {
+                Log.d(TAG, "🔄 KASRAH PHASE 2 HAND LOST - Resetting back to Phase 1 (Hijaiyah detection)")
+                
+                // Reset all Phase 2 states for Kasrah
+                hijaiyahGestureDetected = false
+                isWaitingForDownMovement = false
+                kasrahPatternDetected = false
+                
+                // Reset gesture detection completely (back to Phase 1)
+                resetGestureDetection()
+                
+                // Update UI to show Phase 1 instruction
+                updatePredictionText("Tangan hilang - ulangi dari awal: tunjukkan gesture ${targetLetterName}")
+                fragmentCameraBinding.textLetterName.text = "Fase 1: Tunjukkan ${targetLetterName}"
+                
+                Log.d(TAG, "✅ Successfully reset to Phase 1 - waiting for Hijaiyah gesture")
+            } else if (isWaitingForUpMovement && hijaiyahGestureDetected) {
+                Log.d(TAG, "🔄 DHAMMAH PHASE 2 HAND LOST - Resetting back to Phase 1 (Hijaiyah detection)")
+                
+                // Reset all Phase 2 states for Dhammah
+                hijaiyahGestureDetected = false
+                isWaitingForUpMovement = false
+                dhammahPatternDetected = false
+                
+                // Reset gesture detection completely (back to Phase 1)
+                resetGestureDetection()
+                
+                // Update UI to show Phase 1 instruction
+                updatePredictionText("Tangan hilang - ulangi dari awal: tunjukkan gesture ${targetLetterName}")
+                fragmentCameraBinding.textLetterName.text = "Fase 1: Tunjukkan ${targetLetterName}"
+                
+                Log.d(TAG, "✅ Successfully reset to Phase 1 - waiting for Hijaiyah gesture")
+            } else {
+                // We're in Phase 1 or not started yet
                 updatePredictionText("Tangan hilang - letakkan kembali untuk melanjutkan")
+                Log.d(TAG, "ℹ️ Hand lost during Phase 1 or initial state")
             }
         }
     }
@@ -1366,6 +1836,92 @@ class CameraFragment : Fragment(),
         try {
             // Simple success message, could be enhanced with dialog
             Toast.makeText(requireContext(), "Berhasil! Fathah $targetLetterName telah selesai!", Toast.LENGTH_LONG).show()
+            
+            // Auto navigate back after delay
+            view?.postDelayed({
+                try {
+                    Navigation.findNavController(requireView()).navigateUp()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error navigating back", e)
+                }
+            }, 2000)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error showing success dialog", e)
+        }
+    }
+    
+    private fun onKasrahSuccess() {
+        // Success! User performed correct Hijaiyah gesture + down movement for Kasrah
+        updatePredictionText("BERHASIL! Kasrah $targetLetterName terdeteksi!")
+        
+        // Update UI to show success
+        fragmentCameraBinding.textLetterName.text = "Berhasil: Kasrah $targetLetterName"
+        fragmentCameraBinding.progressTimer.progress = 100
+        
+        // Mark as completed and save progress
+        val letterPosition = arguments?.getInt("letterPosition", -1) ?: -1
+        if (letterPosition >= 0) {
+            progressManager.markLetterCompleted(letterPosition)
+        }
+        
+        // Stop detection and reset all states
+        isDetecting = false
+        isWaitingForDownMovement = false
+        resetStaticTracking()
+        
+        // Show success dialog or navigate back
+        showKasrahSuccessDialog()
+        
+        Log.d(TAG, "Kasrah gesture completed successfully!")
+    }
+    
+    private fun showKasrahSuccessDialog() {
+        try {
+            // Simple success message, could be enhanced with dialog
+            Toast.makeText(requireContext(), "Berhasil! Kasrah $targetLetterName telah selesai!", Toast.LENGTH_LONG).show()
+            
+            // Auto navigate back after delay
+            view?.postDelayed({
+                try {
+                    Navigation.findNavController(requireView()).navigateUp()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error navigating back", e)
+                }
+            }, 2000)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error showing success dialog", e)
+        }
+    }
+    
+    private fun onDhammahSuccess() {
+        // Success! User performed correct Hijaiyah gesture + complex movement pattern for Dhammah
+        updatePredictionText("BERHASIL! Dhammah $targetLetterName terdeteksi!")
+        
+        // Update UI to show success
+        fragmentCameraBinding.textLetterName.text = "Berhasil: Dhammah $targetLetterName"
+        fragmentCameraBinding.progressTimer.progress = 100
+        
+        // Mark as completed and save progress
+        val letterPosition = arguments?.getInt("letterPosition", -1) ?: -1
+        if (letterPosition >= 0) {
+            progressManager.markLetterCompleted(letterPosition)
+        }
+        
+        // Stop detection and reset all states
+        isDetecting = false
+        isWaitingForUpMovement = false
+        resetStaticTracking()
+        
+        // Show success dialog or navigate back
+        showDhammahSuccessDialog()
+        
+        Log.d(TAG, "Dhammah gesture completed successfully!")
+    }
+    
+    private fun showDhammahSuccessDialog() {
+        try {
+            // Simple success message, could be enhanced with dialog
+            Toast.makeText(requireContext(), "Berhasil! Dhammah $targetLetterName telah selesai!", Toast.LENGTH_LONG).show()
             
             // Auto navigate back after delay
             view?.postDelayed({

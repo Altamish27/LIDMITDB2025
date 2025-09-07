@@ -19,41 +19,42 @@ package com.google.mediapipe.examples.gesturerecognizer.data
 data class FathahLetter(
     override val arabic: String,
     override val transliteration: String,
-    override val gestureName: String,
     override val position: Int,
     override var isCompleted: Boolean = false
-) : ArabicLetter
+) : ArabicLetter {
+    override val gestureName: String? = null
+}
 
 object FathahData {
     val letters = listOf(
-        FathahLetter("أَ", "A", "alif", 0),
-        FathahLetter("بَ", "Ba", "ba", 1),
-        FathahLetter("تَ", "Ta", "ta", 2),
-        FathahLetter("ثَ", "Tsa", "tsa", 3),
-        FathahLetter("جَ", "Ja", "jim", 4),
-        FathahLetter("حَ", "Ha", "ha", 5),
-        FathahLetter("خَ", "Kha", "kha", 6),
-        FathahLetter("دَ", "Da", "dal", 7),
-        FathahLetter("ذَ", "Dza", "dzal", 8),
-        FathahLetter("رَ", "Ra", "ra", 9),
-        FathahLetter("زَ", "Za", "zai", 10),
-        FathahLetter("سَ", "Sa", "sin", 11),
-        FathahLetter("شَ", "Sya", "syin", 12),
-        FathahLetter("صَ", "Sha", "shod", 13),
-        FathahLetter("ضَ", "Dha", "dhod", 14),
-        FathahLetter("طَ", "Tha", "tho", 15),
-        FathahLetter("ظَ", "Dzha", "dzho", 16),
-        FathahLetter("عَ", "A", "ain", 17),
-        FathahLetter("غَ", "Gha", "ghoin", 18),
-        FathahLetter("فَ", "Fa", "fa", 19),
-        FathahLetter("قَ", "Qa", "qof", 20),
-        FathahLetter("كَ", "Ka", "kaf", 21),
-        FathahLetter("لَ", "La", "lam", 22),
-        FathahLetter("مَ", "Ma", "mim", 23),
-        FathahLetter("نَ", "Na", "nun", 24),
-        FathahLetter("وَ", "Wa", "waw", 25),
-        FathahLetter("هَ", "Ha", "ha_end", 26),
-        FathahLetter("يَ", "Ya", "ya", 27)
+        FathahLetter("أَ", "A", 1),
+        FathahLetter("بَ", "Ba", 2),
+        FathahLetter("تَ", "Ta", 3),
+        FathahLetter("ثَ", "Tsa", 4),
+        FathahLetter("جَ", "Ja", 5),
+        FathahLetter("حَ", "Ha", 6),
+        FathahLetter("خَ", "Kho", 7),
+        FathahLetter("دَ", "Da", 8),
+        FathahLetter("ذَ", "Dza", 9),
+        FathahLetter("رَ", "Ra", 10),
+        FathahLetter("زَ", "Za", 11),
+        FathahLetter("سَ", "Sa", 12),
+        FathahLetter("شَ", "Sya", 13),
+        FathahLetter("صَ", "Sha", 14),
+        FathahLetter("ضَ", "Dha", 15),
+        FathahLetter("طَ", "Tha", 16),
+        FathahLetter("ظَ", "Dzha", 17),
+        FathahLetter("عَ", "A", 18),
+        FathahLetter("غَ", "Gha", 19),
+        FathahLetter("فَ", "Fa", 20),
+        FathahLetter("قَ", "Qa", 21),
+        FathahLetter("كَ", "Ka", 22),
+        FathahLetter("لَ", "La", 23),
+        FathahLetter("مَ", "Ma", 24),
+        FathahLetter("نَ", "Na", 25),
+        FathahLetter("وَ", "Wa", 26),
+        FathahLetter("هَ", "Ha", 27),
+        FathahLetter("يَ", "Ya", 28)
     )
     
     fun getAllLetters(): List<FathahLetter> = letters

@@ -204,7 +204,7 @@ class HomeActivity : AppCompatActivity() {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
             try {
                 val intent = Intent(this, MainActivity::class.java)
-                intent.putExtra("navigate_to", "hijaiyah_list")
+                // Navigate to default hijaiyah_fragment (no extra needed)
                 startActivity(intent)
             } catch (e: Exception) {
                 Log.e("HomeActivity", "Failed to start Learning: ${e.message}", e)

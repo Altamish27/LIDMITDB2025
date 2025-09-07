@@ -62,20 +62,7 @@
         android:name="com.google.mediapipe.examples.gesturerecognizer.ui.gallery.GalleryFragment"
         android:label="GalleryFragment" />
 
-    <fragment
-        android:id="@+id/hijaiyah_list_fragment"
-        android:name="com.google.mediapipe.examples.gesturerecognizer.ui.hijaiyah.HijaiyahListFragment"
-        android:label="HijaiyahListFragment">
 
-        <action
-            android:id="@+id/action_hijaiyah_list_to_camera"
-            app:destination="@id/camera_fragment" />
-
-        <action
-            android:id="@+id/action_hijaiyah_list_to_hijaiyah"
-            app:destination="@id/hijaiyah_fragment" />
-
-    </fragment>
 
     <fragment
         android:id="@+id/hijaiyah_fragment"
@@ -96,16 +83,5 @@
         android:id="@+id/latihan_fragment"
         android:name="com.google.mediapipe.examples.gesturerecognizer.ui.latihan.LatihanFragment"
         android:label="LatihanFragment" />
-
-    <fragment
-        android:id="@+id/fathah_list_fragment"
-        android:name="com.google.mediapipe.examples.gesturerecognizer.ui.fathah.FathahListFragment"
-        android:label="FathahListFragment">
-
-        <action
-            android:id="@+id/action_fathah_list_to_camera"
-            app:destination="@id/camera_fragment" />
-
-    </fragment>
 
 </navigation>

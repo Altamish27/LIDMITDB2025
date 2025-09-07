@@ -19,7 +19,7 @@ package com.google.mediapipe.examples.gesturerecognizer.data
 interface ArabicLetter {
     val arabic: String
     val transliteration: String
-    val gestureName: String
     val position: Int
     var isCompleted: Boolean
+    val gestureName: String? // Optional for letters that use position-based matching
 }

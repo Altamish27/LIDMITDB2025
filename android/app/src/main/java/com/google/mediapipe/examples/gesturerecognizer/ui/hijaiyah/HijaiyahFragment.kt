@@ -35,10 +35,38 @@ import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahLetter
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager
 import com.google.mediapipe.examples.gesturerecognizer.data.FathahData
 import com.google.mediapipe.examples.gesturerecognizer.data.FathahLetter
+import com.google.mediapipe.examples.gesturerecognizer.data.KasrahData
+import com.google.mediapipe.examples.gesturerecognizer.data.DhammahData
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentHijaiyahBinding
 
 
 class HijaiyahFragment : Fragment() {
+
+    companion object {
+        /**
+         * Create bundle for navigating to HijaiyahFragment with specific category
+         */
+        fun createBundle(category: String): Bundle {
+            return Bundle().apply {
+                putString("defaultCategory", category)
+            }
+        }
+        
+        /**
+         * Create bundle for Fathah category
+         */
+        fun createFathahBundle(): Bundle = createBundle("fathah")
+        
+        /**
+         * Create bundle for Kasrah category  
+         */
+        fun createKasrahBundle(): Bundle = createBundle("kasrah")
+        
+        /**
+         * Create bundle for Dhammah category
+         */
+        fun createDhammahBundle(): Bundle = createBundle("dhammah")
+    }
 
     private var _binding: FragmentHijaiyahBinding? = null
     private val binding get() = _binding!!
@@ -61,6 +89,15 @@ class HijaiyahFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         progressManager = HijaiyahProgressManager(requireContext())
+        
+        // Check if default category is specified in arguments
+        val defaultCategory = arguments?.getString("defaultCategory")
+        currentCategory = when(defaultCategory) {
+            "fathah" -> 1
+            "kasrah" -> 2
+            "dhammah" -> 3
+            else -> 0 // default to Hijaiyah
+        }
         
         setupUI()
         setupSpinner()
@@ -97,10 +134,10 @@ class HijaiyahFragment : Fragment() {
                             loadFathahLetters()
                         }
                         2 -> { // Kasrah
-                            adapter.updateLetters(emptyList())
+                            loadKasrahLetters()
                         }
                         3 -> { // Dhammah
-                            adapter.updateLetters(emptyList())
+                            loadDhammahLetters()
                         }
                     }
                 }
@@ -109,6 +146,9 @@ class HijaiyahFragment : Fragment() {
                     // Do nothing
                 }
             }
+            
+            // Set spinner to default category
+            binding.spinnerCategory.setSelection(currentCategory, false)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -136,7 +176,7 @@ class HijaiyahFragment : Fragment() {
                     allLetters.filter { letter ->
                         letter.arabic.contains(query, ignoreCase = true) ||
                         letter.transliteration.contains(query, ignoreCase = true) ||
-                        letter.gestureName.contains(query, ignoreCase = true)
+                        (letter.gestureName?.contains(query, ignoreCase = true) == true)
                     }
                 }
                 adapter.updateLetters(filteredLetters)
@@ -150,7 +190,7 @@ class HijaiyahFragment : Fragment() {
             object : ArabicLetter {
                 override val arabic = hijaiyahLetter.arabic
                 override val transliteration = hijaiyahLetter.transliteration
-                override val gestureName = hijaiyahLetter.transliteration.lowercase()
+                override val gestureName = hijaiyahLetter.gestureName
                 override val position = hijaiyahLetter.position
                 override var isCompleted = hijaiyahLetter.isCompleted
             }
@@ -161,7 +201,45 @@ class HijaiyahFragment : Fragment() {
     
     private fun loadFathahLetters() {
         val fathahLetters = FathahData.getAllLetters()
-        allLetters = fathahLetters.map { it as ArabicLetter }
+        allLetters = fathahLetters.map { fathahLetter ->
+            object : ArabicLetter {
+                override val arabic = fathahLetter.arabic
+                override val transliteration = fathahLetter.transliteration
+                override val gestureName: String? = null // Fathah uses position-based matching
+                override val position = fathahLetter.position
+                override var isCompleted = false // TODO: Implement progress tracking for fathah
+            }
+        }
+        adapter.updateLetters(allLetters)
+        updateProgress()
+    }
+    
+    private fun loadKasrahLetters() {
+        val kasrahLetters = KasrahData.getAllLetters()
+        allLetters = kasrahLetters.map { kasrahLetter ->
+            object : ArabicLetter {
+                override val arabic = kasrahLetter.arabic
+                override val transliteration = kasrahLetter.transliteration
+                override val gestureName = kasrahLetter.gestureName
+                override val position = kasrahLetter.position
+                override var isCompleted = false // TODO: Implement progress tracking for kasrah
+            }
+        }
+        adapter.updateLetters(allLetters)
+        updateProgress()
+    }
+    
+    private fun loadDhammahLetters() {
+        val dhammahLetters = DhammahData.getAllLetters()
+        allLetters = dhammahLetters.map { dhammahLetter ->
+            object : ArabicLetter {
+                override val arabic = dhammahLetter.arabic
+                override val transliteration = dhammahLetter.transliteration
+                override val gestureName = dhammahLetter.gestureName
+                override val position = dhammahLetter.position
+                override var isCompleted = false // TODO: Implement progress tracking for dhammah
+            }
+        }
         adapter.updateLetters(allLetters)
         updateProgress()
     }

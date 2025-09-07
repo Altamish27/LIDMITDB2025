@@ -89,13 +89,10 @@
                 // Check if we need to navigate to a specific destination
                 val navigateTo = intent.getStringExtra("navigate_to")
                 when (navigateTo) {
-                    "hijaiyah_list" -> {
-                        navController.navigate(R.id.hijaiyah_list_fragment)
-                    }
                     "latihan" -> {
                         navController.navigate(R.id.latihan_fragment)
                     }
-                    // Default stays at hijaiyah_fragment (camera)
+                    // Default stays at hijaiyah_fragment (start destination)
                 }
 
                 // Handle back press with modern API
