@@ -1,7 +1,25 @@
 /*
  * Copyright 2022 The TensorFlow Authors. All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (th        loadCurrentBaris()
+    }
+
+    private fun loadPageData() {
+        currentHalaman = LatihanPageData.getHalamanById(currentJilidId, currentHalamanId)
+        currentBaris = currentHalaman?.barisList?.find { it.id == currentBarisId }
+    }
+
+    private fun setupUI() {
+        binding.tvTitle.text = exerciseTitle
+        updateUI()
+    }
+
+    private fun updateUI() {
+        currentHalaman?.let { halaman ->
+            binding.tvSubtitle.text = "Halaman ${halaman.id}"
+            binding.tvRowTitle.text = "Baris $currentBarisId"
+        }
+    }se");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -18,15 +36,24 @@ package com.google.mediapipe.examples.gesturerecognizer.ui.latihan
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
 import androidx.recyclerview.widget.GridLayoutManager
 import android.view.View
+import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityLatihanPracticeBinding
 import com.google.mediapipe.examples.gesturerecognizer.fragment.CameraFragment
 import com.google.mediapipe.examples.gesturerecognizer.ui.main.MainActivity
+import com.google.mediapipe.examples.gesturerecognizer.data.LatihanPageData
+import com.google.mediapipe.examples.gesturerecognizer.data.LatihanHalaman
+import com.google.mediapipe.examples.gesturerecognizer.data.LatihanBaris
+import com.google.mediapipe.examples.gesturerecognizer.data.LatihanHuruf
 
+// Keep old HurufItem for backward compatibility if needed
 data class HurufItem(
     val arabic: String,
     val latin: String,
@@ -38,10 +65,16 @@ data class HurufItem(
 class LatihanPracticeActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLatihanPracticeBinding
-    private lateinit var adapter: HurufGridAdapter
-    private var currentRow = 1
+    private lateinit var adapter: LatihanHurufGridAdapter
+    
+    // New structure variables
+    private var currentJilidId = 1
+    private var currentHalamanId = 1
+    private var currentBarisId = 1
+    
     private var exerciseId = 1
     private var exerciseTitle = "Latihan 1"
+    
     // Track whether we are running a sequential row test
     private var sequenceMode = false
     // Track completed letter positions in this activity session
@@ -49,7 +82,11 @@ class LatihanPracticeActivity : AppCompatActivity() {
     // Auto-start camera on first launch of this activity
     private var firstLaunch = true
     
-    // Data huruf untuk setiap baris
+    // Current page data
+    private var currentHalaman: LatihanHalaman? = null
+    private var currentBaris: LatihanBaris? = null
+    
+    // Data huruf untuk setiap baris (legacy - keep for backward compatibility)
     private val hurufData = listOf(
         // Baris 1
         listOf(
@@ -83,7 +120,7 @@ class LatihanPracticeActivity : AppCompatActivity() {
             if (success && letterPos > 0) {
                 // mark as completed locally and refresh UI
                 completedPositions.add(letterPos)
-                loadCurrentRow()
+                loadCurrentBaris()
 
                 if (sequenceMode) {
                     // continue to next letter in the same row
@@ -91,6 +128,20 @@ class LatihanPracticeActivity : AppCompatActivity() {
                 } else {
                     // hide camera container if not sequence
                     hideEmbeddedCamera()
+                    
+                    // Check if current baris is completed and auto advance if possible
+                    if (isCurrentBarisCompleted() && canGoNextBaris()) {
+                        Toast.makeText(this@LatihanPracticeActivity, "Baris selesai! Auto pindah ke baris selanjutnya...", Toast.LENGTH_SHORT).show()
+                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                            currentBarisId++
+                            loadCurrentBaris()
+                        }, 1500) // 1.5 second delay
+                    } else if (isCurrentHalamanCompleted()) {
+                        // Check if entire halaman is completed
+                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                            showPageCompletionDialog()
+                        }, 1500) // 1.5 second delay
+                    }
                 }
             } else {
                 // on failure just hide embedded camera for now
@@ -102,20 +153,34 @@ class LatihanPracticeActivity : AppCompatActivity() {
         exerciseId = intent.getIntExtra("exerciseId", 1)
         exerciseTitle = intent.getStringExtra("exerciseTitle") ?: "Latihan 1"
 
+        // Load new structure data
+        loadPageData()
+        
         setupUI()
         setupRecyclerView()
         setupClickListeners()
-        loadCurrentRow()
+        loadCurrentBaris()
+    }
+
+    private fun loadPageData() {
+        currentHalaman = LatihanPageData.getHalamanById(currentJilidId, currentHalamanId)
+        currentBaris = currentHalaman?.barisList?.find { it.id == currentBarisId }
     }
 
     private fun setupUI() {
         binding.tvTitle.text = exerciseTitle
-        binding.tvSubtitle.text = "Halaman $currentRow"
-        binding.tvRowTitle.text = "Baris $currentRow"
+        updateUI()
+    }
+
+    private fun updateUI() {
+        currentHalaman?.let { halaman ->
+            binding.tvSubtitle.text = "Halaman ${halaman.id}"
+            binding.tvRowTitle.text = "Baris $currentBarisId"
+        }
     }
 
     private fun setupRecyclerView() {
-        adapter = HurufGridAdapter { huruf ->
+        adapter = LatihanHurufGridAdapter { huruf ->
             onHurufClick(huruf)
         }
         
@@ -132,59 +197,65 @@ class LatihanPracticeActivity : AppCompatActivity() {
             finish()
         }
         
-    // Camera button removed; camera auto-starts on first resume
+        // Camera button removed; camera auto-starts on first resume
         
         binding.btnNext.setOnClickListener {
-            nextRow()
+            nextBaris()
         }
         
         binding.btnPrevious.setOnClickListener {
-            previousRow()
+            previousBaris()
         }
     }
 
-    private fun loadCurrentRow() {
-        if (currentRow <= hurufData.size) {
+    private fun loadCurrentBaris() {
+        currentBaris = LatihanPageData.getBarisById(currentJilidId, currentHalamanId, currentBarisId)
+        
+        currentBaris?.let { baris ->
             // Merge persisted completed letters from progress manager
             try {
                 val persisted = com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager(this).getCompletedLetters()
                 completedPositions.addAll(persisted)
             } catch (_: Exception) {}
 
-            // Map completion state from session `completedPositions` so default is not-tested (blue)
-            val currentHurufList = hurufData[currentRow - 1].map { huruf ->
-                if (completedPositions.contains(huruf.position)) {
-                    huruf.copy(isCompleted = true)
-                } else {
-                    huruf.copy(isCompleted = false)
-                }
-            }
-
-            adapter.updateHuruf(currentHurufList)
+            // Update adapter with current baris data
+            adapter.updateHuruf(baris.hurufList)
+            adapter.updateCompletedPositions(completedPositions)
             
             // Update UI
-            binding.tvSubtitle.text = "Halaman $currentRow"
-            binding.tvRowTitle.text = "Baris $currentRow"
+            updateUI()
             
             // Enable/disable navigation buttons
-            binding.btnPrevious.isEnabled = currentRow > 1
-            binding.btnNext.isEnabled = currentRow < hurufData.size
+            binding.btnPrevious.isEnabled = canGoPreviousBaris()
+            binding.btnNext.isEnabled = canGoNextBaris()
+            
+            // Debug info untuk memastikan completed positions ter-track
+            android.util.Log.d("LatihanPractice", "Baris $currentBarisId loaded. Completed positions: $completedPositions")
         }
     }
 
-    private fun onHurufClick(huruf: HurufItem) {
+    private fun canGoPreviousBaris(): Boolean {
+        return currentBarisId > 1
+    }
+
+    private fun canGoNextBaris(): Boolean {
+        val totalBaris = currentHalaman?.barisList?.size ?: 0
+        return currentBarisId < totalBaris
+    }
+
+    private fun onHurufClick(huruf: LatihanHuruf) {
         // Embed CameraFragment for this specific huruf (single mode)
         sequenceMode = false
         embedCameraForLetter(huruf, sequenceMode)
     }
 
     private fun openCamera() {
-        // Start sequential practice for current row
+        // Start sequential practice for current baris
         sequenceMode = true
-        startSequenceFromCurrentRow()
+        startSequenceFromCurrentBaris()
     }
 
-    private fun embedCameraForLetter(huruf: HurufItem, sequence: Boolean) {
+    private fun embedCameraForLetter(huruf: LatihanHuruf, sequence: Boolean) {
         // Create fragment and set arguments
         val frag = CameraFragment().apply {
             arguments = Bundle().apply {
@@ -212,63 +283,176 @@ class LatihanPracticeActivity : AppCompatActivity() {
         }
     }
 
-    private fun startSequenceFromCurrentRow() {
-        val rowList = hurufData.getOrNull(currentRow - 1) ?: emptyList()
-        // find first not-completed letter
-        val next = rowList.firstOrNull { !completedPositions.contains(it.position) }
-        if (next == null) {
-            Toast.makeText(this, "Semua huruf di baris ini sudah selesai", Toast.LENGTH_SHORT).show()
-            return
+    private fun startSequenceFromCurrentBaris() {
+        currentBaris?.let { baris ->
+            // find first not-completed letter
+            val next = baris.hurufList.firstOrNull { !completedPositions.contains(it.position) }
+            if (next == null) {
+                Toast.makeText(this, "Semua huruf di baris ini sudah selesai", Toast.LENGTH_SHORT).show()
+                return
+            }
+            embedCameraForLetter(next, true)
         }
-        embedCameraForLetter(next, true)
     }
 
     private fun advanceSequence(completedLetterPosition: Int) {
-        // find current row list and locate next not-completed after the completed position
-        val rowList = hurufData.getOrNull(currentRow - 1) ?: return
-        val currentIndex = rowList.indexOfFirst { it.position == completedLetterPosition }
-        var nextIndex = -1
-        for (i in currentIndex + 1 until rowList.size) {
-            if (!completedPositions.contains(rowList[i].position)) {
-                nextIndex = i
-                break
+        // find current baris list and locate next not-completed after the completed position
+        currentBaris?.let { baris ->
+            val currentIndex = baris.hurufList.indexOfFirst { it.position == completedLetterPosition }
+            var nextIndex = -1
+            for (i in currentIndex + 1 until baris.hurufList.size) {
+                if (!completedPositions.contains(baris.hurufList[i].position)) {
+                    nextIndex = i
+                    break
+                }
+            }
+
+            if (nextIndex >= 0) {
+                val nextHuruf = baris.hurufList[nextIndex]
+                // replace fragment with next letter
+                embedCameraForLetter(nextHuruf, true)
+            } else {
+                // finished baris, check if we can auto advance to next baris
+                if (canGoNextBaris()) {
+                    Toast.makeText(this, "Selesai baris ini. Pindah ke baris selanjutnya...", Toast.LENGTH_SHORT).show()
+                    // Auto advance to next baris after a short delay
+                    hideEmbeddedCamera()
+                    currentBarisId++
+                    loadCurrentBaris()
+                    // Auto start camera for next baris
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        if (sequenceMode) {
+                            startSequenceFromCurrentBaris()
+                        }
+                    }, 1000) // 1 second delay
+                } else {
+                    // No more baris available
+                    Toast.makeText(this, "Selesai halaman ini!", Toast.LENGTH_SHORT).show()
+                    sequenceMode = false
+                    hideEmbeddedCamera()
+                    
+                    // Check if entire halaman is completed and show dialog
+                    if (isCurrentHalamanCompleted()) {
+                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                            showPageCompletionDialog()
+                        }, 1500) // 1.5 second delay to show toast first
+                    }
+                }
             }
         }
+    }
 
-        if (nextIndex >= 0) {
-            val nextHuruf = rowList[nextIndex]
-            // replace fragment with next letter
-            embedCameraForLetter(nextHuruf, true)
-        } else {
-            // finished row
-            Toast.makeText(this, "Selesai baris ini", Toast.LENGTH_SHORT).show()
-            sequenceMode = false
-            hideEmbeddedCamera()
+    private fun nextBaris() {
+        if (canGoNextBaris()) {
+            currentBarisId++
+            loadCurrentBaris()
+            // Auto start camera for new baris if sequence mode is active
+            if (sequenceMode) {
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    startSequenceFromCurrentBaris()
+                }, 500) // 0.5 second delay
+            }
         }
     }
 
-    private fun nextRow() {
-        if (currentRow < hurufData.size) {
-            currentRow++
-            loadCurrentRow()
-        }
-    }
-
-    private fun previousRow() {
-        if (currentRow > 1) {
-            currentRow--
-            loadCurrentRow()
+    private fun previousBaris() {
+        if (canGoPreviousBaris()) {
+            currentBarisId--
+            loadCurrentBaris()
         }
     }
 
     override fun onResume() {
         super.onResume()
         // Reload data when returning from camera
-        loadCurrentRow()
+        loadCurrentBaris()
         // Automatically start camera on first resume so user doesn't need to press the button
         if (firstLaunch) {
             firstLaunch = false
             openCamera()
+        }
+    }
+
+    // Helper function to check if current baris is completed
+    private fun isCurrentBarisCompleted(): Boolean {
+        return currentBaris?.hurufList?.all { completedPositions.contains(it.position) } ?: false
+    }
+
+    // Helper function to check if current halaman is completed
+    private fun isCurrentHalamanCompleted(): Boolean {
+        return currentHalaman?.let { halaman ->
+            val allPositions = halaman.barisList.flatMap { it.hurufList.map { huruf -> huruf.position } }
+            val completedCount = allPositions.count { completedPositions.contains(it) }
+            val totalCount = allPositions.size
+            
+            android.util.Log.d("LatihanPractice", "Halaman $currentHalamanId progress: $completedCount/$totalCount")
+            
+            completedCount == totalCount
+        } ?: false
+    }
+
+    // Show completion dialog when page is finished
+    private fun showPageCompletionDialog() {
+        val dialog = AlertDialog.Builder(this)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_page_completed, null)
+        dialog.setView(dialogView)
+        dialog.setCancelable(false)
+
+        val alertDialog = dialog.create()
+        
+        // Set message
+        val tvMessage = dialogView.findViewById<TextView>(R.id.tvMessage)
+        tvMessage.text = "Anda telah menyelesaikan Halaman $currentHalamanId!"
+        
+        // Stop button - back to page list
+        dialogView.findViewById<Button>(R.id.btnStop).setOnClickListener {
+            alertDialog.dismiss()
+            finish() // Go back to previous activity (page list)
+        }
+        
+        // Next page button
+        dialogView.findViewById<Button>(R.id.btnNextPage).setOnClickListener {
+            alertDialog.dismiss()
+            navigateToNextPage()
+        }
+        
+        alertDialog.show()
+    }
+
+    // Navigate to next page or show warning if not available
+    private fun navigateToNextPage() {
+        val nextHalamanId = currentHalamanId + 1
+        val nextHalaman = LatihanPageData.getHalamanById(currentJilidId, nextHalamanId)
+        
+        if (nextHalaman != null) {
+            // Next page available, navigate to it
+            currentHalamanId = nextHalamanId
+            currentBarisId = 1 // Reset to first baris of new page
+            
+            // Clear completed positions for new page to avoid conflicts
+            // Keep only positions that might be relevant for the new page
+            val newPagePositions = nextHalaman.barisList.flatMap { it.hurufList.map { huruf -> huruf.position } }
+            completedPositions.retainAll(newPagePositions)
+            
+            loadPageData()
+            loadCurrentBaris()
+            
+            Toast.makeText(this, "Pindah ke Halaman $currentHalamanId", Toast.LENGTH_SHORT).show()
+            
+            // Auto start sequence mode for new page
+            sequenceMode = true
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                startSequenceFromCurrentBaris()
+            }, 1000) // 1 second delay
+        } else {
+            // Next page not available
+            AlertDialog.Builder(this)
+                .setTitle("Halaman Belum Tersedia")
+                .setMessage("Halaman $nextHalamanId belum tersedia. Silakan tunggu update selanjutnya.")
+                .setPositiveButton("OK") { _, _ ->
+                    finish() // Go back to page list
+                }
+                .show()
         }
     }
 }
