@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/card_bg">
+
+    <!-- Check icon top-right -->
+    <ImageView
+        android:id="@+id/iv_check"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_alignParentEnd="true"
+        android:src="@drawable/ic_check"
+        android:visibility="gone" />
+
+    <!-- Number circle -->
+    <TextView
+        android:id="@+id/tv_ayat_number"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_alignParentStart="true"
+        android:background="@drawable/circle_green"
+        android:textColor="@android:color/white"
+        android:gravity="center"
+        android:text="1"
+        android:textStyle="bold" />
+
+    <!-- Content container to the right of number -->
+    <LinearLayout
+        android:id="@+id/content_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/tv_ayat_number"
+        android:orientation="vertical"
+        android:layout_marginStart="12dp">
+
+        <TextView
+            android:id="@+id/tv_arab"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:gravity="end"
+            android:text="آية" />
+
+        <!-- Representasi bahasa isyarat per huruf (tampil sebagai teks hijaiyah) -->
+        <TextView
+            android:id="@+id/tv_isyarat"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="20sp"
+            android:textColor="@color/hijaiyah_navy"
+            android:fontFamily="@font/hijaiyah_font_family"
+            android:gravity="start" />
+
+        <TextView
+            android:id="@+id/tv_terjemahan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="@color/hijaiyah_navy"
+            android:layout_marginTop="8dp"
+            android:text="Terjemahan ayat" />
+
+    </LinearLayout>
+
+</RelativeLayout>
