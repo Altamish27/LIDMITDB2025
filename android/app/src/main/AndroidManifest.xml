@@ -97,6 +97,17 @@
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer" />
 
+        <!-- Surat activities -->
+        <activity
+            android:name=".ui.surat.SuratListActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer" />
+
+        <activity
+            android:name=".ui.surat.SuratDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer" />
+
 
     </application>
 
