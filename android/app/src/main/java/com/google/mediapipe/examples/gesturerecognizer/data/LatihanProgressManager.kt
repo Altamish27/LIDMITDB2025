@@ -81,10 +81,15 @@ class LatihanProgressManager(context: Context) {
         sharedPreferences.edit().clear().apply()
     }
     
-    fun getTotalProgress(): Int {
+    fun getTotalProgress(): Pair<Int, Int> {
         val completedCount = getCompletedExercises().size
         val totalExercises = LatihanData.getAllExercises().size
-        return if (totalExercises > 0) (completedCount * 100) / totalExercises else 0
+        return Pair(completedCount, totalExercises)
+    }
+    
+    fun getTotalProgressPercentage(): Int {
+        val (completed, total) = getTotalProgress()
+        return if (total > 0) (completed * 100) / total else 0
     }
     
     fun getUnlockedExercises(): List<LatihanItem> {

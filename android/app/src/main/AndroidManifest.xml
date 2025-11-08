@@ -77,17 +77,22 @@
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer">
         </activity>
-            <activity
-                android:name=".ui.LoginActivity"
-                android:exported="false"
-                android:theme="@style/Theme.GestureRecognizer">
-            </activity>
+        <activity
+            android:name=".ui.LoginActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer">
+        </activity>
+        
+        <activity
+            android:name=".ui.ProfileActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer">
+        </activity>
+        
         <activity
             android:name=".ui.hijaiyahdb.HijaiyahDBListActivity"
             android:exported="false"
-            android:theme="@style/Theme.GestureRecognizer" />
-        
-        <activity
+            android:theme="@style/Theme.GestureRecognizer" />        <activity
             android:name=".ui.latihan.LatihanDetailActivity"
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer" />

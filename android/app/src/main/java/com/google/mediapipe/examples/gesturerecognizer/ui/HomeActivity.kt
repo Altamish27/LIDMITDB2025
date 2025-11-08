@@ -185,10 +185,33 @@ class HomeActivity : AppCompatActivity() {
         // Get navigation drawer views
         val navigationDrawer = findViewById<View>(R.id.navigation_drawer) ?: return
         
+        // Setup profile section click listener
+        navigationDrawer.findViewById<View>(R.id.profile_section)?.setOnClickListener {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+            try {
+                val intent = Intent(this, ProfileActivity::class.java)
+                startActivity(intent)
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Failed to start ProfileActivity: ${e.message}", e)
+                Toast.makeText(this, "Error opening profile: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+        
         // Setup menu item click listeners
         navigationDrawer.findViewById<View>(R.id.menu_home)?.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
             // Already on home, do nothing
+        }
+        
+        navigationDrawer.findViewById<View>(R.id.menu_profile)?.setOnClickListener {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+            try {
+                val intent = Intent(this, ProfileActivity::class.java)
+                startActivity(intent)
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Failed to start ProfileActivity: ${e.message}", e)
+                Toast.makeText(this, "Error opening profile: ${e.message}", Toast.LENGTH_LONG).show()
+            }
         }
         
         navigationDrawer.findViewById<View>(R.id.menu_panduan)?.setOnClickListener {

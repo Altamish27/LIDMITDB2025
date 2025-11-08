@@ -34,6 +34,10 @@ class HijaiyahProgressManager(context: Context) {
         return (1..28).count { isLetterCompleted(it) }
     }
     
+    fun getTotalProgress(): Pair<Int, Int> {
+        return Pair(getCompletedCount(), 28)
+    }
+    
     fun getCompletedLetters(): Set<Int> {
         return (1..28).filter { isLetterCompleted(it) }.toSet()
     }
