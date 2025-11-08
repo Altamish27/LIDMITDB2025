@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.mediapipe.examples.gesturerecognizer.data
+package com.google.mediapipe.examples.gesturerecognizer.data    
 
 /**
  * Data class untuk setiap huruf dalam latihan
