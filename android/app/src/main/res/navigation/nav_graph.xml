@@ -21,7 +21,7 @@
 
     <fragment
         android:id="@+id/permissions_fragment"
-        android:name="com.google.mediapipe.examples.gesturerecognizer.ui.permissions.PermissionsFragment"
+        android:name="com.google.mediapipe.examples.gesturerecognizer.core.permissions.PermissionsFragment"
         android:label="PermissionsFragment">
 
         <action
@@ -34,7 +34,7 @@
 
     <fragment
         android:id="@+id/camera_fragment"
-        android:name="com.google.mediapipe.examples.gesturerecognizer.fragment.CameraFragment"
+        android:name="com.google.mediapipe.examples.gesturerecognizer.features.camera.fragment.CameraFragment"
         android:label="CameraFragment">
         
         <argument
@@ -59,14 +59,14 @@
 
     <fragment
         android:id="@+id/gallery_fragment"
-        android:name="com.google.mediapipe.examples.gesturerecognizer.ui.gallery.GalleryFragment"
+        android:name="com.google.mediapipe.examples.gesturerecognizer.features.gallery.GalleryFragment"
         android:label="GalleryFragment" />
 
 
 
     <fragment
         android:id="@+id/hijaiyah_fragment"
-        android:name="com.google.mediapipe.examples.gesturerecognizer.ui.hijaiyah.HijaiyahFragment"
+        android:name="com.google.mediapipe.examples.gesturerecognizer.features.hijaiyah.HijaiyahFragment"
         android:label="HijaiyahFragment">
 
         <action
@@ -76,12 +76,12 @@
     </fragment>
     <fragment
     android:id="@+id/hijaiyah_db_fragment"
-    android:name="com.google.mediapipe.examples.gesturerecognizer.ui.hijaiyahdb.HijaiyahDbFragment"
+    android:name="com.google.mediapipe.examples.gesturerecognizer.features.hijaiyahdb.HijaiyahDbFragment"
     android:label="HijaiyahDbFragment" />
 
     <fragment
         android:id="@+id/latihan_fragment"
-        android:name="com.google.mediapipe.examples.gesturerecognizer.ui.latihan.LatihanFragment"
+        android:name="com.google.mediapipe.examples.gesturerecognizer.features.latihan.LatihanFragment"
         android:label="LatihanFragment" />
 
 </navigation>

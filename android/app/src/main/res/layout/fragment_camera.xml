@@ -14,7 +14,7 @@
         app:scaleType="fillStart" />
 
     <!-- Gesture Overlay -->
-    <com.google.mediapipe.examples.gesturerecognizer.OverlayView
+    <com.google.mediapipe.examples.gesturerecognizer.core.overlay.OverlayView
         android:id="@+id/overlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

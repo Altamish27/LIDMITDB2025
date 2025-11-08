@@ -46,7 +46,7 @@
         tools:ignore="AllowBackup">
 
         <activity
-            android:name=".ui.HomeActivity"
+            android:name=".features.home.HomeActivity"
             android:exported="true"
             android:theme="@style/Theme.GestureRecognizer.FullScreen">
             <intent-filter>
@@ -62,7 +62,7 @@
         </activity>
 
         <activity
-            android:name=".ui.main.MainActivity"
+            android:name=".core.main.MainActivity"
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer">
 
@@ -73,43 +73,43 @@
         </activity>
 
         <activity
-            android:name=".ui.panduan.PanduanHijaiyahActivity"
+            android:name=".features.panduan.PanduanHijaiyahActivity"
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer">
         </activity>
         <activity
-            android:name=".ui.LoginActivity"
-            android:exported="false"
-            android:theme="@style/Theme.GestureRecognizer">
-        </activity>
-        
-        <activity
-            android:name=".ui.ProfileActivity"
+            android:name=".features.auth.LoginActivity"
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer">
         </activity>
         
         <activity
-            android:name=".ui.hijaiyahdb.HijaiyahDBListActivity"
+            android:name=".features.auth.ProfileActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer">
+        </activity>
+        
+        <activity
+            android:name=".features.hijaiyahdb.HijaiyahDBListActivity"
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer" />        <activity
-            android:name=".ui.latihan.LatihanDetailActivity"
+            android:name=".features.latihan.LatihanDetailActivity"
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer" />
         
         <activity
-            android:name=".ui.latihan.LatihanPracticeActivity"
+            android:name=".features.latihan.LatihanPracticeActivity"
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer" />
 
         <!-- Surat activities -->
         <activity
-            android:name=".ui.surat.SuratListActivity"
+            android:name=".features.surat.SuratListActivity"
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer" />
 
         <activity
-            android:name=".ui.surat.SuratDetailActivity"
+            android:name=".features.surat.SuratDetailActivity"
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer" />
 
