@@ -27,7 +27,7 @@ data class FathahLetter(
 
 object FathahData {
     val letters = listOf(
-        FathahLetter("أَ", "A", 1),
+        FathahLetter("اَ", "A", 1),
         FathahLetter("بَ", "Ba", 2),
         FathahLetter("تَ", "Ta", 3),
         FathahLetter("ثَ", "Tsa", 4),

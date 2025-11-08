@@ -50,4 +50,9 @@
     
     <!-- Fathah colors -->
     <color name="fathah_card_color">#E74C3C</color> <!-- Red color for Fathah -->
+    
+    <!-- Profile page colors -->
+    <color name="background_light">#F5F6FA</color>
+    <color name="progress_yellow_start">#FFD700</color>
+    <color name="progress_yellow_end">#FFA500</color>
 </resources>
