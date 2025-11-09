@@ -1,43 +1,243 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:background="#FFFFFF">
 
-    <!-- Header gradient area -->
-    <LinearLayout
+    <!-- Header gradient area with teal color -->
+    <RelativeLayout
+        android:id="@+id/header_container"
         android:layout_width="match_parent"
-        android:layout_height="140dp"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:background="@drawable/gradient_card_mint"
-        android:gravity="bottom">
+        android:layout_height="wrap_content"
+        android:background="@drawable/gradient_header_teal"
+        android:paddingTop="16dp"
+        android:paddingBottom="24dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
 
-        <TextView
-            android:id="@+id/tv_surat_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Surat"
-            android:textColor="@android:color/white"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+        <!-- Back button -->
+        <ImageView
+            android:id="@+id/btn_back"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentStart="true"
+            android:src="@drawable/ic_back"
+            android:padding="6dp"
+            android:tint="#FFFFFF"
+            android:contentDescription="Back" />
 
+        <!-- Sedang dibaca button -->
         <TextView
-            android:id="@+id/tv_surat_sub"
-            android:layout_width="match_parent"
+            android:id="@+id/btn_sedang_dibaca"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Jumlah Ayat: 7    Juz: 30"
-            android:textColor="@android:color/white"
+            android:layout_alignParentEnd="true"
+            android:text="📖 Sedang dibaca"
+            android:textColor="#FFFFFF"
             android:textSize="12sp"
-            android:layout_marginTop="4dp" />
+            android:background="@drawable/bg_button_filter_inactive"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp" />
+
+        <!-- Title and subtitle container -->
+        <LinearLayout
+            android:id="@+id/title_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/btn_back"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tv_surat_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Al Maa'uun"
+                android:textColor="#FFFFFF"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_surat_title_arab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="الماعون"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/tv_surat_info"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Makiyah"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:layout_marginTop="8dp" />
+
+            <TextView
+                android:id="@+id/tv_surat_sub"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="7 Ayat • Juz 30"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:layout_marginTop="2dp" />
+
+        </LinearLayout>
+
+        <!-- Filter buttons -->
+        <LinearLayout
+            android:id="@+id/filter_buttons_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/title_container"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/btn_filter_prev"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="An-nass"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:background="@drawable/bg_button_filter_inactive"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/btn_filter_current"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Al-Ma'un"
+                android:textColor="#2C3E50"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:background="@drawable/bg_button_filter_active"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/btn_filter_next"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="An-nass"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:background="@drawable/bg_button_filter_inactive"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+    <!-- Main content ScrollView -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/header_container"
+        android:layout_above="@id/footer_navigation"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Bismillah section -->
+            <LinearLayout
+                android:id="@+id/bismillah_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_bismillah_section"
+                android:padding="16dp"
+                android:gravity="center"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:id="@+id/tv_bismillah_arab"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="#2C3E50"
+                    android:gravity="center" />
+
+                <TextView
+                    android:id="@+id/tv_bismillah_translation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Dengan nama Allah Yang Maha Pengasih lagi Maha Penyayang"
+                    android:textSize="13sp"
+                    android:textColor="#7F8C8D"
+                    android:gravity="center"
+                    android:layout_marginTop="8dp" />
+
+            </LinearLayout>
+
+            <!-- Ayat list -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_ayat_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:clipToPadding="false" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Footer navigation -->
+    <LinearLayout
+        android:id="@+id/footer_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:background="#147E7E"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/btn_previous_surat"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Sebelumnya"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:padding="8dp" />
+
+        <TextView
+            android:id="@+id/btn_next_surat"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Selanjutnya"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:padding="8dp" />
 
     </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_ayat_list"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="12dp"
-        android:clipToPadding="false" />
-
-</LinearLayout>
+</RelativeLayout>

@@ -167,6 +167,156 @@ object LatihanPageData {
     }
 
     /**
+     * Data untuk halaman ketiga
+     * Latihan huruf Ta dan Tsa
+     */
+    fun getHalaman3(): LatihanHalaman {
+        return LatihanHalaman(
+            id = 3,
+            title = "Halaman 3",
+            description = "Latihan Huruf Ta dan Tsa",
+            barisList = listOf(
+                // Baris 1
+                LatihanBaris(
+                    id = 1,
+                    hurufList = listOf(
+                        LatihanHuruf("ت", "TA", "ta", 37),
+                        LatihanHuruf("ت", "TA", "ta", 38),
+                        LatihanHuruf("ت", "TA", "ta", 39),
+                        LatihanHuruf("ث", "TSA", "tsa", 40),
+                        LatihanHuruf("ث", "TSA", "tsa", 41),
+                        LatihanHuruf("ث", "TSA", "tsa", 42)
+                    )
+                ),
+                // Baris 2
+                LatihanBaris(
+                    id = 2,
+                    hurufList = listOf(
+                        LatihanHuruf("ت", "TA", "ta", 43),
+                        LatihanHuruf("ث", "TSA", "tsa", 44),
+                        LatihanHuruf("ت", "TA", "ta", 45),
+                        LatihanHuruf("ث", "TSA", "tsa", 46),
+                        LatihanHuruf("ت", "TA", "ta", 47),
+                        LatihanHuruf("ث", "TSA", "tsa", 48)
+                    )
+                ),
+                // Baris 3
+                LatihanBaris(
+                    id = 3,
+                    hurufList = listOf(
+                        LatihanHuruf("ث", "TSA", "tsa", 49),
+                        LatihanHuruf("ث", "TSA", "tsa", 50),
+                        LatihanHuruf("ت", "TA", "ta", 51),
+                        LatihanHuruf("ت", "TA", "ta", 52),
+                        LatihanHuruf("ث", "TSA", "tsa", 53),
+                        LatihanHuruf("ت", "TA", "ta", 54)
+                    )
+                )
+            )
+        )
+    }
+
+    /**
+     * Data untuk halaman keempat
+     * Latihan huruf Ha dan Kho
+     */
+    fun getHalaman4(): LatihanHalaman {
+        return LatihanHalaman(
+            id = 4,
+            title = "Halaman 4",
+            description = "Latihan Huruf Ha dan Kho",
+            barisList = listOf(
+                // Baris 1
+                LatihanBaris(
+                    id = 1,
+                    hurufList = listOf(
+                        LatihanHuruf("ح", "HA", "ha", 55),
+                        LatihanHuruf("ح", "HA", "ha", 56),
+                        LatihanHuruf("ح", "HA", "ha", 57),
+                        LatihanHuruf("خ", "KHO", "kho", 58),
+                        LatihanHuruf("خ", "KHO", "kho", 59),
+                        LatihanHuruf("خ", "KHO", "kho", 60)
+                    )
+                ),
+                // Baris 2
+                LatihanBaris(
+                    id = 2,
+                    hurufList = listOf(
+                        LatihanHuruf("ح", "HA", "ha", 61),
+                        LatihanHuruf("خ", "KHO", "kho", 62),
+                        LatihanHuruf("ح", "HA", "ha", 63),
+                        LatihanHuruf("خ", "KHO", "kho", 64),
+                        LatihanHuruf("ح", "HA", "ha", 65),
+                        LatihanHuruf("خ", "KHO", "kho", 66)
+                    )
+                ),
+                // Baris 3
+                LatihanBaris(
+                    id = 3,
+                    hurufList = listOf(
+                        LatihanHuruf("خ", "KHO", "kho", 67),
+                        LatihanHuruf("خ", "KHO", "kho", 68),
+                        LatihanHuruf("ح", "HA", "ha", 69),
+                        LatihanHuruf("ح", "HA", "ha", 70),
+                        LatihanHuruf("خ", "KHO", "kho", 71),
+                        LatihanHuruf("ح", "HA", "ha", 72)
+                    )
+                )
+            )
+        )
+    }
+
+    /**
+     * Data untuk halaman kelima
+     * Latihan huruf Dal, Dzal, dan Ra
+     */
+    fun getHalaman5(): LatihanHalaman {
+        return LatihanHalaman(
+            id = 5,
+            title = "Halaman 5",
+            description = "Latihan Huruf Dal, Dzal, dan Ra",
+            barisList = listOf(
+                // Baris 1
+                LatihanBaris(
+                    id = 1,
+                    hurufList = listOf(
+                        LatihanHuruf("د", "DAL", "dal", 73),
+                        LatihanHuruf("د", "DAL", "dal", 74),
+                        LatihanHuruf("ذ", "DZAL", "dzal", 75),
+                        LatihanHuruf("ذ", "DZAL", "dzal", 76),
+                        LatihanHuruf("ر", "RA", "ra", 77),
+                        LatihanHuruf("ر", "RA", "ra", 78)
+                    )
+                ),
+                // Baris 2
+                LatihanBaris(
+                    id = 2,
+                    hurufList = listOf(
+                        LatihanHuruf("د", "DAL", "dal", 79),
+                        LatihanHuruf("ذ", "DZAL", "dzal", 80),
+                        LatihanHuruf("ر", "RA", "ra", 81),
+                        LatihanHuruf("د", "DAL", "dal", 82),
+                        LatihanHuruf("ذ", "DZAL", "dzal", 83),
+                        LatihanHuruf("ر", "RA", "ra", 84)
+                    )
+                ),
+                // Baris 3
+                LatihanBaris(
+                    id = 3,
+                    hurufList = listOf(
+                        LatihanHuruf("ر", "RA", "ra", 85),
+                        LatihanHuruf("ر", "RA", "ra", 86),
+                        LatihanHuruf("ذ", "DZAL", "dzal", 87),
+                        LatihanHuruf("د", "DAL", "dal", 88),
+                        LatihanHuruf("ر", "RA", "ra", 89),
+                        LatihanHuruf("د", "DAL", "dal", 90)
+                    )
+                )
+            )
+        )
+    }
+
+    /**
      * Data untuk jilid pertama (bisa dikembangkan untuk menambah halaman)
      */
     fun getJilid1(): LatihanJilid {
@@ -176,8 +326,10 @@ object LatihanPageData {
             description = "Belajar pengenalan huruf Hijaiyah dasar",
             halamanList = listOf(
                 getHalaman1(),
-                getHalaman2()
-                // Halaman lain bisa ditambah di sini
+                getHalaman2(),
+                getHalaman3(),
+                getHalaman4(),
+                getHalaman5()
             )
         )
     }

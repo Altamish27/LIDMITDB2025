@@ -3,26 +3,30 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@color/background_light">
 
-    <!-- Header Section -->
+    <!-- Header Section with Gradient -->
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="160dp"
-        android:background="@drawable/header_gradient_background"
+        android:layout_height="180dp"
+        android:background="@drawable/gradient_header_hijaiyah"
         android:padding="16dp">
 
         <!-- Back Arrow -->
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
             android:src="@drawable/ic_arrow_back"
             android:layout_marginTop="8dp"
             android:clickable="true"
-            android:focusable="true"/>
+            android:focusable="true"
+            app:tint="@color/white"
+            android:background="@android:color/transparent"
+            android:padding="4dp"/>
 
         <!-- Title -->
         <TextView
@@ -46,6 +50,7 @@
             android:layout_alignParentStart="true"
             android:text="Sedang dipelajari - 30 Halaman"
             android:textColor="@color/white"
+            android:alpha="0.9"
             android:textSize="14sp"
             android:layout_marginTop="4dp"/>
 
@@ -72,7 +77,7 @@
             android:layout_marginEnd="100dp"
             android:progress="10"
             android:progressTint="@color/hijaiyah_yellow"
-            android:progressBackgroundTint="@color/white"/>
+            android:progressBackgroundTint="#40FFFFFF"/>
 
     </RelativeLayout>
 
@@ -120,68 +125,76 @@
             </LinearLayout>
 
             <!-- Filter Tabs -->
-            <LinearLayout
+            <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
                 android:layout_marginBottom="16dp"
-                android:background="@drawable/cr16bc4c4c4"
-                android:padding="4dp">
+                android:scrollbars="none">
 
-                <TextView
-                    android:id="@+id/tabSemua"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Semua"
-                    android:textColor="@color/white"
-                    android:textSize="14sp"
-                    android:padding="8dp"
-                    android:gravity="center"
-                    android:background="@drawable/gradient_card_hijaiyah"
-                    android:clickable="true"
-                    android:focusable="true"/>
+                    android:orientation="horizontal"
+                    android:background="@drawable/cr16bc4c4c4"
+                    android:padding="4dp">
 
-                <TextView
-                    android:id="@+id/tabSelesai"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Selesai"
-                    android:textColor="@color/hijaiyah_navy"
-                    android:textSize="14sp"
-                    android:padding="8dp"
-                    android:gravity="center"
-                    android:clickable="true"
-                    android:focusable="true"/>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/tabSemua"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="Semua"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:paddingHorizontal="16dp"
+                        app:backgroundTint="@color/hijaiyah_green"
+                        app:cornerRadius="8dp"
+                        android:layout_marginEnd="4dp"/>
 
-                <TextView
-                    android:id="@+id/tabAktif"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Aktif"
-                    android:textColor="@color/hijaiyah_navy"
-                    android:textSize="14sp"
-                    android:padding="8dp"
-                    android:gravity="center"
-                    android:clickable="true"
-                    android:focusable="true"/>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/tabSelesai"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="Selesai"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:textSize="13sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:paddingHorizontal="16dp"
+                        app:backgroundTint="@android:color/transparent"
+                        app:cornerRadius="8dp"
+                        android:layout_marginEnd="4dp"/>
 
-                <TextView
-                    android:id="@+id/tabTerkunci"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Terkunci"
-                    android:textColor="@color/hijaiyah_navy"
-                    android:textSize="14sp"
-                    android:padding="8dp"
-                    android:gravity="center"
-                    android:clickable="true"
-                    android:focusable="true"/>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/tabAktif"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="Aktif"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:textSize="13sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:paddingHorizontal="16dp"
+                        app:backgroundTint="@android:color/transparent"
+                        app:cornerRadius="8dp"
+                        android:layout_marginEnd="4dp"/>
 
-            </LinearLayout>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/tabTerkunci"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="Terkunci"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:textSize="13sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:paddingHorizontal="16dp"
+                        app:backgroundTint="@android:color/transparent"
+                        app:cornerRadius="8dp"/>
+
+                </LinearLayout>
+            </HorizontalScrollView>
 
             <!-- Huruf List -->
             <androidx.recyclerview.widget.RecyclerView
@@ -209,53 +222,37 @@
             android:layout_marginBottom="16dp">
 
             <!-- Lanjutkan Button -->
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLanjutkan"
                 android:layout_width="0dp"
-                android:layout_height="50dp"
+                android:layout_height="54dp"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                app:cardCornerRadius="25dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@color/hijaiyah_navy">
-
-                <TextView
-                    android:id="@+id/btnLanjutkan"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:text="▶ Lanjutkan"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:gravity="center"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?android:attr/selectableItemBackground"/>
-
-            </androidx.cardview.widget.CardView>
+                android:text="▶ Lanjutkan"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/hijaiyah_green"
+                app:cornerRadius="27dp"
+                app:icon="@drawable/ic_arrow_forward"
+                app:iconGravity="textEnd"
+                app:iconTint="@color/white"/>
 
             <!-- Reset Button -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                app:cardCornerRadius="25dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@android:color/darker_gray">
-
-                <TextView
-                    android:id="@+id/btnReset"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:text="🔄 Reset"
-                    android:textColor="@color/white"
-                    android:textSize="14sp"
-                    android:gravity="center"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?android:attr/selectableItemBackground"/>
-
-            </androidx.cardview.widget.CardView>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnReset"
+                android:layout_width="54dp"
+                android:layout_height="54dp"
+                android:text="🔄"
+                android:textSize="18sp"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                app:backgroundTint="@color/white"
+                app:strokeColor="@color/hijaiyah_navy"
+                app:strokeWidth="2dp"
+                app:cornerRadius="27dp"/>
 
         </LinearLayout>
 

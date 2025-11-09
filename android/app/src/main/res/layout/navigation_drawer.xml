@@ -174,7 +174,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Deteksi Isyarat"
+                    android:text="Praktek Hijaiyah"
                     android:textColor="#147E7E"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -202,7 +202,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Pembelajaran"
+                    android:text="Latihan Jilid"
                     android:textColor="#147E7E"
                     android:textSize="16sp"
                     android:textStyle="bold" />

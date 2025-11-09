@@ -21,11 +21,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.mediapipe.examples.gesturerecognizer.data.LatihanData
-import com.google.mediapipe.examples.gesturerecognizer.data.LatihanItem
-import com.google.mediapipe.examples.gesturerecognizer.data.LatihanProgressManager
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentLatihanBinding
 
 class LatihanFragment : Fragment() {
@@ -33,8 +30,8 @@ class LatihanFragment : Fragment() {
     private var _binding: FragmentLatihanBinding? = null
     private val binding get() = _binding!!
     
-    private lateinit var progressManager: LatihanProgressManager
-    private lateinit var adapter: LatihanAdapter
+    private var jilidId: Int = 1
+    private var jilidTitle: String = "Jilid 1"
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,51 +45,70 @@ class LatihanFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        progressManager = LatihanProgressManager(requireContext())
-        setupRecyclerView()
-        loadExercises()
+        // Get arguments
+        jilidId = arguments?.getInt("jilidId", 1) ?: 1
+        jilidTitle = arguments?.getString("jilidTitle", "Jilid 1") ?: "Jilid 1"
+        
+        // Update UI with jilid info
+        binding.tvTitle.text = jilidTitle
+        
+        setupClickListeners()
         updateProgress()
     }
 
-    private fun setupRecyclerView() {
-        adapter = LatihanAdapter { exercise ->
-            navigateToExerciseDetail(exercise)
+    private fun setupClickListeners() {
+        // Halaman 1 - Unlocked
+        binding.cardHalaman1.setOnClickListener {
+            navigateToHalaman(1, "Halaman 1", "Pengenalan Huruf Hijaiyah Dasar")
         }
         
-        binding.recyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = this@LatihanFragment.adapter
+        // Halaman 2-5 - Locked
+        binding.cardHalaman2.setOnClickListener {
+            showLockedMessage()
+        }
+        
+        binding.cardHalaman3.setOnClickListener {
+            showLockedMessage()
+        }
+        
+        binding.cardHalaman4.setOnClickListener {
+            showLockedMessage()
+        }
+        
+        binding.cardHalaman5.setOnClickListener {
+            showLockedMessage()
         }
     }
     
-    private fun navigateToExerciseDetail(exercise: LatihanItem) {
-        val intent = Intent(requireContext(), LatihanDetailActivity::class.java).apply {
-            putExtra("exerciseId", exercise.id)
-            putExtra("exerciseTitle", exercise.title)
+    private fun navigateToHalaman(halamanId: Int, title: String, description: String) {
+        val intent = Intent(requireContext(), LatihanPracticeActivity::class.java).apply {
+            putExtra("exerciseId", jilidId)
+            putExtra("exerciseTitle", jilidTitle)
+            putExtra("jilidId", jilidId)
+            putExtra("halamanId", halamanId)
         }
         startActivity(intent)
     }
-
-    private fun loadExercises() {
-        val exercisesWithProgress = progressManager.getExercisesWithProgress()
-        adapter.updateExercises(exercisesWithProgress)
+    
+    private fun showLockedMessage() {
+        Toast.makeText(
+            requireContext(),
+            "Selesaikan halaman sebelumnya terlebih dahulu",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
     private fun updateProgress() {
-        val completedExercises = progressManager.getCompletedExercises()
-        val totalCount = LatihanData.getAllExercises().size
-        val completedCount = completedExercises.size
-        val percentage = if (totalCount > 0) (completedCount * 100) / totalCount else 0
+        val totalPages = 5
+        val completedCount = 0 // TODO: implement progress tracking
+        val percentage = if (totalPages > 0) (completedCount * 100) / totalPages else 0
         
-        binding.tvProgress.text = "$completedCount / $totalCount Latihan"
+        binding.tvProgress.text = "$completedCount / $totalPages Halaman"
         binding.progressBar.progress = percentage
-        binding.tvPercentage.text = "$percentage%"
     }
 
     override fun onResume() {
         super.onResume()
-        // Refresh progress when returning to fragment
-        loadExercises()
         updateProgress()
     }
 

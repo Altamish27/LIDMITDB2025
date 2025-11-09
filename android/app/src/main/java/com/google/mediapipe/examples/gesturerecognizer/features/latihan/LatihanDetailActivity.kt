@@ -21,6 +21,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityLatihanDetailBinding
 import com.google.mediapipe.examples.gesturerecognizer.core.main.MainActivity
 
@@ -145,14 +146,26 @@ class LatihanDetailActivity : AppCompatActivity() {
     }
 
     private fun filterByStatus(status: String) {
-        // Update tab appearance
+        // Update tab appearance with MaterialButton
         resetTabColors()
         
         when (status) {
-            "Semua" -> binding.tabSemua.setBackgroundResource(android.R.color.holo_blue_light)
-            "Selesai" -> binding.tabSelesai.setBackgroundResource(android.R.color.holo_blue_light)
-            "Aktif" -> binding.tabAktif.setBackgroundResource(android.R.color.holo_blue_light)
-            "Terkunci" -> binding.tabTerkunci.setBackgroundResource(android.R.color.holo_blue_light)
+            "Semua" -> {
+                binding.tabSemua.setBackgroundColor(getColor(R.color.hijaiyah_green))
+                binding.tabSemua.setTextColor(getColor(R.color.white))
+            }
+            "Selesai" -> {
+                binding.tabSelesai.setBackgroundColor(getColor(R.color.hijaiyah_green))
+                binding.tabSelesai.setTextColor(getColor(R.color.white))
+            }
+            "Aktif" -> {
+                binding.tabAktif.setBackgroundColor(getColor(R.color.hijaiyah_green))
+                binding.tabAktif.setTextColor(getColor(R.color.white))
+            }
+            "Terkunci" -> {
+                binding.tabTerkunci.setBackgroundColor(getColor(R.color.hijaiyah_green))
+                binding.tabTerkunci.setTextColor(getColor(R.color.white))
+            }
         }
         
         // Filter adapter based on status
@@ -160,9 +173,16 @@ class LatihanDetailActivity : AppCompatActivity() {
     }
 
     private fun resetTabColors() {
-        binding.tabSemua.setBackgroundResource(android.R.color.transparent)
-        binding.tabSelesai.setBackgroundResource(android.R.color.transparent)
-        binding.tabAktif.setBackgroundResource(android.R.color.transparent)
-        binding.tabTerkunci.setBackgroundResource(android.R.color.transparent)
+        val transparent = getColor(android.R.color.transparent)
+        val navyColor = getColor(R.color.hijaiyah_navy)
+        
+        binding.tabSemua.setBackgroundColor(transparent)
+        binding.tabSemua.setTextColor(navyColor)
+        binding.tabSelesai.setBackgroundColor(transparent)
+        binding.tabSelesai.setTextColor(navyColor)
+        binding.tabAktif.setBackgroundColor(transparent)
+        binding.tabAktif.setTextColor(navyColor)
+        binding.tabTerkunci.setBackgroundColor(transparent)
+        binding.tabTerkunci.setTextColor(navyColor)
     }
 }

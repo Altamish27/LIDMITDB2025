@@ -7,10 +7,13 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahLetter
+import com.google.mediapipe.examples.gesturerecognizer.core.animation.ViewAnimationUtils
 
 class PanduanHijaiyahAdapter(
     private val letters: List<HijaiyahLetter>
 ) : RecyclerView.Adapter<PanduanHijaiyahAdapter.ViewHolder>() {
+
+    private val animatedPositions = mutableSetOf<Int>()
 
     // Mapping posisi huruf ke huruf Hijaiyah asli untuk isyarat
     private val gestureHijaiyah = mapOf(
@@ -71,6 +74,13 @@ class PanduanHijaiyahAdapter(
             androidx.core.content.ContextCompat.getColor(context, R.color.hijaiyah_grey)
         }
         holder.itemView.setBackgroundColor(backgroundColor)
+        
+        // Animate item entrance only once
+        if (!animatedPositions.contains(position)) {
+            ViewAnimationUtils.prepareForAnimation(holder.itemView, 0f)
+            ViewAnimationUtils.animateListItem(holder.itemView, position, 30)
+            animatedPositions.add(position)
+        }
     }
 
     override fun getItemCount(): Int = letters.size

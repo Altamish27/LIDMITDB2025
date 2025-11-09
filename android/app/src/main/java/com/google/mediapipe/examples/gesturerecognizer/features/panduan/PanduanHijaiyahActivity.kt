@@ -2,18 +2,21 @@ package com.google.mediapipe.examples.gesturerecognizer.features.panduan
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
 import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityPanduanHijaiyahBinding
-import com.google.mediapipe.examples.gesturerecognizer.core.adapter.PanduanHijaiyahAdapter
 
 class PanduanHijaiyahActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPanduanHijaiyahBinding
-    private lateinit var adapter: PanduanHijaiyahAdapter
+    private lateinit var adapter: HijaiyahGridAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Hide action bar
+        supportActionBar?.hide()
+        
         binding = ActivityPanduanHijaiyahBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -22,9 +25,9 @@ class PanduanHijaiyahActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        adapter = PanduanHijaiyahAdapter(HijaiyahData.letters)
+        adapter = HijaiyahGridAdapter(HijaiyahData.letters)
         binding.rvPanduanHijaiyah.apply {
-            layoutManager = LinearLayoutManager(this@PanduanHijaiyahActivity)
+            layoutManager = GridLayoutManager(this@PanduanHijaiyahActivity, 3) // 3 columns
             adapter = this@PanduanHijaiyahActivity.adapter
             isNestedScrollingEnabled = false
         }
@@ -32,7 +35,7 @@ class PanduanHijaiyahActivity : AppCompatActivity() {
 
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener {
-            onBackPressed()
+            finish()
         }
     }
 

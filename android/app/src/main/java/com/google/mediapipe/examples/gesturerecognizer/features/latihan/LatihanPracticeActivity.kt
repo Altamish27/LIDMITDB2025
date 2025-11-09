@@ -44,6 +44,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
 import androidx.recyclerview.widget.GridLayoutManager
 import android.view.View
+import android.view.animation.AnimationUtils
 import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityLatihanPracticeBinding
 import com.google.mediapipe.examples.gesturerecognizer.features.camera.fragment.CameraFragment
@@ -107,59 +108,86 @@ class LatihanPracticeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityLatihanPracticeBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        // Listen for results from embedded CameraFragment
-        supportFragmentManager.setFragmentResultListener(
-            "camera_result",
-            this
-        ) { _, bundle ->
-            val success = bundle.getBoolean("success", false)
-            val letterPos = bundle.getInt("letterPosition", -1)
-            if (success && letterPos > 0) {
-                // mark as completed locally and refresh UI
-                completedPositions.add(letterPos)
-                loadCurrentBaris()
-
-                if (sequenceMode) {
-                    // continue to next letter in the same row
-                    advanceSequence(letterPos)
-                } else {
-                    // hide camera container if not sequence
-                    hideEmbeddedCamera()
-                    
-                    // Check if current baris is completed and auto advance if possible
-                    if (isCurrentBarisCompleted() && canGoNextBaris()) {
-                        Toast.makeText(this@LatihanPracticeActivity, "Baris selesai! Auto pindah ke baris selanjutnya...", Toast.LENGTH_SHORT).show()
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            currentBarisId++
-                            loadCurrentBaris()
-                        }, 1500) // 1.5 second delay
-                    } else if (isCurrentHalamanCompleted()) {
-                        // Check if entire halaman is completed
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            showPageCompletionDialog()
-                        }, 1500) // 1.5 second delay
-                    }
-                }
-            } else {
-                // on failure just hide embedded camera for now
-                hideEmbeddedCamera()
-            }
-        }
-
-        // Get data from intent
-        exerciseId = intent.getIntExtra("exerciseId", 1)
-        exerciseTitle = intent.getStringExtra("exerciseTitle") ?: "Latihan 1"
-
-        // Load new structure data
-        loadPageData()
         
-        setupUI()
-        setupRecyclerView()
-        setupClickListeners()
-        loadCurrentBaris()
+        try {
+            binding = ActivityLatihanPracticeBinding.inflate(layoutInflater)
+            setContentView(binding.root)
+
+            android.util.Log.d("LatihanPractice", "onCreate started")
+
+            // Listen for results from embedded CameraFragment
+            supportFragmentManager.setFragmentResultListener(
+                "camera_result",
+                this
+            ) { _, bundle ->
+                val success = bundle.getBoolean("success", false)
+                val letterPos = bundle.getInt("letterPosition", -1)
+                if (success && letterPos > 0) {
+                    // mark as completed locally and refresh UI
+                    completedPositions.add(letterPos)
+                    loadCurrentBaris()
+
+                    if (sequenceMode) {
+                        // continue to next letter in the same row
+                        advanceSequence(letterPos)
+                    } else {
+                        // hide camera container if not sequence
+                        hideEmbeddedCamera()
+                        
+                        // Check if current baris is completed and auto advance if possible
+                        if (isCurrentBarisCompleted() && canGoNextBaris()) {
+                            Toast.makeText(this@LatihanPracticeActivity, "Baris selesai! Auto pindah ke baris selanjutnya...", Toast.LENGTH_SHORT).show()
+                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                currentBarisId++
+                                loadCurrentBaris()
+                            }, 1500) // 1.5 second delay
+                        } else if (isCurrentHalamanCompleted()) {
+                            // Check if entire halaman is completed
+                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                showPageCompletionDialog()
+                            }, 1500) // 1.5 second delay
+                        }
+                    }
+                } else {
+                    // on failure just hide embedded camera for now
+                    hideEmbeddedCamera()
+                }
+            }
+
+            // Get data from intent
+            exerciseId = intent.getIntExtra("exerciseId", 1)
+            exerciseTitle = intent.getStringExtra("exerciseTitle") ?: "Latihan 1"
+            currentJilidId = intent.getIntExtra("jilidId", 1)
+            currentHalamanId = intent.getIntExtra("halamanId", 1)
+            currentBarisId = 1 // Always start from first baris
+
+            android.util.Log.d("LatihanPractice", "Intent data: jilidId=$currentJilidId, halamanId=$currentHalamanId, exerciseTitle=$exerciseTitle")
+
+            // Load new structure data
+            loadPageData()
+            
+            // Check if data loaded successfully
+            if (currentHalaman == null) {
+                android.util.Log.e("LatihanPractice", "currentHalaman is null!")
+                Toast.makeText(this, "Halaman tidak ditemukan", Toast.LENGTH_LONG).show()
+                finish()
+                return
+            }
+            
+            android.util.Log.d("LatihanPractice", "Data loaded successfully: ${currentHalaman?.title}")
+            
+            setupUI()
+            setupRecyclerView()
+            setupClickListeners()
+            loadCurrentBaris()
+            
+            android.util.Log.d("LatihanPractice", "onCreate completed successfully")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("LatihanPractice", "Error in onCreate: ${e.message}", e)
+            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+            finish()
+        }
     }
 
     private fun loadPageData() {
@@ -224,6 +252,10 @@ class LatihanPracticeActivity : AppCompatActivity() {
             
             // Update UI
             updateUI()
+            
+            // Apply fade in animation to RecyclerView
+            val fadeIn = AnimationUtils.loadAnimation(this, R.anim.fade_in)
+            binding.recyclerViewGrid.startAnimation(fadeIn)
             
             // Enable/disable navigation buttons
             binding.btnPrevious.isEnabled = canGoPreviousBaris()

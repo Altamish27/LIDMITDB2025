@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="6dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardBackgroundColor="#FFFFFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:gravity="center">
+
+        <!-- Huruf Arab dengan circle background -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            app:cardCornerRadius="35dp"
+            app:cardElevation="6dp"
+            app:cardBackgroundColor="#147E7E"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/tv_huruf"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="ا"
+                android:textColor="#FFFFFF"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+        </androidx.cardview.widget.CardView>
+
+        <!-- Gesture Icon -->
+        <TextView
+            android:id="@+id/tv_gesture"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ا"
+            android:textColor="#147E7E"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"
+            android:fontFamily="@font/hijaiyah_font_family" />
+
+        <!-- Nama Latin -->
+        <TextView
+            android:id="@+id/tv_nama_latin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Alif"
+            android:textColor="#2C3E50"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:gravity="center" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
