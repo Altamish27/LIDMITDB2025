@@ -91,12 +91,8 @@ class LatihanFragment : Fragment() {
                 binding.cardHalaman1.setOnClickListener {
                     navigateToHalaman(page1.halamanId, page1.nomorHalaman, "Halaman ${page1.nomorHalaman}", page1.deskripsi)
                 }
-                // Update text jika ada TextView untuk deskripsi
-                try {
-                    binding.tvHalaman1Desc?.text = page1.deskripsi
-                } catch (e: Exception) {
-                    // TextView deskripsi tidak ada di layout
-                }
+                // Update deskripsi jika ada field untuk itu di layout
+                // Untuk saat ini kita skip update deskripsi ke UI karena layout belum punya TextView-nya
             } else {
                 binding.cardHalaman1.setOnClickListener {
                     showLockedMessage()
@@ -109,9 +105,6 @@ class LatihanFragment : Fragment() {
                 binding.cardHalaman2.setOnClickListener {
                     navigateToHalaman(page2.halamanId, page2.nomorHalaman, "Halaman ${page2.nomorHalaman}", page2.deskripsi)
                 }
-                try {
-                    binding.tvHalaman2Desc?.text = page2.deskripsi
-                } catch (e: Exception) {}
             } else {
                 binding.cardHalaman2.setOnClickListener {
                     showLockedMessage()
@@ -124,9 +117,6 @@ class LatihanFragment : Fragment() {
                 binding.cardHalaman3.setOnClickListener {
                     navigateToHalaman(page3.halamanId, page3.nomorHalaman, "Halaman ${page3.nomorHalaman}", page3.deskripsi)
                 }
-                try {
-                    binding.tvHalaman3Desc?.text = page3.deskripsi
-                } catch (e: Exception) {}
             } else {
                 binding.cardHalaman3.setOnClickListener {
                     showLockedMessage()
@@ -139,9 +129,6 @@ class LatihanFragment : Fragment() {
                 binding.cardHalaman4.setOnClickListener {
                     navigateToHalaman(page4.halamanId, page4.nomorHalaman, "Halaman ${page4.nomorHalaman}", page4.deskripsi)
                 }
-                try {
-                    binding.tvHalaman4Desc?.text = page4.deskripsi
-                } catch (e: Exception) {}
             } else {
                 binding.cardHalaman4.setOnClickListener {
                     showLockedMessage()
@@ -154,9 +141,6 @@ class LatihanFragment : Fragment() {
                 binding.cardHalaman5.setOnClickListener {
                     navigateToHalaman(page5.halamanId, page5.nomorHalaman, "Halaman ${page5.nomorHalaman}", page5.deskripsi)
                 }
-                try {
-                    binding.tvHalaman5Desc?.text = page5.deskripsi
-                } catch (e: Exception) {}
             } else {
                 binding.cardHalaman5.setOnClickListener {
                     showLockedMessage()

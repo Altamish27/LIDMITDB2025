@@ -77,6 +77,7 @@ class LatihanPracticeActivity : AppCompatActivity() {
     // New structure variables
     private var currentJilidId = 1
     private var currentHalamanId = 1
+    private var realHalamanId = "1-1"  // Real halaman_id from database (e.g., "1-1")
     private var currentBarisId = 1
     
     private var exerciseId = 1
