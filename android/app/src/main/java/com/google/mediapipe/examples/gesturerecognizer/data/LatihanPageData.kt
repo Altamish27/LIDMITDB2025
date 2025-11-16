@@ -1,20 +1,11 @@
-/*
- * Copyright 2022 The TensorFlow Authors. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *             http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.google.mediapipe.examples.gesturerecognizer.data
+
+import android.util.Log
+import com.google.mediapipe.examples.gesturerecognizer.data.api.SignQuranApiService
+import com.google.mediapipe.examples.gesturerecognizer.data.models.JilidApi
+import com.google.mediapipe.examples.gesturerecognizer.data.models.PageDetailItem
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Data class untuk setiap huruf dalam latihan
@@ -46,7 +37,7 @@ data class LatihanHalaman(
     val description: String,
     val barisList: List<LatihanBaris>,
     val isCompleted: Boolean = false,
-    val progress: Int = 0 // Progress dalam persentase
+    val progress: Int = 0
 )
 
 /**
@@ -58,290 +49,282 @@ data class LatihanJilid(
     val description: String,
     val halamanList: List<LatihanHalaman>,
     val isCompleted: Boolean = false,
-    val progress: Int = 0 // Progress dalam persentase
+    val progress: Int = 0
 )
 
 /**
- * Object untuk menyimpan data struktur latihan berdasarkan gambar
+ * Object untuk mengelola data latihan dari API
+ * 100% API - NO HARDCODE
  */
 object LatihanPageData {
     
+    private const val TAG = "LatihanPageData"
+    
+    // Cache untuk data dari API
+    private var cachedJilidList: List<LatihanJilid>? = null
+    private val cachedHalamanMap = mutableMapOf<String, LatihanHalaman>()
+    
+    // Mapping dari latin name API ke gesture name untuk deteksi kamera
+    private val latinToGestureMap = mapOf(
+        "Alif" to "alif",
+        "Ba" to "ba",
+        "Ta" to "ta",
+        "Tsa" to "tsa",
+        "Jim" to "jim",
+        "Ha" to "ha",
+        "Kha" to "kha",
+        "Dal" to "dal",
+        "Dzal" to "dzal",
+        "Ra" to "ra",
+        "Za" to "za",
+        "Sin" to "sin",
+        "Syin" to "syin",
+        "Shod" to "shad",
+        "Dhod" to "dhad",
+        "Tho" to "tha",
+        "Zho" to "zha",
+        "Ain" to "ain",
+        "Ghoin" to "ghain",
+        "Fa" to "fa",
+        "Qof" to "qaf",
+        "Kaf" to "kaf",
+        "Lam" to "lam",
+        "Mim" to "mim",
+        "Nun" to "nun",
+        "Wau" to "waw",
+        "Ha'" to "ha'",
+        "Ya" to "ya"
+    )
+    
     /**
-     * Data untuk halaman pertama sesuai dengan gambar yang diberikan
-     * Terdiri dari 3 baris dengan 6 huruf per baris
+     * Load data jilid dari API
      */
-    fun getHalaman1(): LatihanHalaman {
-        return LatihanHalaman(
-            id = 1,
-            title = "Halaman 1",
-            description = "Pengenalan Huruf Hijaiyah Dasar",
-            barisList = listOf(
-                // Baris 1
-                LatihanBaris(
-                    id = 1,
-                    hurufList = listOf(
-                        LatihanHuruf("ا", "ALIF", "alif", 1),
-                        LatihanHuruf("ب", "BA", "ba", 2),
-                        LatihanHuruf("ب", "BA", "ba", 3),
-                        LatihanHuruf("ا", "ALIF", "alif", 4),
-                        LatihanHuruf("ب", "BA", "ba", 5),
-                        LatihanHuruf("ا", "ALIF", "alif", 6)
-                    )
-                ),
-                // Baris 2
-                LatihanBaris(
-                    id = 2,
-                    hurufList = listOf(
-                        LatihanHuruf("ب", "BA", "ba", 7),
-                        LatihanHuruf("ا", "ALIF", "alif", 8),
-                        LatihanHuruf("ا", "ALIF", "alif", 9),
-                        LatihanHuruf("ب", "BA", "ba", 10),
-                        LatihanHuruf("ب", "BA", "ba", 11),
-                        LatihanHuruf("ا", "ALIF", "alif", 12)
-                    )
-                ),
-                // Baris 3
-                LatihanBaris(
-                    id = 3,
-                    hurufList = listOf(
-                        LatihanHuruf("ب", "BA", "ba", 13),
-                        LatihanHuruf("ا", "ALIF", "alif", 14),
-                        LatihanHuruf("ا", "ALIF", "alif", 15),
-                        LatihanHuruf("ا", "ALIF", "alif", 16),
-                        LatihanHuruf("ا", "ALIF", "alif", 17),
-                        LatihanHuruf("ب", "BA", "ba", 18)
-                    )
+    suspend fun loadJilidFromApi(): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "Loading jilid list from API...")
+                val apiService = SignQuranApiService.getInstance()
+                val result = apiService.getJilidList()
+                
+                result.onSuccess { response ->
+                    Log.d(TAG, "API Success: ${response.jilid.size} jilid loaded")
+                    
+                    // Map setiap jilid dan cek halaman yang tersedia
+                    val jilidList = mutableListOf<LatihanJilid>()
+                    for (apiJilid in response.jilid) {
+                        val jilid = mapApiJilidToLatihanJilid(apiJilid)
+                        
+                        // Hanya tambahkan jilid yang punya minimal 1 halaman
+                        if (jilid.halamanList.isNotEmpty()) {
+                            jilidList.add(jilid)
+                            Log.d(TAG, "Added ${jilid.title} with ${jilid.halamanList.size} pages")
+                        } else {
+                            Log.w(TAG, "Skipped ${jilid.title} - no pages available")
+                        }
+                    }
+                    
+                    cachedJilidList = jilidList
+                    return@withContext jilidList.isNotEmpty()
+                }
+                
+                result.onFailure { error ->
+                    Log.e(TAG, "API Jilid Failed: ${error.message}", error)
+                    cachedJilidList = emptyList()
+                }
+                
+                return@withContext false
+            } catch (e: Exception) {
+                Log.e(TAG, "API Jilid Error: ${e.message}", e)
+                cachedJilidList = emptyList()
+                return@withContext false
+            }
+        }
+    }
+    
+    /**
+     * Load halaman detail dari API
+     */
+    suspend fun loadHalamanFromApi(jilidId: Int, nomorHalaman: Int): LatihanHalaman? {
+        return withContext(Dispatchers.IO) {
+            val cacheKey = "$jilidId-$nomorHalaman"
+            
+            // Cek cache dulu
+            if (cachedHalamanMap.containsKey(cacheKey)) {
+                Log.d(TAG, "Using cached page: $cacheKey")
+                return@withContext cachedHalamanMap[cacheKey]
+            }
+            
+            try {
+                Log.d(TAG, "Loading page from API: jilid=$jilidId, halaman=$nomorHalaman")
+                val apiService = SignQuranApiService.getInstance()
+                val result = apiService.getPageDetail(jilidId, nomorHalaman)
+                
+                result.onSuccess { response ->
+                    if (response.pageDetail.isNotEmpty()) {
+                        Log.d(TAG, "API Success: ${response.pageDetail.size} items loaded")
+                        val halaman = mapApiPageToLatihanHalaman(response.pageDetail, jilidId, nomorHalaman)
+                        cachedHalamanMap[cacheKey] = halaman
+                        return@withContext halaman
+                    } else {
+                        Log.w(TAG, "API returned empty pageDetail")
+                    }
+                }
+                
+                result.onFailure { error ->
+                    Log.e(TAG, "API Halaman Failed: ${error.message}", error)
+                }
+                
+                return@withContext null
+            } catch (e: Exception) {
+                Log.e(TAG, "API Halaman Error: ${e.message}", e)
+                return@withContext null
+            }
+        }
+    }
+    
+    /**
+     * Mapping dari API page detail ke LatihanHalaman
+     */
+    private fun mapApiPageToLatihanHalaman(
+        pageDetails: List<PageDetailItem>,
+        jilidId: Int,
+        nomorHalaman: Int
+    ): LatihanHalaman {
+        Log.d(TAG, "Mapping ${pageDetails.size} items to LatihanHalaman")
+        
+        // Group by baris
+        val groupedByBaris = pageDetails.groupBy { it.baris }
+        Log.d(TAG, "Grouped into ${groupedByBaris.size} baris")
+        
+        // Convert ke LatihanBaris
+        val barisList = groupedByBaris.map { (barisId, items) ->
+            val hurufList = items.sortedBy { it.urutan }.mapIndexed { index, item ->
+                val gestureName = latinToGestureMap[item.latinName] ?: item.latinName.lowercase()
+                
+                // Position calculation: untuk setiap baris, position mulai dari (barisId-1)*6 + urutan
+                val position = item.hijaiyahHalamanId
+                
+                Log.d(TAG, "Baris $barisId, Urutan ${item.urutan}: ${item.latinName} (${item.arabicChar}) -> gesture: $gestureName, pos: $position")
+                
+                LatihanHuruf(
+                    arabic = item.arabicChar,
+                    latin = item.latinName.uppercase(),
+                    gestureName = gestureName,
+                    position = position,
+                    isCompleted = false,
+                    isActive = false
                 )
+            }
+            
+            LatihanBaris(
+                id = barisId,
+                hurufList = hurufList,
+                isCompleted = false
             )
+        }.sortedBy { it.id }
+        
+        val jilidName = pageDetails.firstOrNull()?.jilidName ?: "Jilid $jilidId"
+        
+        return LatihanHalaman(
+            id = nomorHalaman,
+            title = "Halaman $nomorHalaman",
+            description = "Latihan Halaman $nomorHalaman dari $jilidName",
+            barisList = barisList,
+            isCompleted = false,
+            progress = 0
         )
     }
-
+    
     /**
-     * Data untuk halaman kedua sesuai dengan gambar yang diberikan
-     * Baris 1 & 2: semua Jim, Baris 3: Jim, Ta, Ta, Ba, Jim, Alif
+     * Mapping dari API jilid ke LatihanJilid
+     * HANYA MENAMPILKAN HALAMAN YANG ADA DATANYA DI API
      */
-    fun getHalaman2(): LatihanHalaman {
-        return LatihanHalaman(
-            id = 2,
-            title = "Halaman 2",
-            description = "Latihan Huruf Jim, Ta, dan Ba",
-            barisList = listOf(
-                // Baris 1 - Jim, Jim, Jim, Jim, Jim, Jim
-                LatihanBaris(
-                    id = 1,
-                    hurufList = listOf(
-                        LatihanHuruf("ج", "JIM", "jim", 19),
-                        LatihanHuruf("ج", "JIM", "jim", 20),
-                        LatihanHuruf("ج", "JIM", "jim", 21),
-                        LatihanHuruf("ج", "JIM", "jim", 22),
-                        LatihanHuruf("ج", "JIM", "jim", 23),
-                        LatihanHuruf("ج", "JIM", "jim", 24)
+    private suspend fun mapApiJilidToLatihanJilid(apiJilid: JilidApi): LatihanJilid {
+        Log.d(TAG, "Checking available pages for jilid ${apiJilid.jilidId}...")
+        
+        val apiService = SignQuranApiService.getInstance()
+        val availablePages = mutableListOf<LatihanHalaman>()
+        
+        // Cek maksimal 50 halaman untuk setiap jilid
+        val maxPagesToCheck = 50
+        var consecutiveEmptyCount = 0
+        val maxConsecutiveEmpty = 3  // Stop jika 3 halaman berturut-turut kosong
+        
+        for (pageNum in 1..maxPagesToCheck) {
+            try {
+                val result = apiService.getPageDetail(apiJilid.jilidId, pageNum)
+                
+                var pageFound = false
+                result.onSuccess { response ->
+                    if (response.pageDetail.isNotEmpty()) {
+                        // Halaman ini ada datanya, buat placeholder
+                        Log.d(TAG, "✓ Jilid ${apiJilid.jilidId} - Halaman $pageNum: ${response.pageDetail.size} items found")
+                        availablePages.add(
+                            LatihanHalaman(
+                                id = pageNum,
+                                title = "Halaman $pageNum",
+                                description = "Klik untuk memuat halaman",
+                                barisList = emptyList(),
+                                isCompleted = false,
+                                progress = 0
+                            )
+                        )
+                        consecutiveEmptyCount = 0
+                        pageFound = true
+                    }
+                }
+                
+                if (!pageFound) {
+                    consecutiveEmptyCount++
+                    Log.d(TAG, "✗ Jilid ${apiJilid.jilidId} - Halaman $pageNum: Empty/Not found (${consecutiveEmptyCount}/${maxConsecutiveEmpty})")
+                    
+                    if (consecutiveEmptyCount >= maxConsecutiveEmpty) {
+                        Log.d(TAG, "Stopping check - ${maxConsecutiveEmpty} consecutive empty pages")
+                        return@mapApiJilidToLatihanJilid LatihanJilid(
+                            id = apiJilid.jilidId,
+                            title = apiJilid.jilidName,
+                            description = apiJilid.description,
+                            halamanList = availablePages,
+                            isCompleted = false,
+                            progress = 0
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                consecutiveEmptyCount++
+                Log.e(TAG, "Error checking page $pageNum: ${e.message}")
+                
+                if (consecutiveEmptyCount >= maxConsecutiveEmpty) {
+                    Log.d(TAG, "Stopping check due to errors")
+                    return@mapApiJilidToLatihanJilid LatihanJilid(
+                        id = apiJilid.jilidId,
+                        title = apiJilid.jilidName,
+                        description = apiJilid.description,
+                        halamanList = availablePages,
+                        isCompleted = false,
+                        progress = 0
                     )
-                ),
-                // Baris 2 - Jim, Jim, Jim, Jim, Jim, Jim
-                LatihanBaris(
-                    id = 2,
-                    hurufList = listOf(
-                        LatihanHuruf("ج", "JIM", "jim", 25),
-                        LatihanHuruf("ج", "JIM", "jim", 26),
-                        LatihanHuruf("ج", "JIM", "jim", 27),
-                        LatihanHuruf("ج", "JIM", "jim", 28),
-                        LatihanHuruf("ج", "JIM", "jim", 29),
-                        LatihanHuruf("ج", "JIM", "jim", 30)
-                    )
-                ),
-                // Baris 3 - Jim, Ta, Ta, Ba, Jim, Alif (sesuai gambar)
-                LatihanBaris(
-                    id = 3,
-                    hurufList = listOf(
-                        LatihanHuruf("ج", "JIM", "jim", 31),
-                        LatihanHuruf("ت", "TA", "ta", 32),
-                        LatihanHuruf("ت", "TA", "ta", 33),
-                        LatihanHuruf("ب", "BA", "ba", 34),
-                        LatihanHuruf("ج", "JIM", "jim", 35),
-                        LatihanHuruf("ا", "ALIF", "alif", 36)
-                    )
-                )
-            )
-        )
-    }
-
-    /**
-     * Data untuk halaman ketiga
-     * Latihan huruf Ta dan Tsa
-     */
-    fun getHalaman3(): LatihanHalaman {
-        return LatihanHalaman(
-            id = 3,
-            title = "Halaman 3",
-            description = "Latihan Huruf Ta dan Tsa",
-            barisList = listOf(
-                // Baris 1
-                LatihanBaris(
-                    id = 1,
-                    hurufList = listOf(
-                        LatihanHuruf("ت", "TA", "ta", 37),
-                        LatihanHuruf("ت", "TA", "ta", 38),
-                        LatihanHuruf("ت", "TA", "ta", 39),
-                        LatihanHuruf("ث", "TSA", "tsa", 40),
-                        LatihanHuruf("ث", "TSA", "tsa", 41),
-                        LatihanHuruf("ث", "TSA", "tsa", 42)
-                    )
-                ),
-                // Baris 2
-                LatihanBaris(
-                    id = 2,
-                    hurufList = listOf(
-                        LatihanHuruf("ت", "TA", "ta", 43),
-                        LatihanHuruf("ث", "TSA", "tsa", 44),
-                        LatihanHuruf("ت", "TA", "ta", 45),
-                        LatihanHuruf("ث", "TSA", "tsa", 46),
-                        LatihanHuruf("ت", "TA", "ta", 47),
-                        LatihanHuruf("ث", "TSA", "tsa", 48)
-                    )
-                ),
-                // Baris 3
-                LatihanBaris(
-                    id = 3,
-                    hurufList = listOf(
-                        LatihanHuruf("ث", "TSA", "tsa", 49),
-                        LatihanHuruf("ث", "TSA", "tsa", 50),
-                        LatihanHuruf("ت", "TA", "ta", 51),
-                        LatihanHuruf("ت", "TA", "ta", 52),
-                        LatihanHuruf("ث", "TSA", "tsa", 53),
-                        LatihanHuruf("ت", "TA", "ta", 54)
-                    )
-                )
-            )
-        )
-    }
-
-    /**
-     * Data untuk halaman keempat
-     * Latihan huruf Ha dan Kho
-     */
-    fun getHalaman4(): LatihanHalaman {
-        return LatihanHalaman(
-            id = 4,
-            title = "Halaman 4",
-            description = "Latihan Huruf Ha dan Kho",
-            barisList = listOf(
-                // Baris 1
-                LatihanBaris(
-                    id = 1,
-                    hurufList = listOf(
-                        LatihanHuruf("ح", "HA", "ha", 55),
-                        LatihanHuruf("ح", "HA", "ha", 56),
-                        LatihanHuruf("ح", "HA", "ha", 57),
-                        LatihanHuruf("خ", "KHO", "kho", 58),
-                        LatihanHuruf("خ", "KHO", "kho", 59),
-                        LatihanHuruf("خ", "KHO", "kho", 60)
-                    )
-                ),
-                // Baris 2
-                LatihanBaris(
-                    id = 2,
-                    hurufList = listOf(
-                        LatihanHuruf("ح", "HA", "ha", 61),
-                        LatihanHuruf("خ", "KHO", "kho", 62),
-                        LatihanHuruf("ح", "HA", "ha", 63),
-                        LatihanHuruf("خ", "KHO", "kho", 64),
-                        LatihanHuruf("ح", "HA", "ha", 65),
-                        LatihanHuruf("خ", "KHO", "kho", 66)
-                    )
-                ),
-                // Baris 3
-                LatihanBaris(
-                    id = 3,
-                    hurufList = listOf(
-                        LatihanHuruf("خ", "KHO", "kho", 67),
-                        LatihanHuruf("خ", "KHO", "kho", 68),
-                        LatihanHuruf("ح", "HA", "ha", 69),
-                        LatihanHuruf("ح", "HA", "ha", 70),
-                        LatihanHuruf("خ", "KHO", "kho", 71),
-                        LatihanHuruf("ح", "HA", "ha", 72)
-                    )
-                )
-            )
-        )
-    }
-
-    /**
-     * Data untuk halaman kelima
-     * Latihan huruf Dal, Dzal, dan Ra
-     */
-    fun getHalaman5(): LatihanHalaman {
-        return LatihanHalaman(
-            id = 5,
-            title = "Halaman 5",
-            description = "Latihan Huruf Dal, Dzal, dan Ra",
-            barisList = listOf(
-                // Baris 1
-                LatihanBaris(
-                    id = 1,
-                    hurufList = listOf(
-                        LatihanHuruf("د", "DAL", "dal", 73),
-                        LatihanHuruf("د", "DAL", "dal", 74),
-                        LatihanHuruf("ذ", "DZAL", "dzal", 75),
-                        LatihanHuruf("ذ", "DZAL", "dzal", 76),
-                        LatihanHuruf("ر", "RA", "ra", 77),
-                        LatihanHuruf("ر", "RA", "ra", 78)
-                    )
-                ),
-                // Baris 2
-                LatihanBaris(
-                    id = 2,
-                    hurufList = listOf(
-                        LatihanHuruf("د", "DAL", "dal", 79),
-                        LatihanHuruf("ذ", "DZAL", "dzal", 80),
-                        LatihanHuruf("ر", "RA", "ra", 81),
-                        LatihanHuruf("د", "DAL", "dal", 82),
-                        LatihanHuruf("ذ", "DZAL", "dzal", 83),
-                        LatihanHuruf("ر", "RA", "ra", 84)
-                    )
-                ),
-                // Baris 3
-                LatihanBaris(
-                    id = 3,
-                    hurufList = listOf(
-                        LatihanHuruf("ر", "RA", "ra", 85),
-                        LatihanHuruf("ر", "RA", "ra", 86),
-                        LatihanHuruf("ذ", "DZAL", "dzal", 87),
-                        LatihanHuruf("د", "DAL", "dal", 88),
-                        LatihanHuruf("ر", "RA", "ra", 89),
-                        LatihanHuruf("د", "DAL", "dal", 90)
-                    )
-                )
-            )
-        )
-    }
-
-    /**
-     * Data untuk jilid pertama (bisa dikembangkan untuk menambah halaman)
-     */
-    fun getJilid1(): LatihanJilid {
+                }
+            }
+        }
+        
+        Log.d(TAG, "Jilid ${apiJilid.jilidId}: Found ${availablePages.size} available pages")
+        
         return LatihanJilid(
-            id = 1,
-            title = "Jilid 1 - Pengenalan Huruf",
-            description = "Belajar pengenalan huruf Hijaiyah dasar",
-            halamanList = listOf(
-                getHalaman1(),
-                getHalaman2(),
-                getHalaman3(),
-                getHalaman4(),
-                getHalaman5()
-            )
+            id = apiJilid.jilidId,
+            title = apiJilid.jilidName,
+            description = apiJilid.description,
+            halamanList = availablePages,
+            isCompleted = false,
+            progress = 0
         )
     }
-
+    
     /**
-     * Mendapatkan semua jilid yang tersedia
+     * Mendapatkan semua jilid
      */
     fun getAllJilid(): List<LatihanJilid> {
-        return listOf(
-            getJilid1()
-            // Jilid lain bisa ditambah di sini
-        )
+        return cachedJilidList ?: emptyList()
     }
 
     /**
@@ -353,9 +336,12 @@ object LatihanPageData {
 
     /**
      * Mendapatkan halaman berdasarkan jilid ID dan halaman ID
+     * Untuk placeholder, gunakan loadHalamanFromApi() untuk data sebenarnya
      */
     fun getHalamanById(jilidId: Int, halamanId: Int): LatihanHalaman? {
-        return getJilidById(jilidId)?.halamanList?.find { it.id == halamanId }
+        // Cek cache dulu
+        val cacheKey = "$jilidId-$halamanId"
+        return cachedHalamanMap[cacheKey] ?: getJilidById(jilidId)?.halamanList?.find { it.id == halamanId }
     }
 
     /**
@@ -442,5 +428,14 @@ object LatihanPageData {
         
         val completedHuruf = completedPositions.size
         return (completedHuruf * 100) / totalHuruf
+    }
+    
+    /**
+     * Clear cache - untuk refresh data
+     */
+    fun clearCache() {
+        cachedJilidList = null
+        cachedHalamanMap.clear()
+        Log.d(TAG, "Cache cleared")
     }
 }

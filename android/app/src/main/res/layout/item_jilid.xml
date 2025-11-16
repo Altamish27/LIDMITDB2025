@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardJilid"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardBackgroundColor="@color/hijaiyah_navy"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <!-- Nomor Jilid -->
+        <TextView
+            android:id="@+id/tvJilidNumber"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/circle_yellow_background"
+            android:gravity="center"
+            android:text="1"
+            android:textColor="@color/hijaiyah_navy"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <!-- Content -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- Title -->
+            <TextView
+                android:id="@+id/tvJilidTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Iqra Jilid 1"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- Description -->
+            <TextView
+                android:id="@+id/tvJilidDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Pengenalan huruf hijaiyah dasar dalam Qur'an Isyarat"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:alpha="0.8" />
+
+            <!-- Status/Progress -->
+            <TextView
+                android:id="@+id/tvJilidStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="5 Halaman"
+                android:textColor="@color/hijaiyah_yellow"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Lock Icon (untuk jilid yang terkunci) -->
+        <ImageView
+            android:id="@+id/ivLockIcon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_lock"
+            android:visibility="gone"
+            android:tint="@color/gray_dark" />
+
+        <!-- Arrow Icon -->
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_arrow_right"
+            android:tint="@color/white" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

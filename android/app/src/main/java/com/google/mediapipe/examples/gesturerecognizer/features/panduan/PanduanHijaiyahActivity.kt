@@ -2,9 +2,11 @@ package com.google.mediapipe.examples.gesturerecognizer.features.panduan
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
 import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityPanduanHijaiyahBinding
+import kotlinx.coroutines.launch
 
 class PanduanHijaiyahActivity : AppCompatActivity() {
 
@@ -20,8 +22,18 @@ class PanduanHijaiyahActivity : AppCompatActivity() {
         binding = ActivityPanduanHijaiyahBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupRecyclerView()
+        // Load data dari API
+        loadDataFromApi()
         setupClickListeners()
+    }
+    
+    private fun loadDataFromApi() {
+        lifecycleScope.launch {
+            // Load data hijaiyah dari API
+            HijaiyahData.loadFromApi()
+            // Setup RecyclerView setelah data di-load
+            setupRecyclerView()
+        }
     }
 
     private fun setupRecyclerView() {

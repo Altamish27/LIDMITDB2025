@@ -3,10 +3,12 @@ package com.google.mediapipe.examples.gesturerecognizer.features.praga
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.core.main.MainActivity
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
 import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityTutorialHijaiyahBinding
+import kotlinx.coroutines.launch
 
 class PragaActivity : AppCompatActivity() {
 
@@ -29,13 +31,23 @@ class PragaActivity : AppCompatActivity() {
         hurufLatin = intent.getStringExtra("huruf_latin") ?: "Alif"
         gestureName = intent.getStringExtra("gesture_name") ?: ""
 
-        // Find current index
-        currentIndex = HijaiyahData.letters.indexOfFirst { it.transliteration == hurufLatin }
-        if (currentIndex == -1) currentIndex = 0
+        // Load data dan setup UI
+        loadDataAndSetup()
+    }
+    
+    private fun loadDataAndSetup() {
+        lifecycleScope.launch {
+            // Load data hijaiyah dari API
+            HijaiyahData.loadFromApi()
+            
+            // Find current index
+            currentIndex = HijaiyahData.letters.indexOfFirst { it.transliteration == hurufLatin }
+            if (currentIndex == -1) currentIndex = 0
 
-        setupViews()
-        setupClickListeners()
-        updateNavigationButtons()
+            setupViews()
+            setupClickListeners()
+            updateNavigationButtons()
+        }
     }
 
     private fun setupViews() {

@@ -42,6 +42,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import android.view.View
 import android.view.animation.AnimationUtils
@@ -53,6 +54,7 @@ import com.google.mediapipe.examples.gesturerecognizer.data.LatihanPageData
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanHalaman
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanBaris
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanHuruf
+import kotlinx.coroutines.launch
 
 // Keep old HurufItem for backward compatibility if needed
 data class HurufItem(
@@ -163,23 +165,13 @@ class LatihanPracticeActivity : AppCompatActivity() {
 
             android.util.Log.d("LatihanPractice", "Intent data: jilidId=$currentJilidId, halamanId=$currentHalamanId, exerciseTitle=$exerciseTitle")
 
-            // Load new structure data
-            loadPageData()
-            
-            // Check if data loaded successfully
-            if (currentHalaman == null) {
-                android.util.Log.e("LatihanPractice", "currentHalaman is null!")
-                Toast.makeText(this, "Halaman tidak ditemukan", Toast.LENGTH_LONG).show()
-                finish()
-                return
-            }
-            
-            android.util.Log.d("LatihanPractice", "Data loaded successfully: ${currentHalaman?.title}")
-            
+            // Setup UI first
             setupUI()
             setupRecyclerView()
             setupClickListeners()
-            loadCurrentBaris()
+            
+            // Then load data asynchronously
+            loadPageData()
             
             android.util.Log.d("LatihanPractice", "onCreate completed successfully")
             
@@ -191,8 +183,75 @@ class LatihanPracticeActivity : AppCompatActivity() {
     }
 
     private fun loadPageData() {
-        currentHalaman = LatihanPageData.getHalamanById(currentJilidId, currentHalamanId)
-        currentBaris = currentHalaman?.barisList?.find { it.id == currentBarisId }
+        lifecycleScope.launch {
+            android.util.Log.d("LatihanPractice", "========================================")
+            android.util.Log.d("LatihanPractice", "Loading page: jilid=$currentJilidId, halaman=$currentHalamanId")
+            
+            try {
+                // Show loading indicator
+                runOnUiThread {
+                    binding.tvSubtitle.text = "Memuat data..."
+                }
+                
+                // Load halaman dari API
+                val halaman = LatihanPageData.loadHalamanFromApi(currentJilidId, currentHalamanId)
+                
+                if (halaman != null) {
+                    android.util.Log.d("LatihanPractice", "✓ API Success!")
+                    android.util.Log.d("LatihanPractice", "  - Title: ${halaman.title}")
+                    android.util.Log.d("LatihanPractice", "  - Baris count: ${halaman.barisList.size}")
+                    halaman.barisList.forEachIndexed { index, baris ->
+                        android.util.Log.d("LatihanPractice", "  - Baris ${baris.id}: ${baris.hurufList.size} huruf")
+                    }
+                    
+                    currentHalaman = halaman
+                    currentBaris = halaman.barisList.find { it.id == currentBarisId }
+                    
+                    if (currentBaris != null) {
+                        android.util.Log.d("LatihanPractice", "✓ Current baris loaded: ${currentBaris!!.hurufList.size} huruf")
+                        
+                        // Update UI on main thread
+                        runOnUiThread {
+                            updateUI()
+                            loadCurrentBaris()
+                        }
+                    } else {
+                        android.util.Log.e("LatihanPractice", "✗ Baris $currentBarisId not found!")
+                        runOnUiThread {
+                            Toast.makeText(
+                                this@LatihanPracticeActivity, 
+                                "Baris $currentBarisId tidak ditemukan", 
+                                Toast.LENGTH_LONG
+                            ).show()
+                            finish()
+                        }
+                    }
+                } else {
+                    android.util.Log.e("LatihanPractice", "✗ API Failed: halaman is null")
+                    android.util.Log.e("LatihanPractice", "  Check network connection and API URL")
+                    runOnUiThread {
+                        Toast.makeText(
+                            this@LatihanPracticeActivity, 
+                            "Gagal memuat data dari API. Periksa koneksi internet.", 
+                            Toast.LENGTH_LONG
+                        ).show()
+                        finish()
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("LatihanPractice", "✗ Exception: ${e.message}", e)
+                runOnUiThread {
+                    Toast.makeText(
+                        this@LatihanPracticeActivity, 
+                        "Error: ${e.message}", 
+                        Toast.LENGTH_LONG
+                    ).show()
+                    finish()
+                }
+            }
+            
+            android.util.Log.d("LatihanPractice", "========================================")
+        }
     }
 
     private fun setupUI() {
@@ -246,9 +305,13 @@ class LatihanPracticeActivity : AppCompatActivity() {
                 completedPositions.addAll(persisted)
             } catch (_: Exception) {}
 
-            // Update adapter with current baris data
-            adapter.updateHuruf(baris.hurufList)
-            adapter.updateCompletedPositions(completedPositions)
+            // Update adapter with current baris data only if adapter is initialized
+            if (::adapter.isInitialized) {
+                adapter.updateHuruf(baris.hurufList)
+                adapter.updateCompletedPositions(completedPositions)
+            } else {
+                android.util.Log.w("LatihanPractice", "Adapter not initialized yet, skipping update")
+            }
             
             // Update UI
             updateUI()
@@ -263,6 +326,8 @@ class LatihanPracticeActivity : AppCompatActivity() {
             
             // Debug info untuk memastikan completed positions ter-track
             android.util.Log.d("LatihanPractice", "Baris $currentBarisId loaded. Completed positions: $completedPositions")
+        } ?: run {
+            android.util.Log.w("LatihanPractice", "currentBaris is null in loadCurrentBaris()")
         }
     }
 

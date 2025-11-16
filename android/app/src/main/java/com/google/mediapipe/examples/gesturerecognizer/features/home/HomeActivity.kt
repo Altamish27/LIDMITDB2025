@@ -33,6 +33,7 @@ import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.lifecycleScope
 import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityHomeBinding
 import com.google.mediapipe.examples.gesturerecognizer.core.main.MainActivity
@@ -41,6 +42,9 @@ import com.google.mediapipe.examples.gesturerecognizer.features.surat.SuratListA
 import com.google.mediapipe.examples.gesturerecognizer.features.auth.ProfileActivity
 import com.google.mediapipe.examples.gesturerecognizer.features.auth.LoginActivity
 import com.google.mediapipe.examples.gesturerecognizer.core.animation.ViewAnimationUtils
+import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
+import com.google.mediapipe.examples.gesturerecognizer.data.LatihanPageData
+import kotlinx.coroutines.launch
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHomeBinding
@@ -57,6 +61,9 @@ class HomeActivity : AppCompatActivity() {
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Load data dari API di background
+        loadApiData()
+        
         setupUI()
         setupClickListeners()
         setupCustomFonts()
@@ -65,6 +72,22 @@ class HomeActivity : AppCompatActivity() {
         // Delay animations to ensure views are laid out properly
         binding.root.post {
             startEntranceAnimations()
+        }
+    }
+    
+    /**
+     * Load data dari API secara async saat app dimulai
+     */
+    private fun loadApiData() {
+        lifecycleScope.launch {
+            try {
+                // Load hijaiyah dan jilid data dari API
+                HijaiyahData.loadFromApi()
+                LatihanPageData.loadJilidFromApi()
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Failed to load API data: ${e.message}", e)
+                // Data fallback akan digunakan otomatis
+            }
         }
     }
 

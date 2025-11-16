@@ -23,12 +23,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.mediapipe.examples.gesturerecognizer.data.LatihanJilid
+import com.google.mediapipe.examples.gesturerecognizer.data.LatihanPageData
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentLatihanJilidBinding
+import kotlinx.coroutines.launch
 
 class LatihanJilidFragment : Fragment() {
 
     private var _binding: FragmentLatihanJilidBinding? = null
     private val binding get() = _binding!!
+    private lateinit var adapter: JilidListAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,22 +48,69 @@ class LatihanJilidFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        setupClickListeners()
+        setupRecyclerView()
+        loadJilidData()
+    }
+
+    private fun setupRecyclerView() {
+        adapter = JilidListAdapter { jilid ->
+            onJilidClicked(jilid)
+        }
+        
+        // Cek apakah ada RecyclerView di layout, jika tidak gunakan click listeners lama
+        try {
+            binding.rvJilidList?.apply {
+                layoutManager = LinearLayoutManager(requireContext())
+                adapter = this@LatihanJilidFragment.adapter
+            }
+        } catch (e: Exception) {
+            // Fallback ke click listeners lama jika layout belum di-update
+            setupClickListeners()
+        }
+    }
+    
+    private fun loadJilidData() {
+        lifecycleScope.launch {
+            // Load jilid dari API
+            LatihanPageData.loadJilidFromApi()
+            
+            // Get data jilid
+            val jilidList = LatihanPageData.getAllJilid()
+            
+            // Update adapter jika RecyclerView ada
+            try {
+                adapter.submitList(jilidList)
+            } catch (e: Exception) {
+                // Jika RecyclerView tidak ada, tidak perlu update adapter
+            }
+        }
+    }
+    
+    private fun onJilidClicked(jilid: LatihanJilid) {
+        // Cek apakah jilid memiliki halaman
+        if (jilid.halamanList.isEmpty()) {
+            showLockedMessage()
+        } else {
+            navigateToJilidHalaman(jilid.id, jilid.title)
+        }
     }
 
     private fun setupClickListeners() {
-        // Jilid 1 - Available
-        binding.cardJilid1.setOnClickListener {
-            navigateToJilidHalaman(1, "Jilid 1")
-        }
-        
-        // Jilid 2-3 - Locked
-        binding.cardJilid2.setOnClickListener {
-            showLockedMessage()
-        }
-        
-        binding.cardJilid3.setOnClickListener {
-            showLockedMessage()
+        // Fallback untuk layout lama yang masih menggunakan CardView
+        try {
+            binding.cardJilid1?.setOnClickListener {
+                navigateToJilidHalaman(1, "Jilid 1")
+            }
+            
+            binding.cardJilid2?.setOnClickListener {
+                showLockedMessage()
+            }
+            
+            binding.cardJilid3?.setOnClickListener {
+                showLockedMessage()
+            }
+        } catch (e: Exception) {
+            // Ignore jika view tidak ada
         }
     }
     
