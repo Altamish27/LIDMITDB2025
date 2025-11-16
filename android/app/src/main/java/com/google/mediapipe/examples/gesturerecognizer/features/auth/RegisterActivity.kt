@@ -4,13 +4,27 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
-import android.widget.TextView
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.mediapipe.examples.gesturerecognizer.R
+import com.google.mediapipe.examples.gesturerecognizer.data.api.AuthApiService
+import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
+import com.google.mediapipe.examples.gesturerecognizer.features.home.HomeActivity
 import com.google.mediapipe.examples.gesturerecognizer.core.animation.ViewAnimationUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class RegisterActivity : AppCompatActivity() {
+    private lateinit var authManager: AuthManager
+    private lateinit var authApiService: AuthApiService
+    private lateinit var etName: EditText
+    private lateinit var etEmail: EditText
+    private lateinit var etPassword: EditText
+    private lateinit var btnDaftar: Button
+    private lateinit var progressBar: ProgressBar
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -22,11 +36,17 @@ class RegisterActivity : AppCompatActivity() {
         
         setContentView(R.layout.activity_register)
 
-        val etFullname = findViewById<EditText>(R.id.et_fullname)
-        val etEmail = findViewById<EditText>(R.id.et_email)
-        val etPassword = findViewById<EditText>(R.id.et_password)
-        val btnDaftar = findViewById<Button>(R.id.btn_daftar)
-        val tvLoginLink = findViewById<TextView>(R.id.tv_login_link)
+        authManager = AuthManager(this)
+        authApiService = AuthApiService.getInstance()
+        
+        etName = findViewById(R.id.et_fullname)
+        etEmail = findViewById(R.id.et_email)
+        etPassword = findViewById(R.id.et_password)
+        // Note: et_confirm_password doesn't exist in layout, so we'll skip validation
+        btnDaftar = findViewById(R.id.btn_daftar)
+        progressBar = findViewById(R.id.progress_bar_register)
+
+        val tvLoginLink = findViewById<android.widget.TextView>(R.id.tv_login_link)
         val registerContainer = findViewById<android.view.ViewGroup>(R.id.register_container)
         
         // Prepare for animation
@@ -40,43 +60,96 @@ class RegisterActivity : AppCompatActivity() {
 
         btnDaftar.setOnClickListener {
             ViewAnimationUtils.animateClick(it) {
-                val fullname = etFullname.text.toString()
-                val email = etEmail.text.toString()
-                val password = etPassword.text.toString()
-                
-                // Validasi input
-                when {
-                    fullname.isEmpty() -> {
-                        Toast.makeText(this, "Nama lengkap tidak boleh kosong", Toast.LENGTH_SHORT).show()
-                    }
-                    email.isEmpty() -> {
-                        Toast.makeText(this, "Email tidak boleh kosong", Toast.LENGTH_SHORT).show()
-                    }
-                    password.isEmpty() -> {
-                        Toast.makeText(this, "Password tidak boleh kosong", Toast.LENGTH_SHORT).show()
-                    }
-                    password.length < 6 -> {
-                        Toast.makeText(this, "Password minimal 6 karakter", Toast.LENGTH_SHORT).show()
-                    }
-                    else -> {
-                        // Registrasi berhasil (simpan data di sini jika diperlukan)
-                        Toast.makeText(this, "Registrasi berhasil! Silakan login.", Toast.LENGTH_SHORT).show()
-                        
-                        // Redirect ke halaman login
-                        val intent = Intent(this, LoginActivity::class.java)
-                        startActivity(intent)
-                        finish()
-                    }
-                }
+                performRegister()
             }
         }
 
         tvLoginLink.setOnClickListener {
             ViewAnimationUtils.animateClick(it) {
-                // Kembali ke halaman login
                 val intent = Intent(this, LoginActivity::class.java)
                 startActivity(intent)
                 finish()
+            }
+        }
+    }
+    
+    private fun performRegister() {
+        val name = etName.text.toString().trim()
+        val email = etEmail.text.toString().trim()
+        val password = etPassword.text.toString().trim()
+        
+        // Validate input
+        when {
+            name.isEmpty() -> {
+                Toast.makeText(this, "Nama tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                return
+            }
+            email.isEmpty() -> {
+                Toast.makeText(this, "Email tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                return
+            }
+            password.isEmpty() -> {
+                Toast.makeText(this, "Password tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                return
+            }
+            password.length < 6 -> {
+                Toast.makeText(this, "Password minimal 6 karakter", Toast.LENGTH_SHORT).show()
+                return
+            }
+            else -> {
+                // Show progress indicator
+                progressBar.visibility = android.view.View.VISIBLE
+                btnDaftar.isEnabled = false
+                
+                // Call register API with "murid" role
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val result = authApiService.register(name, email, password, "murid")
+                        
+                        runOnUiThread {
+                            progressBar.visibility = android.view.View.GONE
+                            btnDaftar.isEnabled = true
+                            
+                            if (result.isSuccess) {
+                                val registerResponse = result.getOrNull()
+                                if (registerResponse != null) {
+                                    Toast.makeText(this@RegisterActivity, 
+                                        "Registrasi berhasil! Silakan periksa email Anda untuk verifikasi.", 
+                                        Toast.LENGTH_LONG).show()
+                                    
+                                    val intent = Intent(this@RegisterActivity, LoginActivity::class.java)
+                                    startActivity(intent)
+                                    finish()
+                                } else {
+                                    Toast.makeText(this@RegisterActivity, 
+                                        "Registrasi gagal: Data tidak valid", 
+                                        Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                // Extract error message if possible
+                                val exception = result.exceptionOrNull()
+                                if (exception?.message?.contains("400") == true && 
+                                    exception.message?.contains("Email already exists") == true) {
+                                    Toast.makeText(this@RegisterActivity, 
+                                        "Email sudah terdaftar", 
+                                        Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(this@RegisterActivity, 
+                                        "Registrasi gagal: ${exception?.message}", 
+                                        Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        runOnUiThread {
+                            progressBar.visibility = android.view.View.GONE
+                            btnDaftar.isEnabled = true
+                            Toast.makeText(this@RegisterActivity, 
+                                "Registrasi gagal: ${e.message}", 
+                                Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
             }
         }
     }

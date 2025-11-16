@@ -299,7 +299,19 @@
             android:backgroundTint="#009688"
             android:textColor="#FFFFFF"
             android:textStyle="bold"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginBottom="8dp" />
+
+        <!-- Logout button at bottom of drawer (no icon) -->
+        <Button
+            android:id="@+id/menu_button_logout"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:text="Keluar"
+            android:backgroundTint="#D32F2F"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone" />
 
         <TextView
             android:layout_width="wrap_content"

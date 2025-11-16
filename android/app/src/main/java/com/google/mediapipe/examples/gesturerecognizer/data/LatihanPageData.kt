@@ -99,32 +99,51 @@ object LatihanPageData {
     /**
      * Load data jilid dari API
      */
-    suspend fun loadJilidFromApi(): Boolean {
+    suspend fun loadJilidFromApi(context: android.content.Context? = null): Boolean {
         return withContext(Dispatchers.IO) {
             try {
+                Log.d(TAG, "========================================")
                 Log.d(TAG, "Loading jilid list from API...")
+                Log.d(TAG, "Context provided: ${context != null}")
+                
                 val apiService = SignQuranApiService.getInstance()
-                val result = apiService.getJilidList()
+                
+                // Get auth token if context is provided
+                val token = if (context != null) {
+                    val authManager = com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager(context)
+                    Log.d(TAG, "AuthManager isLoggedIn: ${authManager.isLoggedIn}")
+                    Log.d(TAG, "AuthManager token: ${if (authManager.authToken.isNotEmpty()) "EXISTS (${authManager.authToken.take(20)}...)" else "EMPTY"}")
+                    if (authManager.isLoggedIn) authManager.authToken else null
+                } else {
+                    Log.w(TAG, "No context provided, will call API without token")
+                    null
+                }
+                
+                Log.d(TAG, "Token to be used: ${if (token != null) "EXISTS" else "NULL"}")
+                
+                val result = apiService.getJilidList(token)
                 
                 result.onSuccess { response ->
                     Log.d(TAG, "API Success: ${response.jilid.size} jilid loaded")
                     
-                    // Map setiap jilid dan cek halaman yang tersedia
-                    val jilidList = mutableListOf<LatihanJilid>()
-                    for (apiJilid in response.jilid) {
-                        val jilid = mapApiJilidToLatihanJilid(apiJilid)
+                    // Map setiap jilid - LANGSUNG TAMPILKAN, TIDAK PERLU CEK HALAMAN DULU
+                    val jilidList = response.jilid.map { apiJilid ->
+                        Log.d(TAG, "Mapping jilid: ${apiJilid.jilidName} (ID: ${apiJilid.jilidId})")
                         
-                        // Hanya tambahkan jilid yang punya minimal 1 halaman
-                        if (jilid.halamanList.isNotEmpty()) {
-                            jilidList.add(jilid)
-                            Log.d(TAG, "Added ${jilid.title} with ${jilid.halamanList.size} pages")
-                        } else {
-                            Log.w(TAG, "Skipped ${jilid.title} - no pages available")
-                        }
+                        // Buat placeholder - halaman akan di-load on-demand
+                        LatihanJilid(
+                            id = apiJilid.jilidId,
+                            title = apiJilid.jilidName,
+                            description = apiJilid.description,
+                            halamanList = emptyList(), // Will be loaded on demand
+                            isCompleted = false,
+                            progress = 0
+                        )
                     }
                     
                     cachedJilidList = jilidList
-                    return@withContext jilidList.isNotEmpty()
+                    Log.d(TAG, "✓ Successfully loaded ${jilidList.size} jilid")
+                    return@withContext true
                 }
                 
                 result.onFailure { error ->
@@ -144,7 +163,7 @@ object LatihanPageData {
     /**
      * Load halaman detail dari API
      */
-    suspend fun loadHalamanFromApi(jilidId: Int, nomorHalaman: Int): LatihanHalaman? {
+    suspend fun loadHalamanFromApi(jilidId: Int, nomorHalaman: Int, context: android.content.Context? = null): LatihanHalaman? {
         return withContext(Dispatchers.IO) {
             val cacheKey = "$jilidId-$nomorHalaman"
             
@@ -157,7 +176,14 @@ object LatihanPageData {
             try {
                 Log.d(TAG, "Loading page from API: jilid=$jilidId, halaman=$nomorHalaman")
                 val apiService = SignQuranApiService.getInstance()
-                val result = apiService.getPageDetail(jilidId, nomorHalaman)
+                
+                // Get auth token if context is provided
+                val token = if (context != null) {
+                    val authManager = com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager(context)
+                    if (authManager.isLoggedIn) authManager.authToken else null
+                } else null
+                
+                val result = apiService.getPageDetail(jilidId, nomorHalaman, token)
                 
                 result.onSuccess { response ->
                     if (response.pageDetail.isNotEmpty()) {
@@ -199,16 +225,16 @@ object LatihanPageData {
         // Convert ke LatihanBaris
         val barisList = groupedByBaris.map { (barisId, items) ->
             val hurufList = items.sortedBy { it.urutan }.mapIndexed { index, item ->
-                val gestureName = latinToGestureMap[item.latinName] ?: item.latinName.lowercase()
+                val gestureName = latinToGestureMap[item.hurufLatin] ?: item.hurufLatin.lowercase()
                 
-                // Position calculation: untuk setiap baris, position mulai dari (barisId-1)*6 + urutan
-                val position = item.hijaiyahHalamanId
+                // Position calculation: for this context we'll use a combination of barisId and urutan
+                val position = (barisId * 100) + item.urutan  // Simple position calculation
                 
-                Log.d(TAG, "Baris $barisId, Urutan ${item.urutan}: ${item.latinName} (${item.arabicChar}) -> gesture: $gestureName, pos: $position")
+                Log.d(TAG, "Baris $barisId, Urutan ${item.urutan}: ${item.hurufLatin} (${item.hurufArab}) -> gesture: $gestureName, pos: $position")
                 
                 LatihanHuruf(
-                    arabic = item.arabicChar,
-                    latin = item.latinName.uppercase(),
+                    arabic = item.hurufArab,
+                    latin = item.hurufLatin.uppercase(),
                     gestureName = gestureName,
                     position = position,
                     isCompleted = false,
@@ -223,7 +249,7 @@ object LatihanPageData {
             )
         }.sortedBy { it.id }
         
-        val jilidName = pageDetails.firstOrNull()?.jilidName ?: "Jilid $jilidId"
+        val jilidName = "Jilid $jilidId"  // Using the jilidId as name since PageDetailItem doesn't have jilidName
         
         return LatihanHalaman(
             id = nomorHalaman,
@@ -239,10 +265,17 @@ object LatihanPageData {
      * Mapping dari API jilid ke LatihanJilid
      * HANYA MENAMPILKAN HALAMAN YANG ADA DATANYA DI API
      */
-    private suspend fun mapApiJilidToLatihanJilid(apiJilid: JilidApi): LatihanJilid {
+    private suspend fun mapApiJilidToLatihanJilid(apiJilid: JilidApi, context: android.content.Context? = null): LatihanJilid {
         Log.d(TAG, "Checking available pages for jilid ${apiJilid.jilidId}...")
         
         val apiService = SignQuranApiService.getInstance()
+        
+        // Get auth token if context is provided
+        val token = if (context != null) {
+            val authManager = com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager(context)
+            if (authManager.isLoggedIn) authManager.authToken else null
+        } else null
+        
         val availablePages = mutableListOf<LatihanHalaman>()
         
         // Cek maksimal 50 halaman untuk setiap jilid
@@ -252,7 +285,7 @@ object LatihanPageData {
         
         for (pageNum in 1..maxPagesToCheck) {
             try {
-                val result = apiService.getPageDetail(apiJilid.jilidId, pageNum)
+                val result = apiService.getPageDetail(apiJilid.jilidId, pageNum, token)
                 
                 var pageFound = false
                 result.onSuccess { response ->
@@ -428,6 +461,66 @@ object LatihanPageData {
         
         val completedHuruf = completedPositions.size
         return (completedHuruf * 100) / totalHuruf
+    }
+    
+    /**
+     * Load daftar halaman yang tersedia untuk sebuah jilid
+     * Fungsi ini lebih ringan - hanya mengecek halaman yang ada tanpa load detail
+     */
+    suspend fun loadAvailablePagesForJilid(jilidId: Int, context: android.content.Context? = null): List<Int> {
+        return withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "Checking available pages for jilid $jilidId...")
+                val apiService = SignQuranApiService.getInstance()
+                
+                // Get auth token if context is provided (untuk progress nanti)
+                val token = if (context != null) {
+                    val authManager = com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager(context)
+                    if (authManager.isLoggedIn) authManager.authToken else null
+                } else null
+                
+                val availablePages = mutableListOf<Int>()
+                
+                // Cek maksimal 20 halaman untuk setiap jilid (lebih cepat)
+                val maxPagesToCheck = 20
+                var consecutiveEmptyCount = 0
+                val maxConsecutiveEmpty = 3
+                
+                for (pageNum in 1..maxPagesToCheck) {
+                    try {
+                        val result = apiService.getPageDetail(jilidId, pageNum, token)
+                        
+                        var pageFound = false
+                        result.onSuccess { response ->
+                            if (response.pageDetail.isNotEmpty()) {
+                                availablePages.add(pageNum)
+                                consecutiveEmptyCount = 0
+                                pageFound = true
+                                Log.d(TAG, "✓ Page $pageNum available")
+                            }
+                        }
+                        
+                        if (!pageFound) {
+                            consecutiveEmptyCount++
+                            if (consecutiveEmptyCount >= maxConsecutiveEmpty) {
+                                Log.d(TAG, "Stopping check after $consecutiveEmptyCount consecutive empty pages")
+                                break
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Error checking page $pageNum: ${e.message}")
+                        consecutiveEmptyCount++
+                        if (consecutiveEmptyCount >= maxConsecutiveEmpty) break
+                    }
+                }
+                
+                Log.d(TAG, "Found ${availablePages.size} available pages for jilid $jilidId")
+                return@withContext availablePages
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading available pages: ${e.message}", e)
+                return@withContext emptyList()
+            }
+        }
     }
     
     /**

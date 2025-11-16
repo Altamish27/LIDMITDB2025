@@ -193,8 +193,8 @@ class LatihanPracticeActivity : AppCompatActivity() {
                     binding.tvSubtitle.text = "Memuat data..."
                 }
                 
-                // Load halaman dari API
-                val halaman = LatihanPageData.loadHalamanFromApi(currentJilidId, currentHalamanId)
+                // Load halaman dari API dengan context
+                val halaman = LatihanPageData.loadHalamanFromApi(currentJilidId, currentHalamanId, this@LatihanPracticeActivity)
                 
                 if (halaman != null) {
                     android.util.Log.d("LatihanPractice", "✓ API Success!")

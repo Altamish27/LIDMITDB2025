@@ -71,28 +71,37 @@ class LatihanJilidFragment : Fragment() {
     
     private fun loadJilidData() {
         lifecycleScope.launch {
-            // Load jilid dari API
-            LatihanPageData.loadJilidFromApi()
+            // Load jilid dari API dengan context
+            val success = LatihanPageData.loadJilidFromApi(requireContext())
             
-            // Get data jilid
-            val jilidList = LatihanPageData.getAllJilid()
-            
-            // Update adapter jika RecyclerView ada
-            try {
-                adapter.submitList(jilidList)
-            } catch (e: Exception) {
-                // Jika RecyclerView tidak ada, tidak perlu update adapter
+            if (success) {
+                // Get data jilid
+                val jilidList = LatihanPageData.getAllJilid()
+                
+                // Update adapter jika RecyclerView ada
+                try {
+                    adapter.submitList(jilidList)
+                } catch (e: Exception) {
+                    // Jika RecyclerView tidak ada, tidak perlu update adapter
+                }
+                
+                android.util.Log.d("LatihanJilid", "Loaded ${jilidList.size} jilid from API")
+            } else {
+                // Show error
+                Toast.makeText(
+                    requireContext(),
+                    "Gagal memuat data jilid. Pastikan Anda sudah login.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                android.util.Log.e("LatihanJilid", "Failed to load jilid from API")
             }
         }
     }
     
     private fun onJilidClicked(jilid: LatihanJilid) {
-        // Cek apakah jilid memiliki halaman
-        if (jilid.halamanList.isEmpty()) {
-            showLockedMessage()
-        } else {
-            navigateToJilidHalaman(jilid.id, jilid.title)
-        }
+        // Langsung navigasi ke halaman jilid
+        // Halaman akan di-load on-demand di LatihanFragment
+        navigateToJilidHalaman(jilid.id, jilid.title)
     }
 
     private fun setupClickListeners() {

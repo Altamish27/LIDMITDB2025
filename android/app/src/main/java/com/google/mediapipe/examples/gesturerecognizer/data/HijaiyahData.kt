@@ -72,11 +72,18 @@ object HijaiyahData {
     /**
      * Load data dari API
      */
-    suspend fun loadFromApi(): Boolean {
+    suspend fun loadFromApi(context: android.content.Context? = null): Boolean {
         return withContext(Dispatchers.IO) {
             try {
                 val apiService = SignQuranApiService.getInstance()
-                val result = apiService.getHijaiyahLetters()
+                
+                // Get auth token if context is provided
+                val token = if (context != null) {
+                    val authManager = com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager(context)
+                    if (authManager.isLoggedIn) authManager.authToken else null
+                } else null
+                
+                val result = apiService.getHijaiyahLetters(token)
                 
                 result.onSuccess { response ->
                     cachedLetters = response.letters.map { apiLetter ->

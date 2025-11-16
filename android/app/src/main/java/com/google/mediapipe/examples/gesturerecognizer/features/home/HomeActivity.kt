@@ -27,6 +27,7 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.BounceInterpolator
 import android.view.animation.OvershootInterpolator
 import android.view.animation.DecelerateInterpolator
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -44,10 +45,12 @@ import com.google.mediapipe.examples.gesturerecognizer.features.auth.LoginActivi
 import com.google.mediapipe.examples.gesturerecognizer.core.animation.ViewAnimationUtils
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanPageData
+import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
 import kotlinx.coroutines.launch
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHomeBinding
+    private lateinit var authManager: AuthManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +63,8 @@ class HomeActivity : AppCompatActivity() {
         
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        authManager = AuthManager(this)
 
         // Load data dari API di background
         loadApiData()
@@ -81,9 +86,9 @@ class HomeActivity : AppCompatActivity() {
     private fun loadApiData() {
         lifecycleScope.launch {
             try {
-                // Load hijaiyah dan jilid data dari API
-                HijaiyahData.loadFromApi()
-                LatihanPageData.loadJilidFromApi()
+                // Load hijaiyah dan jilid data dari API with context for auth
+                HijaiyahData.loadFromApi(this@HomeActivity)
+                LatihanPageData.loadJilidFromApi(this@HomeActivity)
             } catch (e: Exception) {
                 Log.e("HomeActivity", "Failed to load API data: ${e.message}", e)
                 // Data fallback akan digunakan otomatis
@@ -222,19 +227,34 @@ class HomeActivity : AppCompatActivity() {
     
     private fun animateButtonClick(view: View, action: () -> Unit) {
         ViewAnimationUtils.animateClick(view, action)
-    }    private fun setupSidebar() {
+    }
+    
+    private fun setupSidebar() {
         // Get navigation drawer views
         val navigationDrawer = findViewById<View>(R.id.navigation_drawer) ?: return
+        
+        // Update profile section with user data if logged in
+        updateProfileSection(navigationDrawer)
         
         // Setup profile section click listener
         navigationDrawer.findViewById<View>(R.id.profile_section)?.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
-            try {
-                val intent = Intent(this, ProfileActivity::class.java)
-                startActivity(intent)
-            } catch (e: Exception) {
-                Log.e("HomeActivity", "Failed to start ProfileActivity: ${e.message}", e)
-                Toast.makeText(this, "Error opening profile: ${e.message}", Toast.LENGTH_LONG).show()
+            if (authManager.isLoggedIn) {
+                try {
+                    val intent = Intent(this, ProfileActivity::class.java)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Failed to start ProfileActivity: ${e.message}", e)
+                    Toast.makeText(this, "Error opening profile: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            } else {
+                try {
+                    val intent = Intent(this, LoginActivity::class.java)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Failed to start LoginActivity: ${e.message}", e)
+                    Toast.makeText(this, "Error opening login: ${e.message}", Toast.LENGTH_LONG).show()
+                }
             }
         }
         
@@ -246,12 +266,22 @@ class HomeActivity : AppCompatActivity() {
         
         navigationDrawer.findViewById<View>(R.id.menu_profile)?.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
-            try {
-                val intent = Intent(this, ProfileActivity::class.java)
-                startActivity(intent)
-            } catch (e: Exception) {
-                Log.e("HomeActivity", "Failed to start ProfileActivity: ${e.message}", e)
-                Toast.makeText(this, "Error opening profile: ${e.message}", Toast.LENGTH_LONG).show()
+            if (authManager.isLoggedIn) {
+                try {
+                    val intent = Intent(this, ProfileActivity::class.java)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Failed to start ProfileActivity: ${e.message}", e)
+                    Toast.makeText(this, "Error opening profile: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            } else {
+                try {
+                    val intent = Intent(this, LoginActivity::class.java)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Failed to start LoginActivity: ${e.message}", e)
+                    Toast.makeText(this, "Error opening login: ${e.message}", Toast.LENGTH_LONG).show()
+                }
             }
         }
         
@@ -300,8 +330,29 @@ class HomeActivity : AppCompatActivity() {
             }
         }
 
-            // Footer login button (no icon)
-            navigationDrawer.findViewById<View>(R.id.menu_button_login)?.setOnClickListener {
+        // Update login button based on auth status
+        val loginButton = navigationDrawer.findViewById<View>(R.id.menu_button_login)
+        if (authManager.isLoggedIn) {
+            // If user is logged in, hide login button and show logout button
+            loginButton?.visibility = View.GONE
+            // Show logout button if it exists
+            val logoutButton = navigationDrawer.findViewById<View?>(R.id.menu_button_logout)
+            logoutButton?.visibility = View.VISIBLE
+            logoutButton?.setOnClickListener {
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
+                // Perform logout
+                authManager.clearAuthData()
+                Toast.makeText(this, "Berhasil logout", Toast.LENGTH_SHORT).show()
+                
+                // Update UI after logout
+                updateProfileSection(navigationDrawer)
+                // Reconfigure menu items to reflect logged-out state
+                updateMenuItemsForLoggedOut(navigationDrawer)
+            }
+        } else {
+            // If user is not logged in, show login button
+            loginButton?.visibility = View.VISIBLE
+            loginButton?.setOnClickListener {
                 binding.drawerLayout.closeDrawer(GravityCompat.START)
                 try {
                     val intent = Intent(this, LoginActivity::class.java)
@@ -311,6 +362,11 @@ class HomeActivity : AppCompatActivity() {
                     Toast.makeText(this, "Error opening login: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
+            
+            // Hide logout button if exists
+            val logoutButton = navigationDrawer.findViewById<View?>(R.id.menu_button_logout)
+            logoutButton?.visibility = View.GONE
+        }
         
         navigationDrawer.findViewById<View>(R.id.menu_about)?.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
@@ -321,6 +377,41 @@ class HomeActivity : AppCompatActivity() {
                 Log.e("HomeActivity", "Failed to start AboutActivity: ${e.message}", e)
                 Toast.makeText(this, "Error opening about: ${e.message}", Toast.LENGTH_LONG).show()
             }
+        }
+    }
+
+    private fun updateProfileSection(navigationDrawer: View) {
+        val usernameView = navigationDrawer.findViewById<TextView>(R.id.tv_username)
+        val userEmailView = navigationDrawer.findViewById<TextView>(R.id.tv_user_email)
+        
+        if (authManager.isLoggedIn) {
+            // Show user info
+            usernameView?.text = authManager.userName
+            userEmailView?.text = authManager.userEmail
+            
+            // Update login button text if needed
+            val loginButton = navigationDrawer.findViewById<View>(R.id.menu_button_login)
+            loginButton?.findViewById<TextView>(android.R.id.text1)?.text = "Login"
+        } else {
+            // Show placeholder text
+            usernameView?.text = "Guest User"
+            userEmailView?.text = "Silakan login"
+        }
+    }
+    
+    private fun updateMenuItemsForLoggedOut(navigationDrawer: View) {
+        // Update profile menu item text
+        val profileMenuItem = navigationDrawer.findViewById<TextView>(R.id.menu_profile)
+        profileMenuItem?.text = "Login / Register"
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Update UI when returning to home activity (e.g. after logging out from profile)
+        val navigationDrawer = findViewById<View>(R.id.navigation_drawer)
+        if (navigationDrawer != null) {
+            updateProfileSection(navigationDrawer)
+            setupSidebar() // Refresh sidebar setup
         }
     }
 
