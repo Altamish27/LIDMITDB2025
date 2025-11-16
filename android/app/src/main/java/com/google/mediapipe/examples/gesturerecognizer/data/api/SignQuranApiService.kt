@@ -4,6 +4,7 @@ import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
 import com.google.mediapipe.examples.gesturerecognizer.data.models.HijaiyahApiResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.JilidApiResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.JilidPagesApiResponse
+import com.google.mediapipe.examples.gesturerecognizer.data.models.JilidProgressListResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.PageDetailApiResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.HalamanProgressRequest
 import com.google.mediapipe.examples.gesturerecognizer.data.models.HalamanProgressResponse
@@ -140,6 +141,26 @@ class SignQuranApiService {
         } catch (e: Exception) {
             android.util.Log.e("SignQuranAPI", "Page error: ${e.message}", e)
             Result.failure(e)
+        }
+    }
+    
+    /**
+     * Get progress untuk semua halaman dalam jilid (untuk user yang login)
+     * Digunakan untuk menampilkan status completed di daftar halaman
+     */
+    suspend fun getJilidProgress(jilidId: Int, authToken: String): Result<JilidProgressListResponse> {
+        return try {
+            android.util.Log.d("SignQuranAPI", "Fetching jilid progress for jilid: $jilidId")
+            val response = client.get("$BASE_URL/progress/halaman/by-jilid/$jilidId") {
+                headers.append("Authorization", "Bearer $authToken")
+            }
+            val body = response.body<JilidProgressListResponse>()
+            android.util.Log.d("SignQuranAPI", "Progress fetched: ${body.progress.size} completed pages")
+            Result.success(body)
+        } catch (e: Exception) {
+            android.util.Log.e("SignQuranAPI", "Get jilid progress error: ${e.message}", e)
+            // Return empty list on error (user might not have any progress yet)
+            Result.success(JilidProgressListResponse(emptyList()))
         }
     }
     

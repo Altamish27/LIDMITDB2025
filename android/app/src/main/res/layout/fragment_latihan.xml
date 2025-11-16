@@ -140,6 +140,7 @@
                         android:textStyle="bold"/>
 
                     <TextView
+                        android:id="@+id/tvDescHalaman1"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Pengenalan Huruf Hijaiyah Dasar"
@@ -211,6 +212,7 @@
                         android:textStyle="bold"/>
 
                     <TextView
+                        android:id="@+id/tvDescHalaman2"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Latihan Huruf Jim, Ta, dan Ba"
@@ -274,6 +276,7 @@
                         android:textStyle="bold"/>
 
                     <TextView
+                        android:id="@+id/tvDescHalaman3"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Latihan Huruf Ta dan Tsa"
@@ -337,6 +340,7 @@
                         android:textStyle="bold"/>
 
                     <TextView
+                        android:id="@+id/tvDescHalaman4"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Latihan Huruf Ha dan Kho"
@@ -400,6 +404,7 @@
                         android:textStyle="bold"/>
 
                     <TextView
+                        android:id="@+id/tvDescHalaman5"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Latihan Huruf Dal, Dzal, dan Ra"

@@ -55,20 +55,45 @@ class LatihanFragment : Fragment() {
                 val authManager = AuthManager(requireContext())
                 val token = if (authManager.isLoggedIn) authManager.authToken else null
                 
-                val result = apiService.getJilidPages(jilidId, token)
+                // Load pages
+                val pagesResult = apiService.getJilidPages(jilidId, token)
                 
-                result.onSuccess { response ->
-                    availablePages = response.pages
+                pagesResult.onSuccess { response ->
+                    availablePages = response.pages.toMutableList()
                     android.util.Log.d("LatihanFragment", "Loaded ${availablePages.size} pages")
+                    
+                    // Load progress if user is logged in
+                    if (authManager.isLoggedIn && !token.isNullOrEmpty()) {
+                        android.util.Log.d("LatihanFragment", "Loading progress for jilid $jilidId")
+                        
+                        val progressResult = apiService.getJilidProgress(jilidId, token)
+                        progressResult.onSuccess { progressResponse ->
+                            android.util.Log.d("LatihanFragment", "Progress loaded: ${progressResponse.progress.size} completed pages")
+                            
+                            // Create a map of halaman_id -> completed status
+                            val progressMap = progressResponse.progress.associate { 
+                                it.halamanId to (it.status > 0) 
+                            }
+                            
+                            // Update pages with completion status
+                            availablePages.forEach { page ->
+                                page.isCompleted = progressMap[page.halamanId] ?: false
+                                if (page.isCompleted) {
+                                    android.util.Log.d("LatihanFragment", "Page ${page.halamanId} is completed")
+                                }
+                            }
+                        }
+                    }
                     
                     // Setup click listeners with real data
                     setupClickListeners()
                     updateProgress()
                     
-                    binding.tvSubtitle?.text = "${availablePages.size} Halaman Tersedia"
+                    val completedCount = availablePages.count { it.isCompleted }
+                    binding.tvSubtitle?.text = "$completedCount / ${availablePages.size} Halaman Selesai"
                 }
                 
-                result.onFailure { error ->
+                pagesResult.onFailure { error ->
                     android.util.Log.e("LatihanFragment", "Error loading pages: ${error.message}")
                     binding.tvSubtitle?.text = "Gagal memuat halaman"
                     
@@ -88,11 +113,17 @@ class LatihanFragment : Fragment() {
             // Halaman 1
             if (availablePages.size >= 1) {
                 val page1 = availablePages[0]
+                binding.tvDescHalaman1.text = page1.deskripsi
                 binding.cardHalaman1.setOnClickListener {
                     navigateToHalaman(page1.halamanId, page1.nomorHalaman, "Halaman ${page1.nomorHalaman}", page1.deskripsi)
                 }
-                // Update deskripsi jika ada field untuk itu di layout
-                // Untuk saat ini kita skip update deskripsi ke UI karena layout belum punya TextView-nya
+                // Update card color if completed
+                if (page1.isCompleted) {
+                    binding.cardHalaman1.setCardBackgroundColor(
+                        android.graphics.Color.parseColor("#4CAF50") // Green for completed
+                    )
+                    android.util.Log.d("LatihanFragment", "✓ Halaman 1 marked as completed")
+                }
             } else {
                 binding.cardHalaman1.setOnClickListener {
                     showLockedMessage()
@@ -102,8 +133,14 @@ class LatihanFragment : Fragment() {
             // Halaman 2
             if (availablePages.size >= 2) {
                 val page2 = availablePages[1]
+                binding.tvDescHalaman2.text = page2.deskripsi
                 binding.cardHalaman2.setOnClickListener {
                     navigateToHalaman(page2.halamanId, page2.nomorHalaman, "Halaman ${page2.nomorHalaman}", page2.deskripsi)
+                }
+                if (page2.isCompleted) {
+                    binding.cardHalaman2.setCardBackgroundColor(
+                        android.graphics.Color.parseColor("#4CAF50")
+                    )
                 }
             } else {
                 binding.cardHalaman2.setOnClickListener {
@@ -114,8 +151,14 @@ class LatihanFragment : Fragment() {
             // Halaman 3
             if (availablePages.size >= 3) {
                 val page3 = availablePages[2]
+                binding.tvDescHalaman3.text = page3.deskripsi
                 binding.cardHalaman3.setOnClickListener {
                     navigateToHalaman(page3.halamanId, page3.nomorHalaman, "Halaman ${page3.nomorHalaman}", page3.deskripsi)
+                }
+                if (page3.isCompleted) {
+                    binding.cardHalaman3.setCardBackgroundColor(
+                        android.graphics.Color.parseColor("#4CAF50")
+                    )
                 }
             } else {
                 binding.cardHalaman3.setOnClickListener {
@@ -126,8 +169,14 @@ class LatihanFragment : Fragment() {
             // Halaman 4
             if (availablePages.size >= 4) {
                 val page4 = availablePages[3]
+                binding.tvDescHalaman4.text = page4.deskripsi
                 binding.cardHalaman4.setOnClickListener {
                     navigateToHalaman(page4.halamanId, page4.nomorHalaman, "Halaman ${page4.nomorHalaman}", page4.deskripsi)
+                }
+                if (page4.isCompleted) {
+                    binding.cardHalaman4.setCardBackgroundColor(
+                        android.graphics.Color.parseColor("#4CAF50")
+                    )
                 }
             } else {
                 binding.cardHalaman4.setOnClickListener {
@@ -138,8 +187,14 @@ class LatihanFragment : Fragment() {
             // Halaman 5
             if (availablePages.size >= 5) {
                 val page5 = availablePages[4]
+                binding.tvDescHalaman5.text = page5.deskripsi
                 binding.cardHalaman5.setOnClickListener {
                     navigateToHalaman(page5.halamanId, page5.nomorHalaman, "Halaman ${page5.nomorHalaman}", page5.deskripsi)
+                }
+                if (page5.isCompleted) {
+                    binding.cardHalaman5.setCardBackgroundColor(
+                        android.graphics.Color.parseColor("#4CAF50")
+                    )
                 }
             } else {
                 binding.cardHalaman5.setOnClickListener {
@@ -191,7 +246,7 @@ class LatihanFragment : Fragment() {
 
     private fun updateProgress() {
         val totalPages = availablePages.size.coerceAtLeast(5)
-        val completedCount = 0 // TODO: implement progress tracking from API
+        val completedCount = availablePages.count { it.isCompleted }
         val percentage = if (totalPages > 0) (completedCount * 100) / totalPages else 0
         
         binding.tvProgress.text = "$completedCount / $totalPages Halaman"
