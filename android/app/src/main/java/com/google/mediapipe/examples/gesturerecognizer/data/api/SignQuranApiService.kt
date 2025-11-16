@@ -3,7 +3,11 @@ package com.google.mediapipe.examples.gesturerecognizer.data.api
 import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
 import com.google.mediapipe.examples.gesturerecognizer.data.models.HijaiyahApiResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.JilidApiResponse
+import com.google.mediapipe.examples.gesturerecognizer.data.models.JilidPagesApiResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.PageDetailApiResponse
+import com.google.mediapipe.examples.gesturerecognizer.data.models.HalamanProgressRequest
+import com.google.mediapipe.examples.gesturerecognizer.data.models.HalamanProgressResponse
+import com.google.mediapipe.examples.gesturerecognizer.data.models.HalamanProgressCheckResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.android.*
@@ -97,6 +101,26 @@ class SignQuranApiService {
     }
     
     /**
+     * Fetch daftar halaman dalam jilid
+     */
+    suspend fun getJilidPages(jilidId: Int, authToken: String? = null): Result<JilidPagesApiResponse> {
+        return try {
+            android.util.Log.d("SignQuranAPI", "Fetching pages for jilid: $jilidId")
+            val response = client.get("$BASE_URL/jilid/$jilidId/pages") {
+                if (!authToken.isNullOrEmpty()) {
+                    headers.append("Authorization", "Bearer $authToken")
+                }
+            }
+            val body = response.body<JilidPagesApiResponse>()
+            android.util.Log.d("SignQuranAPI", "Pages success: ${body.pages.size} pages found")
+            Result.success(body)
+        } catch (e: Exception) {
+            android.util.Log.e("SignQuranAPI", "Pages error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
      * Fetch detail halaman berdasarkan jilid_id dan nomor_halaman
      */
     suspend fun getPageDetail(jilidId: Int, nomorHalaman: Int, authToken: String? = null): Result<PageDetailApiResponse> {
@@ -115,6 +139,52 @@ class SignQuranApiService {
             Result.success(body)
         } catch (e: Exception) {
             android.util.Log.e("SignQuranAPI", "Page error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Check halaman progress untuk user yang sedang login
+     * Mengecek apakah halaman sudah diselesaikan atau belum
+     */
+    suspend fun checkHalamanProgress(halamanId: String, authToken: String): Result<HalamanProgressCheckResponse> {
+        return try {
+            android.util.Log.d("SignQuranAPI", "Checking progress for halaman: $halamanId")
+            val response = client.get("$BASE_URL/progress/halaman/by-page/$halamanId") {
+                headers.append("Authorization", "Bearer $authToken")
+            }
+            val body = response.body<HalamanProgressCheckResponse>()
+            android.util.Log.d("SignQuranAPI", "Progress check success - completed: ${body.completed}")
+            Result.success(body)
+        } catch (e: Exception) {
+            // 404 berarti belum ada progress (belum dikerjakan)
+            if (e.message?.contains("404") == true) {
+                android.util.Log.d("SignQuranAPI", "No progress found (not started yet)")
+                Result.success(HalamanProgressCheckResponse(completed = false))
+            } else {
+                android.util.Log.e("SignQuranAPI", "Progress check error: ${e.message}", e)
+                Result.failure(e)
+            }
+        }
+    }
+    
+    /**
+     * Save atau update halaman progress
+     * Dipanggil ketika user menyelesaikan halaman
+     */
+    suspend fun saveHalamanProgress(halamanId: String, status: Int, authToken: String): Result<HalamanProgressResponse> {
+        return try {
+            android.util.Log.d("SignQuranAPI", "Saving progress - halaman: $halamanId, status: $status")
+            val response = client.post("$BASE_URL/progress/halaman") {
+                headers.append("Authorization", "Bearer $authToken")
+                contentType(ContentType.Application.Json)
+                setBody(HalamanProgressRequest(halamanId, status))
+            }
+            val body = response.body<HalamanProgressResponse>()
+            android.util.Log.d("SignQuranAPI", "Progress saved successfully")
+            Result.success(body)
+        } catch (e: Exception) {
+            android.util.Log.e("SignQuranAPI", "Save progress error: ${e.message}", e)
             Result.failure(e)
         }
     }

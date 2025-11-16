@@ -1,19 +1,3 @@
-/*
- * Copyright 2022 The TensorFlow Authors. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *             http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.google.mediapipe.examples.gesturerecognizer.features.latihan
 
 import android.content.Intent
@@ -23,7 +7,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentLatihanBinding
+import com.google.mediapipe.examples.gesturerecognizer.data.api.SignQuranApiService
+import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
+import com.google.mediapipe.examples.gesturerecognizer.data.models.HalamanInfo
+import kotlinx.coroutines.launch
 
 class LatihanFragment : Fragment() {
 
@@ -32,6 +21,7 @@ class LatihanFragment : Fragment() {
     
     private var jilidId: Int = 1
     private var jilidTitle: String = "Jilid 1"
+    private var availablePages: List<HalamanInfo> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -52,40 +42,157 @@ class LatihanFragment : Fragment() {
         // Update UI with jilid info
         binding.tvTitle.text = jilidTitle
         
-        setupClickListeners()
-        updateProgress()
+        // Load pages from API
+        loadPagesFromApi()
+    }
+
+    private fun loadPagesFromApi() {
+        lifecycleScope.launch {
+            try {
+                binding.tvSubtitle?.text = "Memuat halaman..."
+                
+                val apiService = SignQuranApiService.getInstance()
+                val authManager = AuthManager(requireContext())
+                val token = if (authManager.isLoggedIn) authManager.authToken else null
+                
+                val result = apiService.getJilidPages(jilidId, token)
+                
+                result.onSuccess { response ->
+                    availablePages = response.pages
+                    android.util.Log.d("LatihanFragment", "Loaded ${availablePages.size} pages")
+                    
+                    // Setup click listeners with real data
+                    setupClickListeners()
+                    updateProgress()
+                    
+                    binding.tvSubtitle?.text = "${availablePages.size} Halaman Tersedia"
+                }
+                
+                result.onFailure { error ->
+                    android.util.Log.e("LatihanFragment", "Error loading pages: ${error.message}")
+                    binding.tvSubtitle?.text = "Gagal memuat halaman"
+                    
+                    // Fallback to hardcoded setup
+                    setupClickListeners()
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("LatihanFragment", "Exception loading pages: ${e.message}", e)
+                binding.tvSubtitle?.text = "Error"
+            }
+        }
     }
 
     private fun setupClickListeners() {
-        // Halaman 1 - Unlocked
-        binding.cardHalaman1.setOnClickListener {
-            navigateToHalaman(1, "Halaman 1", "Pengenalan Huruf Hijaiyah Dasar")
-        }
-        
-        // Halaman 2-5 - Locked
-        binding.cardHalaman2.setOnClickListener {
-            showLockedMessage()
-        }
-        
-        binding.cardHalaman3.setOnClickListener {
-            showLockedMessage()
-        }
-        
-        binding.cardHalaman4.setOnClickListener {
-            showLockedMessage()
-        }
-        
-        binding.cardHalaman5.setOnClickListener {
-            showLockedMessage()
+        // Setup untuk 5 halaman pertama (sesuai layout)
+        if (availablePages.isNotEmpty()) {
+            // Halaman 1
+            if (availablePages.size >= 1) {
+                val page1 = availablePages[0]
+                binding.cardHalaman1.setOnClickListener {
+                    navigateToHalaman(page1.halamanId, page1.nomorHalaman, "Halaman ${page1.nomorHalaman}", page1.deskripsi)
+                }
+                // Update text jika ada TextView untuk deskripsi
+                try {
+                    binding.tvHalaman1Desc?.text = page1.deskripsi
+                } catch (e: Exception) {
+                    // TextView deskripsi tidak ada di layout
+                }
+            } else {
+                binding.cardHalaman1.setOnClickListener {
+                    showLockedMessage()
+                }
+            }
+            
+            // Halaman 2
+            if (availablePages.size >= 2) {
+                val page2 = availablePages[1]
+                binding.cardHalaman2.setOnClickListener {
+                    navigateToHalaman(page2.halamanId, page2.nomorHalaman, "Halaman ${page2.nomorHalaman}", page2.deskripsi)
+                }
+                try {
+                    binding.tvHalaman2Desc?.text = page2.deskripsi
+                } catch (e: Exception) {}
+            } else {
+                binding.cardHalaman2.setOnClickListener {
+                    showLockedMessage()
+                }
+            }
+            
+            // Halaman 3
+            if (availablePages.size >= 3) {
+                val page3 = availablePages[2]
+                binding.cardHalaman3.setOnClickListener {
+                    navigateToHalaman(page3.halamanId, page3.nomorHalaman, "Halaman ${page3.nomorHalaman}", page3.deskripsi)
+                }
+                try {
+                    binding.tvHalaman3Desc?.text = page3.deskripsi
+                } catch (e: Exception) {}
+            } else {
+                binding.cardHalaman3.setOnClickListener {
+                    showLockedMessage()
+                }
+            }
+            
+            // Halaman 4
+            if (availablePages.size >= 4) {
+                val page4 = availablePages[3]
+                binding.cardHalaman4.setOnClickListener {
+                    navigateToHalaman(page4.halamanId, page4.nomorHalaman, "Halaman ${page4.nomorHalaman}", page4.deskripsi)
+                }
+                try {
+                    binding.tvHalaman4Desc?.text = page4.deskripsi
+                } catch (e: Exception) {}
+            } else {
+                binding.cardHalaman4.setOnClickListener {
+                    showLockedMessage()
+                }
+            }
+            
+            // Halaman 5
+            if (availablePages.size >= 5) {
+                val page5 = availablePages[4]
+                binding.cardHalaman5.setOnClickListener {
+                    navigateToHalaman(page5.halamanId, page5.nomorHalaman, "Halaman ${page5.nomorHalaman}", page5.deskripsi)
+                }
+                try {
+                    binding.tvHalaman5Desc?.text = page5.deskripsi
+                } catch (e: Exception) {}
+            } else {
+                binding.cardHalaman5.setOnClickListener {
+                    showLockedMessage()
+                }
+            }
+        } else {
+            // Fallback hardcoded jika API belum load atau error
+            binding.cardHalaman1.setOnClickListener {
+                navigateToHalaman("$jilidId-1", 1, "Halaman 1", "Pengenalan Huruf Hijaiyah Dasar")
+            }
+            
+            binding.cardHalaman2.setOnClickListener {
+                showLockedMessage()
+            }
+            
+            binding.cardHalaman3.setOnClickListener {
+                showLockedMessage()
+            }
+            
+            binding.cardHalaman4.setOnClickListener {
+                showLockedMessage()
+            }
+            
+            binding.cardHalaman5.setOnClickListener {
+                showLockedMessage()
+            }
         }
     }
     
-    private fun navigateToHalaman(halamanId: Int, title: String, description: String) {
+    private fun navigateToHalaman(halamanId: String, nomorHalaman: Int, title: String, description: String) {
         val intent = Intent(requireContext(), LatihanPracticeActivity::class.java).apply {
             putExtra("exerciseId", jilidId)
             putExtra("exerciseTitle", jilidTitle)
             putExtra("jilidId", jilidId)
-            putExtra("halamanId", halamanId)
+            putExtra("halamanId", nomorHalaman)
+            putExtra("realHalamanId", halamanId)  // Pass the real halaman_id like "1-1"
         }
         startActivity(intent)
     }
@@ -93,14 +200,14 @@ class LatihanFragment : Fragment() {
     private fun showLockedMessage() {
         Toast.makeText(
             requireContext(),
-            "Selesaikan halaman sebelumnya terlebih dahulu",
+            "Halaman ini belum tersedia atau masih terkunci",
             Toast.LENGTH_SHORT
         ).show()
     }
 
     private fun updateProgress() {
-        val totalPages = 5
-        val completedCount = 0 // TODO: implement progress tracking
+        val totalPages = availablePages.size.coerceAtLeast(5)
+        val completedCount = 0 // TODO: implement progress tracking from API
         val percentage = if (totalPages > 0) (completedCount * 100) / totalPages else 0
         
         binding.tvProgress.text = "$completedCount / $totalPages Halaman"

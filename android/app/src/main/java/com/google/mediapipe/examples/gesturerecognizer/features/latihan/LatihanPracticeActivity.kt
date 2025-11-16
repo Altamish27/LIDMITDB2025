@@ -54,6 +54,8 @@ import com.google.mediapipe.examples.gesturerecognizer.data.LatihanPageData
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanHalaman
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanBaris
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanHuruf
+import com.google.mediapipe.examples.gesturerecognizer.data.api.SignQuranApiService
+import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
 import kotlinx.coroutines.launch
 
 // Keep old HurufItem for backward compatibility if needed
@@ -69,6 +71,8 @@ class LatihanPracticeActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLatihanPracticeBinding
     private lateinit var adapter: LatihanHurufGridAdapter
+    private lateinit var authManager: AuthManager
+    private lateinit var apiService: SignQuranApiService
     
     // New structure variables
     private var currentJilidId = 1
@@ -77,6 +81,9 @@ class LatihanPracticeActivity : AppCompatActivity() {
     
     private var exerciseId = 1
     private var exerciseTitle = "Latihan 1"
+    
+    // Track page completion status
+    private var isPageAlreadyCompleted = false
     
     // Track whether we are running a sequential row test
     private var sequenceMode = false
@@ -161,17 +168,22 @@ class LatihanPracticeActivity : AppCompatActivity() {
             exerciseTitle = intent.getStringExtra("exerciseTitle") ?: "Latihan 1"
             currentJilidId = intent.getIntExtra("jilidId", 1)
             currentHalamanId = intent.getIntExtra("halamanId", 1)
+            realHalamanId = intent.getStringExtra("realHalamanId") ?: "$currentJilidId-$currentHalamanId"
             currentBarisId = 1 // Always start from first baris
 
-            android.util.Log.d("LatihanPractice", "Intent data: jilidId=$currentJilidId, halamanId=$currentHalamanId, exerciseTitle=$exerciseTitle")
+            android.util.Log.d("LatihanPractice", "Intent data: jilidId=$currentJilidId, halamanId=$currentHalamanId, realHalamanId=$realHalamanId, exerciseTitle=$exerciseTitle")
+
+            // Initialize auth manager and API service
+            authManager = AuthManager(this)
+            apiService = SignQuranApiService.getInstance()
 
             // Setup UI first
             setupUI()
             setupRecyclerView()
             setupClickListeners()
             
-            // Then load data asynchronously
-            loadPageData()
+            // Check page completion status first, then load data
+            checkPageCompletionStatus()
             
             android.util.Log.d("LatihanPractice", "onCreate completed successfully")
             
@@ -490,6 +502,9 @@ class LatihanPracticeActivity : AppCompatActivity() {
 
     // Show completion dialog when page is finished
     private fun showPageCompletionDialog() {
+        // Save progress to API
+        savePageCompletion()
+        
         val dialog = AlertDialog.Builder(this)
         val dialogView = layoutInflater.inflate(R.layout.dialog_page_completed, null)
         dialog.setView(dialogView)
@@ -514,6 +529,106 @@ class LatihanPracticeActivity : AppCompatActivity() {
         }
         
         alertDialog.show()
+    }
+    
+    /**
+     * Check if current page is already completed
+     */
+    private fun checkPageCompletionStatus() {
+        lifecycleScope.launch {
+            try {
+                // Generate halaman_id in format "jilidId-halamanId"
+                val halamanId = "$currentJilidId-$currentHalamanId"
+                
+                // Only check if user is logged in
+                if (authManager.isLoggedIn && authManager.authToken.isNotEmpty()) {
+                    val result = apiService.checkHalamanProgress(halamanId, authManager.authToken)
+                    
+                    result.onSuccess { response ->
+                        isPageAlreadyCompleted = response.completed
+                        android.util.Log.d("LatihanPractice", "Page completion status: $isPageAlreadyCompleted")
+                        
+                        runOnUiThread {
+                            if (isPageAlreadyCompleted) {
+                                // Show completion badge or indicator
+                                Toast.makeText(
+                                    this@LatihanPracticeActivity,
+                                    "✓ Halaman ini sudah selesai",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+                    
+                    result.onFailure { error ->
+                        android.util.Log.e("LatihanPractice", "Failed to check progress: ${error.message}")
+                    }
+                } else {
+                    android.util.Log.d("LatihanPractice", "User not logged in, skipping progress check")
+                }
+                
+                // Continue loading page data
+                loadPageData()
+                
+            } catch (e: Exception) {
+                android.util.Log.e("LatihanPractice", "Error checking completion: ${e.message}", e)
+                // Continue loading page data even if check fails
+                loadPageData()
+            }
+        }
+    }
+    
+    /**
+     * Save page completion to API
+     */
+    private fun savePageCompletion() {
+        lifecycleScope.launch {
+            try {
+                // Generate halaman_id in format "jilidId-halamanId"
+                val halamanId = "$currentJilidId-$currentHalamanId"
+                
+                // Only save if user is logged in and page not already completed
+                if (authManager.isLoggedIn && authManager.authToken.isNotEmpty() && !isPageAlreadyCompleted) {
+                    val result = apiService.saveHalamanProgress(
+                        halamanId = halamanId,
+                        status = 1, // 1 = completed
+                        authToken = authManager.authToken
+                    )
+                    
+                    result.onSuccess { response ->
+                        android.util.Log.d("LatihanPractice", "✓ Progress saved successfully")
+                        isPageAlreadyCompleted = true
+                        
+                        runOnUiThread {
+                            Toast.makeText(
+                                this@LatihanPracticeActivity,
+                                "Progress tersimpan!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                    
+                    result.onFailure { error ->
+                        android.util.Log.e("LatihanPractice", "Failed to save progress: ${error.message}")
+                        runOnUiThread {
+                            Toast.makeText(
+                                this@LatihanPracticeActivity,
+                                "Gagal menyimpan progress",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                } else {
+                    if (!authManager.isLoggedIn) {
+                        android.util.Log.d("LatihanPractice", "User not logged in, progress not saved")
+                    } else if (isPageAlreadyCompleted) {
+                        android.util.Log.d("LatihanPractice", "Page already completed, skipping save")
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("LatihanPractice", "Error saving completion: ${e.message}", e)
+            }
+        }
     }
 
     // Navigate to next page or show warning if not available
