@@ -9,12 +9,17 @@ import com.google.mediapipe.examples.gesturerecognizer.data.models.PageDetailApi
 import com.google.mediapipe.examples.gesturerecognizer.data.models.HalamanProgressRequest
 import com.google.mediapipe.examples.gesturerecognizer.data.models.HalamanProgressResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.HalamanProgressCheckResponse
+import com.google.mediapipe.examples.gesturerecognizer.data.models.JoinRoomRequest
+import com.google.mediapipe.examples.gesturerecognizer.data.models.JoinRoomResponse
+import com.google.mediapipe.examples.gesturerecognizer.data.models.MyRoomsResponse
+import com.google.mediapipe.examples.gesturerecognizer.data.models.RoomMembersResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
@@ -135,7 +140,22 @@ class SignQuranApiService {
                 parameter("jilid_id", jilidId)
                 parameter("nomor_halaman", nomorHalaman)
             }
-            val body = response.body<PageDetailApiResponse>()
+            
+            // Log raw response text for debugging
+            val responseText = response.bodyAsText()
+            android.util.Log.d("SignQuranAPI", "Raw response: ${responseText.take(300)}...")
+            android.util.Log.d("SignQuranAPI", "Response status: ${response.status}")
+            android.util.Log.d("SignQuranAPI", "Response headers: ${response.headers}")
+            
+            // Try to parse
+            val body = try {
+                kotlinx.serialization.json.Json.decodeFromString<PageDetailApiResponse>(responseText)
+            } catch (e: Exception) {
+                android.util.Log.e("SignQuranAPI", "JSON parsing error: ${e.message}")
+                android.util.Log.e("SignQuranAPI", "Failed to parse: $responseText")
+                throw e
+            }
+            
             android.util.Log.d("SignQuranAPI", "Page success: ${body.pageDetail.size} items (${body.pageDetail.groupBy { it.baris }.size} baris)")
             Result.success(body)
         } catch (e: Exception) {
@@ -206,6 +226,79 @@ class SignQuranApiService {
             Result.success(body)
         } catch (e: Exception) {
             android.util.Log.e("SignQuranAPI", "Save progress error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Join room by code
+     */
+    suspend fun joinRoom(code: String, authToken: String): Result<JoinRoomResponse> {
+        return try {
+            android.util.Log.d("SignQuranAPI", "Joining room with code: $code")
+            val response = client.post("$BASE_URL/enrollments/join") {
+                headers.append("Authorization", "Bearer $authToken")
+                contentType(ContentType.Application.Json)
+                setBody(JoinRoomRequest(code))
+            }
+            val body = response.body<JoinRoomResponse>()
+            android.util.Log.d("SignQuranAPI", "Successfully joined room: ${body.room.name}")
+            Result.success(body)
+        } catch (e: Exception) {
+            android.util.Log.e("SignQuranAPI", "Join room error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Get all rooms that current user has joined
+     */
+    suspend fun getMyRooms(authToken: String): Result<MyRoomsResponse> {
+        return try {
+            android.util.Log.d("SignQuranAPI", "Fetching my enrolled rooms")
+            android.util.Log.d("SignQuranAPI", "Request URL: $BASE_URL/enrollments/my-rooms")
+            val response = client.get("$BASE_URL/enrollments/my-rooms") {
+                headers.append("Authorization", "Bearer $authToken")
+            }
+            android.util.Log.d("SignQuranAPI", "Response status: ${response.status}")
+            
+            // Log raw response body
+            val responseText = response.bodyAsText()
+            android.util.Log.d("SignQuranAPI", "Raw response: $responseText")
+            
+            // Check if response is an error
+            if (responseText.contains("\"error\"")) {
+                android.util.Log.e("SignQuranAPI", "Backend returned error response")
+                // Try to extract error message
+                val errorRegex = """"error"\s*:\s*"([^"]+)"""".toRegex()
+                val errorMatch = errorRegex.find(responseText)
+                val errorMessage = errorMatch?.groupValues?.get(1) ?: "Unknown error from backend"
+                return Result.failure(Exception("Backend error: $errorMessage"))
+            }
+            
+            val body = Json.decodeFromString<MyRoomsResponse>(responseText)
+            android.util.Log.d("SignQuranAPI", "Enrolled rooms: ${body.rooms.size}")
+            Result.success(body)
+        } catch (e: Exception) {
+            android.util.Log.e("SignQuranAPI", "Get my rooms error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Get all members in a specific room
+     */
+    suspend fun getRoomMembers(roomId: Int, authToken: String): Result<RoomMembersResponse> {
+        return try {
+            android.util.Log.d("SignQuranAPI", "Fetching members for room: $roomId")
+            val response = client.get("$BASE_URL/enrollments/room/$roomId/members") {
+                headers.append("Authorization", "Bearer $authToken")
+            }
+            val body = response.body<RoomMembersResponse>()
+            android.util.Log.d("SignQuranAPI", "Room members: ${body.members.size}")
+            Result.success(body)
+        } catch (e: Exception) {
+            android.util.Log.e("SignQuranAPI", "Get room members error: ${e.message}", e)
             Result.failure(e)
         }
     }

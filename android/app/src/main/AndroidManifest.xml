@@ -103,6 +103,24 @@
         </activity>
         
         <activity
+            android:name=".features.room.MyRoomsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer">
+        </activity>
+        
+        <activity
+            android:name=".features.room.JoinRoomActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer">
+        </activity>
+        
+        <activity
+            android:name=".features.room.RoomDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer">
+        </activity>
+        
+        <activity
             android:name=".features.about.AboutActivity"
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer">

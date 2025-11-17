@@ -7,6 +7,7 @@ import io.ktor.client.engine.android.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
@@ -66,12 +67,30 @@ class AuthApiService {
      */
     suspend fun login(email: String, password: String): Result<LoginResponse> {
         return try {
+            android.util.Log.d("AuthApiService", "Attempting login for: $email")
+            
             val response = client.post("$BASE_URL/auth/login") {
                 contentType(ContentType.Application.Json)
                 setBody(LoginRequest(email, password))
             }
-            val body = response.body<LoginResponse>()
-            Result.success(body)
+            
+            android.util.Log.d("AuthApiService", "Login response status: ${response.status}")
+            
+            if (response.status == HttpStatusCode.OK) {
+                val body = response.body<LoginResponse>()
+                android.util.Log.d("AuthApiService", "Login successful for: $email")
+                Result.success(body)
+            } else {
+                // Handle error responses
+                val errorMessage = when (response.status.value) {
+                    400 -> "Email and password are required"
+                    401 -> "Email or password is incorrect"
+                    403 -> "Please verify your email before logging in"
+                    else -> "Login failed with status ${response.status}"
+                }
+                android.util.Log.e("AuthApiService", "Login failed: $errorMessage")
+                Result.failure(Exception(errorMessage))
+            }
         } catch (e: Exception) {
             android.util.Log.e("AuthApiService", "Login error: ${e.message}", e)
             Result.failure(e)

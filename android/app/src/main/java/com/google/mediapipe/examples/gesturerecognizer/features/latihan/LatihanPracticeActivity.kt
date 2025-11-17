@@ -206,8 +206,15 @@ class LatihanPracticeActivity : AppCompatActivity() {
                     binding.tvSubtitle.text = "Memuat data..."
                 }
                 
+                android.util.Log.d("LatihanPractice", "About to call LatihanPageData.loadHalamanFromApi with:")
+                android.util.Log.d("LatihanPractice", "  - jilidId: $currentJilidId")
+                android.util.Log.d("LatihanPractice", "  - halamanId: $currentHalamanId")
+                android.util.Log.d("LatihanPractice", "  - context: ${this@LatihanPracticeActivity}")
+                
                 // Load halaman dari API dengan context
                 val halaman = LatihanPageData.loadHalamanFromApi(currentJilidId, currentHalamanId, this@LatihanPracticeActivity)
+                
+                android.util.Log.d("LatihanPractice", "LatihanPageData.loadHalamanFromApi returned: $halaman")
                 
                 if (halaman != null) {
                     android.util.Log.d("LatihanPractice", "✓ API Success!")
@@ -230,25 +237,49 @@ class LatihanPracticeActivity : AppCompatActivity() {
                         }
                     } else {
                         android.util.Log.e("LatihanPractice", "✗ Baris $currentBarisId not found!")
-                        runOnUiThread {
-                            Toast.makeText(
-                                this@LatihanPracticeActivity, 
-                                "Baris $currentBarisId tidak ditemukan", 
-                                Toast.LENGTH_LONG
-                            ).show()
-                            finish()
+                        android.util.Log.w("LatihanPractice", "Available baris: ${halaman.barisList.map { it.id }}")
+                        
+                        // Try to use first available baris instead of finishing
+                        val firstBaris = halaman.barisList.firstOrNull()
+                        if (firstBaris != null) {
+                            android.util.Log.w("LatihanPractice", "Using first available baris: ${firstBaris.id}")
+                            currentBarisId = firstBaris.id
+                            currentBaris = firstBaris
+                            
+                            runOnUiThread {
+                                Toast.makeText(
+                                    this@LatihanPracticeActivity,
+                                    "Baris $currentBarisId tidak ditemukan. Menggunakan baris ${firstBaris.id}.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                updateUI()
+                                loadCurrentBaris()
+                            }
+                        } else {
+                            runOnUiThread {
+                                Toast.makeText(
+                                    this@LatihanPracticeActivity, 
+                                    "Tidak ada baris ditemukan di halaman ini", 
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                finish()
+                            }
                         }
                     }
                 } else {
                     android.util.Log.e("LatihanPractice", "✗ API Failed: halaman is null")
                     android.util.Log.e("LatihanPractice", "  Check network connection and API URL")
+                    android.util.Log.e("LatihanPractice", "  jilidId=$currentJilidId, halamanId=$currentHalamanId")
+                    
                     runOnUiThread {
                         Toast.makeText(
                             this@LatihanPracticeActivity, 
-                            "Gagal memuat data dari API. Periksa koneksi internet.", 
+                            "Gagal memuat data halaman. Menggunakan data default.", 
                             Toast.LENGTH_LONG
                         ).show()
-                        finish()
+                        
+                        // Try fallback with default data
+                        setupDefaultData()
                     }
                 }
             } catch (e: Exception) {
@@ -256,14 +287,66 @@ class LatihanPracticeActivity : AppCompatActivity() {
                 runOnUiThread {
                     Toast.makeText(
                         this@LatihanPracticeActivity, 
-                        "Error: ${e.message}", 
-                        Toast.LENGTH_LONG
+                        "Error loading data. Using default data.", 
+                        Toast.LENGTH_SHORT
                     ).show()
-                    finish()
+                    
+                    // Try fallback with default data
+                    setupDefaultData()
                 }
             }
             
             android.util.Log.d("LatihanPractice", "========================================")
+        }
+    }
+    
+    private fun setupDefaultData() {
+        android.util.Log.d("LatihanPractice", "Setting up default data for testing")
+        
+        try {
+            // Create a simple default halaman for testing
+            currentHalaman = com.google.mediapipe.examples.gesturerecognizer.data.LatihanHalaman(
+                id = currentHalamanId,
+                title = "Halaman $currentHalamanId - Default",
+                description = "Default halaman untuk testing",
+                barisList = listOf(
+                    com.google.mediapipe.examples.gesturerecognizer.data.LatihanBaris(
+                        id = 1,
+                        hurufList = listOf(
+                            com.google.mediapipe.examples.gesturerecognizer.data.LatihanHuruf(
+                                arabic = "أ", 
+                                latin = "Alif", 
+                                gestureName = "alif", 
+                                position = 1
+                            ),
+                            com.google.mediapipe.examples.gesturerecognizer.data.LatihanHuruf(
+                                arabic = "ب", 
+                                latin = "Ba", 
+                                gestureName = "ba", 
+                                position = 2
+                            ),
+                            com.google.mediapipe.examples.gesturerecognizer.data.LatihanHuruf(
+                                arabic = "ت", 
+                                latin = "Ta", 
+                                gestureName = "ta", 
+                                position = 3
+                            )
+                        )
+                    )
+                )
+            )
+            
+            currentBaris = currentHalaman?.barisList?.firstOrNull()
+            
+            updateUI()
+            loadCurrentBaris()
+            
+            android.util.Log.d("LatihanPractice", "Default data setup successful")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("LatihanPractice", "Failed to setup default data: ${e.message}", e)
+            Toast.makeText(this, "Tidak dapat memuat data latihan", Toast.LENGTH_SHORT).show()
+            finish()
         }
     }
 
@@ -309,14 +392,36 @@ class LatihanPracticeActivity : AppCompatActivity() {
     }
 
     private fun loadCurrentBaris() {
+        android.util.Log.d("LatihanPractice", "loadCurrentBaris: jilidId=$currentJilidId, halamanId=$currentHalamanId, barisId=$currentBarisId")
+        
         currentBaris = LatihanPageData.getBarisById(currentJilidId, currentHalamanId, currentBarisId)
         
+        if (currentBaris == null) {
+            android.util.Log.e("LatihanPractice", "Failed to get baris from LatihanPageData, trying fallback...")
+            
+            // Fallback: try to get from currentHalaman if available
+            currentBaris = currentHalaman?.barisList?.find { it.id == currentBarisId }
+            
+            if (currentBaris == null) {
+                android.util.Log.e("LatihanPractice", "Baris still null, using first available baris")
+                currentBaris = currentHalaman?.barisList?.firstOrNull()
+                if (currentBaris != null) {
+                    currentBarisId = currentBaris!!.id
+                }
+            }
+        }
+        
         currentBaris?.let { baris ->
+            android.util.Log.d("LatihanPractice", "✓ Loaded baris ${baris.id} with ${baris.hurufList.size} huruf")
+            
             // Merge persisted completed letters from progress manager
             try {
                 val persisted = com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager(this).getCompletedLetters()
                 completedPositions.addAll(persisted)
-            } catch (_: Exception) {}
+                android.util.Log.d("LatihanPractice", "Added ${persisted.size} persisted completed positions")
+            } catch (e: Exception) {
+                android.util.Log.w("LatihanPractice", "Could not load persisted progress: ${e.message}")
+            }
 
             // Update adapter with current baris data only if adapter is initialized
             if (::adapter.isInitialized) {
@@ -341,6 +446,7 @@ class LatihanPracticeActivity : AppCompatActivity() {
             android.util.Log.d("LatihanPractice", "Baris $currentBarisId loaded. Completed positions: $completedPositions")
         } ?: run {
             android.util.Log.w("LatihanPractice", "currentBaris is null in loadCurrentBaris()")
+            Toast.makeText(this, "Error: Tidak dapat memuat baris", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -474,13 +580,21 @@ class LatihanPracticeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Reload data when returning from camera
-        loadCurrentBaris()
-        // Automatically start camera on first resume so user doesn't need to press the button
-        if (firstLaunch) {
-            firstLaunch = false
-            openCamera()
-        }
+        android.util.Log.d("LatihanPractice", "onResume called")
+        
+        // REMOVED: loadCurrentBaris() - this was causing race condition
+        // loadCurrentBaris() is now only called AFTER loadPageData() completes successfully
+        
+        // REMOVED: Automatically start camera on first resume 
+        // This was causing the "balik-balik" issue where camera would auto-start
+        // and interfere with normal navigation
+        
+        // Optional: Only auto-start camera if user explicitly wants it
+        // You can uncomment this if you want auto-camera behavior:
+        // if (firstLaunch) {
+        //     firstLaunch = false
+        //     openCamera()
+        // }
     }
 
     // Helper function to check if current baris is completed

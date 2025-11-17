@@ -6,6 +6,9 @@ import com.google.mediapipe.examples.gesturerecognizer.data.models.JilidApi
 import com.google.mediapipe.examples.gesturerecognizer.data.models.PageDetailItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.engine.android.*
 
 /**
  * Data class untuk setiap huruf dalam latihan
@@ -66,34 +69,34 @@ object LatihanPageData {
     
     // Mapping dari latin name API ke gesture name untuk deteksi kamera
     private val latinToGestureMap = mapOf(
-        "Alif" to "alif",
-        "Ba" to "ba",
-        "Ta" to "ta",
-        "Tsa" to "tsa",
-        "Jim" to "jim",
-        "Ha" to "ha",
-        "Kha" to "kha",
-        "Dal" to "dal",
-        "Dzal" to "dzal",
-        "Ra" to "ra",
-        "Za" to "za",
-        "Sin" to "sin",
-        "Syin" to "syin",
-        "Shod" to "shad",
-        "Dhod" to "dhad",
-        "Tho" to "tha",
-        "Zho" to "zha",
-        "Ain" to "ain",
-        "Ghoin" to "ghain",
-        "Fa" to "fa",
-        "Qof" to "qaf",
-        "Kaf" to "kaf",
-        "Lam" to "lam",
-        "Mim" to "mim",
-        "Nun" to "nun",
-        "Wau" to "waw",
-        "Ha'" to "ha'",
-        "Ya" to "ya"
+        "Alif" to "01_alif",
+        "Ba" to "02_ba",
+        "Ta" to "03_ta",
+        "Tsa" to "04_tsa",
+        "Jim" to "05_jim",
+        "Ha" to "06_ha",
+        "Kha" to "07_kha",
+        "Dal" to "08_dal",
+        "Dzal" to "09_dzal",
+        "Ra" to "10_ra",
+        "Za" to "11_za",
+        "Sin" to "12_sin",
+        "Syin" to "13_syin",
+        "Shod" to "14_shad",
+        "Dhod" to "15_dhad",
+        "Tho" to "16_tha",
+        "Zho" to "17_zha",
+        "Ain" to "18_ain",
+        "Ghoin" to "19_ghain",
+        "Fa" to "20_fa",
+        "Qof" to "21_qaf",
+        "Kaf" to "22_kaf",
+        "Lam" to "23_lam",
+        "Mim" to "24_mim",
+        "Nun" to "25_nun",
+        "Wau" to "26_waw",
+        "Ha'" to "27_ha'",
+        "Ya" to "28_ya"
     )
     
     /**
@@ -164,47 +167,100 @@ object LatihanPageData {
      * Load halaman detail dari API
      */
     suspend fun loadHalamanFromApi(jilidId: Int, nomorHalaman: Int, context: android.content.Context? = null): LatihanHalaman? {
-        return withContext(Dispatchers.IO) {
-            val cacheKey = "$jilidId-$nomorHalaman"
-            
-            // Cek cache dulu
-            if (cachedHalamanMap.containsKey(cacheKey)) {
-                Log.d(TAG, "Using cached page: $cacheKey")
-                return@withContext cachedHalamanMap[cacheKey]
-            }
-            
-            try {
-                Log.d(TAG, "Loading page from API: jilid=$jilidId, halaman=$nomorHalaman")
-                val apiService = SignQuranApiService.getInstance()
+        return try {
+            withContext(Dispatchers.IO) {
+                val cacheKey = "$jilidId-$nomorHalaman"
                 
-                // Get auth token if context is provided
-                val token = if (context != null) {
-                    val authManager = com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager(context)
-                    if (authManager.isLoggedIn) authManager.authToken else null
-                } else null
+                Log.d(TAG, "==== API CALL DEBUG ====")
+                Log.d(TAG, "Entry point reached successfully")
+                Log.d(TAG, "Request: jilid=$jilidId, halaman=$nomorHalaman")
                 
-                val result = apiService.getPageDetail(jilidId, nomorHalaman, token)
+                // Cek cache dulu
+                if (cachedHalamanMap.containsKey(cacheKey)) {
+                    Log.d(TAG, "Using cached page: $cacheKey")
+                    return@withContext cachedHalamanMap[cacheKey]
+                }
                 
-                result.onSuccess { response ->
-                    if (response.pageDetail.isNotEmpty()) {
-                        Log.d(TAG, "API Success: ${response.pageDetail.size} items loaded")
-                        val halaman = mapApiPageToLatihanHalaman(response.pageDetail, jilidId, nomorHalaman)
-                        cachedHalamanMap[cacheKey] = halaman
-                        return@withContext halaman
-                    } else {
-                        Log.w(TAG, "API returned empty pageDetail")
+                try {
+                    // Test connectivity first
+                    Log.d(TAG, "Testing basic connectivity...")
+                    val testUrl = "https://signquran.site/api/jilid"
+                    val testClient = io.ktor.client.HttpClient(io.ktor.client.engine.android.Android)
+                    try {
+                        val testResponse = testClient.get(testUrl)
+                        Log.d(TAG, "✓ Basic connectivity test passed: ${testResponse.status}")
+                        testClient.close()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "✗ Basic connectivity test failed: ${e.message}")
+                        testClient.close()
+                        // Continue anyway, maybe the specific endpoint works
                     }
+                    
+                    Log.d(TAG, "Creating API service instance...")
+                    val apiService = SignQuranApiService.getInstance()
+                    Log.d(TAG, "✓ API service created successfully")
+                    
+                    // Get auth token if context is provided
+                    val token = if (context != null) {
+                        Log.d(TAG, "Getting auth token from context...")
+                        try {
+                            val authManager = com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager(context)
+                            val isLoggedIn = authManager.isLoggedIn
+                            val authToken = if (isLoggedIn) authManager.authToken else null
+                            Log.d(TAG, "Auth Status: logged_in=$isLoggedIn, token_length=${authToken?.length ?: 0}")
+                            authToken
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error getting auth token: ${e.message}")
+                            null
+                        }
+                    } else {
+                        Log.d(TAG, "No context provided - no auth token")
+                        null
+                    }
+                    
+                    Log.d(TAG, "About to call API with:")
+                    Log.d(TAG, "  - URL: https://signquran.site/api/pages/detail")
+                    Log.d(TAG, "  - jilid_id: $jilidId")
+                    Log.d(TAG, "  - nomor_halaman: $nomorHalaman")
+                    Log.d(TAG, "  - token: ${if (token != null) "YES (${token.length} chars)" else "NO"}")
+                    
+                    val result = apiService.getPageDetail(jilidId, nomorHalaman, token)
+                    
+                    result.onSuccess { response ->
+                        Log.d(TAG, "✓ API SUCCESS!")
+                        Log.d(TAG, "  - Response pageDetail size: ${response.pageDetail.size}")
+                        if (response.pageDetail.isNotEmpty()) {
+                            val firstItem = response.pageDetail[0]
+                            Log.d(TAG, "  - First item sample: baris=${firstItem.baris}, urutan=${firstItem.urutan}, latin='${firstItem.hurufLatin}', arab='${firstItem.hurufArab}'")
+                            Log.d(TAG, "  - Baris groups: ${response.pageDetail.groupBy { it.baris }.keys}")
+                            
+                            Log.d(TAG, "Starting data mapping...")
+                            val halaman = mapApiPageToLatihanHalaman(response.pageDetail, jilidId, nomorHalaman)
+                            cachedHalamanMap[cacheKey] = halaman
+                            Log.d(TAG, "✓ Mapping complete, baris count: ${halaman.barisList.size}")
+                            return@withContext halaman
+                        } else {
+                            Log.w(TAG, "✗ API returned empty pageDetail array")
+                        }
+                    }
+                    
+                    result.onFailure { error ->
+                        Log.e(TAG, "✗ API FAILED: ${error.message}")
+                        Log.e(TAG, "  - Error type: ${error.javaClass.simpleName}")
+                        Log.e(TAG, "  - URL would be: https://signquran.site/api/pages/detail?jilid_id=$jilidId&nomor_halaman=$nomorHalaman")
+                        error.printStackTrace()
+                    }
+                    
+                    Log.d(TAG, "========================")
+                    return@withContext null
+                } catch (e: Exception) {
+                    Log.e(TAG, "✗ INNER EXCEPTION in loadHalamanFromApi: ${e.message}", e)
+                    return@withContext null
                 }
-                
-                result.onFailure { error ->
-                    Log.e(TAG, "API Halaman Failed: ${error.message}", error)
-                }
-                
-                return@withContext null
-            } catch (e: Exception) {
-                Log.e(TAG, "API Halaman Error: ${e.message}", e)
-                return@withContext null
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "✗ OUTER EXCEPTION in loadHalamanFromApi: ${e.message}", e)
+            return null
         }
     }
     
@@ -216,21 +272,27 @@ object LatihanPageData {
         jilidId: Int,
         nomorHalaman: Int
     ): LatihanHalaman {
-        Log.d(TAG, "Mapping ${pageDetails.size} items to LatihanHalaman")
+        Log.d(TAG, "==== MAPPING DEBUG ====")
+        Log.d(TAG, "Input: ${pageDetails.size} items to map")
         
         // Group by baris
         val groupedByBaris = pageDetails.groupBy { it.baris }
-        Log.d(TAG, "Grouped into ${groupedByBaris.size} baris")
+        Log.d(TAG, "Grouped into ${groupedByBaris.size} baris: ${groupedByBaris.keys.sorted()}")
         
         // Convert ke LatihanBaris
         val barisList = groupedByBaris.map { (barisId, items) ->
-            val hurufList = items.sortedBy { it.urutan }.mapIndexed { index, item ->
+            Log.d(TAG, "Processing baris $barisId with ${items.size} items")
+            
+            val sortedItems = items.sortedBy { it.urutan }
+            Log.d(TAG, "  - Urutan sequence: ${sortedItems.map { it.urutan }}")
+            
+            val hurufList = sortedItems.mapIndexed { index, item ->
                 val gestureName = latinToGestureMap[item.hurufLatin] ?: item.hurufLatin.lowercase()
                 
                 // Position calculation: for this context we'll use a combination of barisId and urutan
                 val position = (barisId * 100) + item.urutan  // Simple position calculation
                 
-                Log.d(TAG, "Baris $barisId, Urutan ${item.urutan}: ${item.hurufLatin} (${item.hurufArab}) -> gesture: $gestureName, pos: $position")
+                Log.d(TAG, "    [$index] Urutan ${item.urutan}: latin='${item.hurufLatin}' -> gesture='$gestureName', arab='${item.hurufArab}', pos=$position")
                 
                 LatihanHuruf(
                     arabic = item.hurufArab,
@@ -242,6 +304,8 @@ object LatihanPageData {
                 )
             }
             
+            Log.d(TAG, "  - Created baris $barisId with ${hurufList.size} huruf")
+            
             LatihanBaris(
                 id = barisId,
                 hurufList = hurufList,
@@ -249,9 +313,9 @@ object LatihanPageData {
             )
         }.sortedBy { it.id }
         
-        val jilidName = "Jilid $jilidId"  // Using the jilidId as name since PageDetailItem doesn't have jilidName
+        val jilidName = "Jilid $jilidId"
         
-        return LatihanHalaman(
+        val finalHalaman = LatihanHalaman(
             id = nomorHalaman,
             title = "Halaman $nomorHalaman",
             description = "Latihan Halaman $nomorHalaman dari $jilidName",
@@ -259,6 +323,11 @@ object LatihanPageData {
             isCompleted = false,
             progress = 0
         )
+        
+        Log.d(TAG, "✓ Final result: ${finalHalaman.barisList.size} baris total")
+        Log.d(TAG, "======================")
+        
+        return finalHalaman
     }
     
     /**

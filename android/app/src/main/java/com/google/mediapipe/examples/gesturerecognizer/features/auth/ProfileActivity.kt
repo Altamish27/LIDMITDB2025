@@ -23,6 +23,7 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var authManager: AuthManager
     private lateinit var authApiService: AuthApiService
     private lateinit var btnSettings: CardView
+    private lateinit var btnMyRooms: CardView
     private lateinit var ivProfilePhoto: ImageView
     private lateinit var imgKaligrafiProfile: ImageView
     private lateinit var profileCard: CardView
@@ -72,6 +73,7 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun initializeViews() {
         btnSettings = findViewById(R.id.btn_settings)
+        btnMyRooms = findViewById(R.id.btn_my_rooms)
         ivProfilePhoto = findViewById(R.id.iv_profile_photo)
         imgKaligrafiProfile = findViewById(R.id.img_kaligrafi_profile)
         profileCard = findViewById(R.id.profile_card)
@@ -125,6 +127,14 @@ class ProfileActivity : AppCompatActivity() {
         btnSettings.setOnClickListener {
             ViewAnimationUtils.animateClick(it) {
                 showSettingsDialog()
+            }
+        }
+
+        // My Rooms button
+        btnMyRooms.setOnClickListener {
+            ViewAnimationUtils.animateClick(it) {
+                val intent = Intent(this, com.google.mediapipe.examples.gesturerecognizer.features.room.MyRoomsActivity::class.java)
+                startActivity(intent)
             }
         }
 

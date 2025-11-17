@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentLatihanBinding
 import com.google.mediapipe.examples.gesturerecognizer.data.api.SignQuranApiService
 import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
@@ -22,6 +23,10 @@ class LatihanFragment : Fragment() {
     private var jilidId: Int = 1
     private var jilidTitle: String = "Jilid 1"
     private var availablePages: List<HalamanInfo> = emptyList()
+    
+    // Dynamic adapter for pages
+    private lateinit var halamanAdapter: HalamanListAdapter
+    private var useDynamicAdapter = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,8 +47,30 @@ class LatihanFragment : Fragment() {
         // Update UI with jilid info
         binding.tvTitle.text = jilidTitle
         
+        // Setup dynamic adapter
+        setupHalamanAdapter()
+        
         // Load pages from API
         loadPagesFromApi()
+    }
+    
+    private fun setupHalamanAdapter() {
+        halamanAdapter = HalamanListAdapter { halaman ->
+            navigateToHalaman(halaman.halamanId, halaman.nomorHalaman, "Halaman ${halaman.nomorHalaman}", halaman.deskripsi)
+        }
+        
+        // Check if we have a RecyclerView in the layout (for future dynamic implementation)
+        try {
+            val recyclerView = binding.rvHalamanPages
+            useDynamicAdapter = true
+            recyclerView.visibility = View.VISIBLE
+            recyclerView.layoutManager = GridLayoutManager(requireContext(), 2) // 2 columns
+            recyclerView.adapter = halamanAdapter
+            android.util.Log.d("LatihanFragment", "Using dynamic RecyclerView adapter")
+        } catch (e: Exception) {
+            useDynamicAdapter = false
+            android.util.Log.d("LatihanFragment", "RecyclerView not available, using hardcoded cards")
+        }
     }
 
     private fun loadPagesFromApi() {
@@ -91,6 +118,13 @@ class LatihanFragment : Fragment() {
                     
                     val completedCount = availablePages.count { it.isCompleted }
                     binding.tvSubtitle?.text = "$completedCount / ${availablePages.size} Halaman Selesai"
+                    
+                    // Update adapter if using dynamic display
+                    if (useDynamicAdapter) {
+                        halamanAdapter.submitList(availablePages)
+                        // Hide hardcoded cards if using RecyclerView
+                        hideHardcodedCards()
+                    }
                 }
                 
                 pagesResult.onFailure { error ->
@@ -108,124 +142,93 @@ class LatihanFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
-        // Setup untuk 5 halaman pertama (sesuai layout)
-        if (availablePages.isNotEmpty()) {
-            // Halaman 1
-            if (availablePages.size >= 1) {
-                val page1 = availablePages[0]
-                binding.tvDescHalaman1.text = page1.deskripsi
-                binding.cardHalaman1.setOnClickListener {
-                    navigateToHalaman(page1.halamanId, page1.nomorHalaman, "Halaman ${page1.nomorHalaman}", page1.deskripsi)
-                }
-                // Update card color if completed
-                if (page1.isCompleted) {
-                    binding.cardHalaman1.setCardBackgroundColor(
-                        android.graphics.Color.parseColor("#4CAF50") // Green for completed
-                    )
-                    android.util.Log.d("LatihanFragment", "✓ Halaman 1 marked as completed")
-                }
-            } else {
-                binding.cardHalaman1.setOnClickListener {
-                    showLockedMessage()
-                }
+        // If using dynamic adapter, no need to setup hardcoded cards
+        if (useDynamicAdapter) {
+            return
+        }
+        
+        // Fallback: Setup untuk hardcoded cards (maksimal 5 halaman sesuai layout)
+        setupHardcodedCards()
+    }
+    
+    private fun hideHardcodedCards() {
+        // Hide the hardcoded cards when using RecyclerView
+        try {
+            binding.cardHalaman1?.visibility = View.GONE
+            binding.cardHalaman2?.visibility = View.GONE
+            binding.cardHalaman3?.visibility = View.GONE
+            binding.cardHalaman4?.visibility = View.GONE
+            binding.cardHalaman5?.visibility = View.GONE
+        } catch (e: Exception) {
+            // Ignore if cards don't exist
+        }
+    }
+    
+    private fun setupHardcodedCards() {
+        val maxDisplayPages = 5 // Layout limitation
+        
+        for (i in 0 until maxDisplayPages) {
+            val cardView = when (i) {
+                0 -> binding.cardHalaman1
+                1 -> binding.cardHalaman2
+                2 -> binding.cardHalaman3
+                3 -> binding.cardHalaman4
+                4 -> binding.cardHalaman5
+                else -> null
             }
             
-            // Halaman 2
-            if (availablePages.size >= 2) {
-                val page2 = availablePages[1]
-                binding.tvDescHalaman2.text = page2.deskripsi
-                binding.cardHalaman2.setOnClickListener {
-                    navigateToHalaman(page2.halamanId, page2.nomorHalaman, "Halaman ${page2.nomorHalaman}", page2.deskripsi)
-                }
-                if (page2.isCompleted) {
-                    binding.cardHalaman2.setCardBackgroundColor(
-                        android.graphics.Color.parseColor("#4CAF50")
-                    )
-                }
-            } else {
-                binding.cardHalaman2.setOnClickListener {
-                    showLockedMessage()
-                }
+            val descTextView = when (i) {
+                0 -> binding.tvDescHalaman1
+                1 -> binding.tvDescHalaman2
+                2 -> binding.tvDescHalaman3
+                3 -> binding.tvDescHalaman4
+                4 -> binding.tvDescHalaman5
+                else -> null
             }
             
-            // Halaman 3
-            if (availablePages.size >= 3) {
-                val page3 = availablePages[2]
-                binding.tvDescHalaman3.text = page3.deskripsi
-                binding.cardHalaman3.setOnClickListener {
-                    navigateToHalaman(page3.halamanId, page3.nomorHalaman, "Halaman ${page3.nomorHalaman}", page3.deskripsi)
-                }
-                if (page3.isCompleted) {
-                    binding.cardHalaman3.setCardBackgroundColor(
-                        android.graphics.Color.parseColor("#4CAF50")
-                    )
-                }
-            } else {
-                binding.cardHalaman3.setOnClickListener {
-                    showLockedMessage()
-                }
-            }
-            
-            // Halaman 4
-            if (availablePages.size >= 4) {
-                val page4 = availablePages[3]
-                binding.tvDescHalaman4.text = page4.deskripsi
-                binding.cardHalaman4.setOnClickListener {
-                    navigateToHalaman(page4.halamanId, page4.nomorHalaman, "Halaman ${page4.nomorHalaman}", page4.deskripsi)
-                }
-                if (page4.isCompleted) {
-                    binding.cardHalaman4.setCardBackgroundColor(
-                        android.graphics.Color.parseColor("#4CAF50")
-                    )
-                }
-            } else {
-                binding.cardHalaman4.setOnClickListener {
-                    showLockedMessage()
-                }
-            }
-            
-            // Halaman 5
-            if (availablePages.size >= 5) {
-                val page5 = availablePages[4]
-                binding.tvDescHalaman5.text = page5.deskripsi
-                binding.cardHalaman5.setOnClickListener {
-                    navigateToHalaman(page5.halamanId, page5.nomorHalaman, "Halaman ${page5.nomorHalaman}", page5.deskripsi)
-                }
-                if (page5.isCompleted) {
-                    binding.cardHalaman5.setCardBackgroundColor(
-                        android.graphics.Color.parseColor("#4CAF50")
+            if (cardView != null && descTextView != null) {
+                if (i < availablePages.size) {
+                    val page = availablePages[i]
+                    descTextView.text = page.deskripsi
+                    cardView.setOnClickListener {
+                        navigateToHalaman(page.halamanId, page.nomorHalaman, "Halaman ${page.nomorHalaman}", page.deskripsi)
+                    }
+                    
+                    // Update card color if completed
+                    if (page.isCompleted) {
+                        cardView.setCardBackgroundColor(
+                            android.graphics.Color.parseColor("#4CAF50") // Green for completed
+                        )
+                        android.util.Log.d("LatihanFragment", "✓ Halaman ${i + 1} marked as completed")
+                    } else {
+                        // Reset to default color
+                        cardView.setCardBackgroundColor(
+                            android.graphics.Color.parseColor("#FFFFFF") // White for uncompleted
+                        )
+                    }
+                } else {
+                    // No more pages available, disable card
+                    descTextView.text = "Halaman belum tersedia"
+                    cardView.setOnClickListener {
+                        showLockedMessage()
+                    }
+                    cardView.setCardBackgroundColor(
+                        android.graphics.Color.parseColor("#CCCCCC") // Gray for locked
                     )
                 }
-            } else {
-                binding.cardHalaman5.setOnClickListener {
-                    showLockedMessage()
-                }
             }
-        } else {
-            // Fallback hardcoded jika API belum load atau error
-            binding.cardHalaman1.setOnClickListener {
-                navigateToHalaman("$jilidId-1", 1, "Halaman 1", "Pengenalan Huruf Hijaiyah Dasar")
-            }
-            
-            binding.cardHalaman2.setOnClickListener {
-                showLockedMessage()
-            }
-            
-            binding.cardHalaman3.setOnClickListener {
-                showLockedMessage()
-            }
-            
-            binding.cardHalaman4.setOnClickListener {
-                showLockedMessage()
-            }
-            
-            binding.cardHalaman5.setOnClickListener {
-                showLockedMessage()
-            }
+        }
+        
+        // Show notification if there are more pages than can be displayed
+        if (availablePages.size > maxDisplayPages) {
+            android.util.Log.w("LatihanFragment", "Warning: ${availablePages.size} pages available, but only $maxDisplayPages can be displayed with current layout")
+            // TODO: Show a message to user about additional pages
         }
     }
     
     private fun navigateToHalaman(halamanId: String, nomorHalaman: Int, title: String, description: String) {
+        android.util.Log.d("LatihanFragment", "Navigating to halaman: halamanId=$halamanId, nomorHalaman=$nomorHalaman, title=$title")
+        
         val intent = Intent(requireContext(), LatihanPracticeActivity::class.java).apply {
             putExtra("exerciseId", jilidId)
             putExtra("exerciseTitle", jilidTitle)
@@ -233,7 +236,15 @@ class LatihanFragment : Fragment() {
             putExtra("halamanId", nomorHalaman)
             putExtra("realHalamanId", halamanId)  // Pass the real halaman_id like "1-1"
         }
-        startActivity(intent)
+        
+        android.util.Log.d("LatihanFragment", "Intent extras: jilidId=$jilidId, halamanId=$nomorHalaman, realHalamanId=$halamanId")
+        
+        try {
+            startActivity(intent)
+        } catch (e: Exception) {
+            android.util.Log.e("LatihanFragment", "Failed to start LatihanPracticeActivity: ${e.message}", e)
+            Toast.makeText(requireContext(), "Gagal membuka halaman latihan: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
     
     private fun showLockedMessage() {

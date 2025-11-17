@@ -95,6 +95,14 @@
             android:gravity="center"
             android:layout_marginBottom="16dp"/>
 
+        <!-- Dynamic RecyclerView for Pages (New) -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvHalamanPages"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone" />
+
         <!-- Halaman 1 -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardHalaman1"
