@@ -13,6 +13,9 @@ import com.google.mediapipe.examples.gesturerecognizer.data.models.JoinRoomReque
 import com.google.mediapipe.examples.gesturerecognizer.data.models.JoinRoomResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.MyRoomsResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.RoomMembersResponse
+import com.google.mediapipe.examples.gesturerecognizer.data.models.EnrollmentsResponse
+import com.google.mediapipe.examples.gesturerecognizer.data.models.EnrolledRoom
+import com.google.mediapipe.examples.gesturerecognizer.data.models.SimpleRoomsResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.android.*
@@ -257,27 +260,37 @@ class SignQuranApiService {
         return try {
             android.util.Log.d("SignQuranAPI", "Fetching my enrolled rooms")
             android.util.Log.d("SignQuranAPI", "Request URL: $BASE_URL/enrollments/my-rooms")
+            
             val response = client.get("$BASE_URL/enrollments/my-rooms") {
                 headers.append("Authorization", "Bearer $authToken")
             }
             android.util.Log.d("SignQuranAPI", "Response status: ${response.status}")
             
-            // Log raw response body
-            val responseText = response.bodyAsText()
+            var responseText = response.bodyAsText()
             android.util.Log.d("SignQuranAPI", "Raw response: $responseText")
             
-            // Check if response is an error
-            if (responseText.contains("\"error\"")) {
-                android.util.Log.e("SignQuranAPI", "Backend returned error response")
-                // Try to extract error message
-                val errorRegex = """"error"\s*:\s*"([^"]+)"""".toRegex()
-                val errorMatch = errorRegex.find(responseText)
-                val errorMessage = errorMatch?.groupValues?.get(1) ?: "Unknown error from backend"
-                return Result.failure(Exception("Backend error: $errorMessage"))
+            // Remove BOM if present (can cause "offset 2" JSON error)
+            if (responseText.startsWith("\uFEFF")) {
+                responseText = responseText.substring(1)
+                android.util.Log.d("SignQuranAPI", "Removed BOM from response")
             }
             
-            val body = Json.decodeFromString<MyRoomsResponse>(responseText)
+            // Parse response directly into MyRoomsResponse
+            val body = try {
+                Json.decodeFromString<MyRoomsResponse>(responseText)
+            } catch (parseError: Exception) {
+                android.util.Log.e("SignQuranAPI", "JSON Parse error: ${parseError.message}", parseError)
+                android.util.Log.e("SignQuranAPI", "Response text length: ${responseText.length}")
+                android.util.Log.e("SignQuranAPI", "First 200 chars: ${responseText.take(200)}")
+                android.util.Log.e("SignQuranAPI", "Response bytes: ${responseText.take(50).toByteArray().joinToString(",") { it.toString() }}")
+                throw parseError
+            }
+            
             android.util.Log.d("SignQuranAPI", "Enrolled rooms: ${body.rooms.size}")
+            for ((index, room) in body.rooms.withIndex()) {
+                android.util.Log.d("SignQuranAPI", "Room $index: ${room.name}, Code: ${room.code}, Creator: ${room.createdByName}")
+            }
+            
             Result.success(body)
         } catch (e: Exception) {
             android.util.Log.e("SignQuranAPI", "Get my rooms error: ${e.message}", e)
