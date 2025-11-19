@@ -154,6 +154,13 @@ dependencies {
     implementation "androidx.activity:activity-compose:1.8.0"
     implementation "androidx.compose.foundation:foundation:1.5.0"
 
+    // Image loading library - Coil
+    implementation "io.coil-kt:coil:2.5.0"
+
+    // Video player - ExoPlayer
+    implementation "com.google.android.exoplayer:exoplayer:2.19.1"
+    implementation "com.google.android.exoplayer:exoplayer-ui:2.19.1"
+
 }
 
 

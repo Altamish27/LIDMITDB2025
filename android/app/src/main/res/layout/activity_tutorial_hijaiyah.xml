@@ -151,9 +151,11 @@
 
             <!-- Tutorial Image Card -->
             <androidx.cardview.widget.CardView
+                android:id="@+id/cardImageContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
+                android:visibility="gone"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp"
                 app:cardBackgroundColor="@android:color/white">
@@ -176,7 +178,7 @@
                     <ImageView
                         android:id="@+id/ivTutorialImage"
                         android:layout_width="match_parent"
-                        android:layout_height="600dp"
+                        android:layout_height="400dp"
                         android:scaleType="fitCenter"
                         android:src="@drawable/praga_alif"
                         android:contentDescription="Tutorial Image"
@@ -185,6 +187,51 @@
                 </LinearLayout>
 
             </androidx.cardview.widget.CardView>
+
+            <!-- Tutorial Video Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardVideoContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@android:color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Video Tutorial"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="16dp" />
+
+                    <com.google.android.exoplayer2.ui.PlayerView
+                        android:id="@+id/playerViewTutorial"
+                        android:layout_width="match_parent"
+                        android:layout_height="250dp"
+                        android:background="@color/black" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Loading Progress -->
+            <ProgressBar
+                android:id="@+id/loadingProgress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone" />
 
             <!-- Description Card -->
             <androidx.cardview.widget.CardView

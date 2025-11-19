@@ -26,7 +26,8 @@ data class HijaiyahLetter(
     override val transliteration: String,
     override val gestureName: String?,
     override var isCompleted: Boolean = false,
-    override val position: Int
+    override val position: Int,
+    val assets: String? = null  // URL to image/video asset or null
 ) : ArabicLetter
 
 object HijaiyahData {
@@ -116,7 +117,8 @@ object HijaiyahData {
             transliteration = apiLetter.latinName,
             gestureName = gestureName,
             isCompleted = false,
-            position = apiLetter.ordinal
+            position = apiLetter.ordinal,
+            assets = apiLetter.assets  // Include assets URL from API
         )
     }
     
