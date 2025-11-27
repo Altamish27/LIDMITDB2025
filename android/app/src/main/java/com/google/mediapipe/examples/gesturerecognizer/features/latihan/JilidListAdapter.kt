@@ -39,34 +39,18 @@ class JilidListAdapter(
                 tvJilidTitle.text = jilid.title
                 tvJilidDescription.text = jilid.description
                 
-                // Set status (locked atau available)
-                val isLocked = jilid.halamanList.isEmpty()
-                
-                if (isLocked) {
-                    // Jilid terkunci
-                    cardJilid.setCardBackgroundColor(
-                        itemView.context.getColor(R.color.gray_light)
-                    )
-                    tvJilidNumber.setBackgroundResource(R.drawable.circle_gray_background)
-                    ivLockIcon.visibility = android.view.View.VISIBLE
-                    tvJilidStatus.apply {
-                        text = "Terkunci"
-                        setTextColor(itemView.context.getColor(R.color.gray_dark))
+                cardJilid.setCardBackgroundColor(
+                    itemView.context.getColor(R.color.hijaiyah_navy)
+                )
+                tvJilidNumber.setBackgroundResource(R.drawable.circle_yellow_background)
+                ivLockIcon.visibility = android.view.View.GONE
+                tvJilidStatus.apply {
+                    text = if (jilid.halamanList.isNotEmpty()) {
+                        "${jilid.halamanList.size} Halaman"
+                    } else {
+                        "Siap dipelajari"
                     }
-                } else {
-                    // Jilid tersedia
-                    cardJilid.setCardBackgroundColor(
-                        itemView.context.getColor(R.color.hijaiyah_navy)
-                    )
-                    tvJilidNumber.setBackgroundResource(R.drawable.circle_yellow_background)
-                    ivLockIcon.visibility = android.view.View.GONE
-                    
-                    // Tampilkan progress
-                    val totalHalaman = jilid.halamanList.size
-                    tvJilidStatus.apply {
-                        text = "$totalHalaman Halaman"
-                        setTextColor(itemView.context.getColor(R.color.hijaiyah_yellow))
-                    }
+                    setTextColor(itemView.context.getColor(R.color.hijaiyah_yellow))
                 }
                 
                 // Set click listener

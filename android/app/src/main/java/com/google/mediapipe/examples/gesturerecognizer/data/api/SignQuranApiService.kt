@@ -13,9 +13,13 @@ import com.google.mediapipe.examples.gesturerecognizer.data.models.JoinRoomReque
 import com.google.mediapipe.examples.gesturerecognizer.data.models.JoinRoomResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.MyRoomsResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.RoomMembersResponse
+import com.google.mediapipe.examples.gesturerecognizer.data.models.RoomMember
 import com.google.mediapipe.examples.gesturerecognizer.data.models.EnrollmentsResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.EnrolledRoom
 import com.google.mediapipe.examples.gesturerecognizer.data.models.SimpleRoomsResponse
+import com.google.mediapipe.examples.gesturerecognizer.data.models.HalamanInfo
+import com.google.mediapipe.examples.gesturerecognizer.data.models.LetterProgressResponse
+import com.google.mediapipe.examples.gesturerecognizer.data.models.UserJilidProgressResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.android.*
@@ -26,6 +30,16 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.decodeFromJsonElement
 
 /**
  * API Service untuk mengakses SignQuran API
@@ -45,13 +59,15 @@ class SignQuranApiService {
         }
     }
     
+    private val jsonFormatter = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        prettyPrint = true
+    }
+    
     private val client = HttpClient(Android) {
         install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-                isLenient = true
-                prettyPrint = true
-            })
+            json(jsonFormatter)
         }
         
         install(Logging) {
@@ -122,10 +138,16 @@ class SignQuranApiService {
             }
             val body = response.body<JilidPagesApiResponse>()
             android.util.Log.d("SignQuranAPI", "Pages success: ${body.pages.size} pages found")
-            Result.success(body)
+            if (body.pages.isNotEmpty()) {
+                Result.success(body)
+            } else {
+                android.util.Log.w("SignQuranAPI", "Pages list empty, falling back to detail scanning")
+                fetchPagesFromDetail(jilidId, authToken)
+            }
         } catch (e: Exception) {
             android.util.Log.e("SignQuranAPI", "Pages error: ${e.message}", e)
-            Result.failure(e)
+            val fallback = fetchPagesFromDetail(jilidId, authToken)
+            return if (fallback.isSuccess) fallback else Result.failure(e)
         }
     }
     
@@ -151,8 +173,8 @@ class SignQuranApiService {
             android.util.Log.d("SignQuranAPI", "Response headers: ${response.headers}")
             
             // Try to parse
-            val body = try {
-                kotlinx.serialization.json.Json.decodeFromString<PageDetailApiResponse>(responseText)
+                val body = try {
+                    jsonFormatter.decodeFromString<PageDetailApiResponse>(responseText)
             } catch (e: Exception) {
                 android.util.Log.e("SignQuranAPI", "JSON parsing error: ${e.message}")
                 android.util.Log.e("SignQuranAPI", "Failed to parse: $responseText")
@@ -164,6 +186,55 @@ class SignQuranApiService {
         } catch (e: Exception) {
             android.util.Log.e("SignQuranAPI", "Page error: ${e.message}", e)
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Fallback builder untuk daftar halaman ketika endpoint /jilid/{id}/pages tidak tersedia
+     */
+    private suspend fun fetchPagesFromDetail(jilidId: Int, authToken: String?): Result<JilidPagesApiResponse> {
+        android.util.Log.d("SignQuranAPI", "Fallback: scanning halaman detail for jilid $jilidId")
+        val fallbackPages = mutableListOf<HalamanInfo>()
+        var consecutiveEmpty = 0
+        val maxConsecutiveEmpty = 3
+        val maxPagesToCheck = 30
+
+        for (pageNum in 1..maxPagesToCheck) {
+            val detailResult = getPageDetail(jilidId, pageNum, authToken)
+            var found = false
+            detailResult.onSuccess { response ->
+                if (response.pageDetail.isNotEmpty()) {
+                    val sample = response.pageDetail.first()
+                    val halamanNumericId = sample.hijaiyahHalamanId
+                    val description = "Halaman ${sample.nomorHalaman} - ${sample.latinName}"
+                    fallbackPages.add(
+                        HalamanInfo(
+                            halamanId = halamanNumericId,
+                            nomorHalaman = sample.nomorHalaman,
+                            deskripsi = description,
+                            isCompleted = false
+                        )
+                    )
+                    consecutiveEmpty = 0
+                    found = true
+                }
+            }
+
+            if (!found) {
+                consecutiveEmpty++
+                if (consecutiveEmpty >= maxConsecutiveEmpty) {
+                    android.util.Log.d("SignQuranAPI", "Stopping detail scan after $consecutiveEmpty empty pages")
+                    break
+                }
+            }
+        }
+
+        return if (fallbackPages.isNotEmpty()) {
+            android.util.Log.d("SignQuranAPI", "Fallback produced ${fallbackPages.size} halaman for jilid $jilidId")
+            Result.success(JilidPagesApiResponse(success = true, pages = fallbackPages))
+        } else {
+            android.util.Log.e("SignQuranAPI", "Fallback failed to find pages for jilid $jilidId")
+            Result.failure(IllegalStateException("Tidak menemukan halaman untuk jilid $jilidId"))
         }
     }
     
@@ -219,10 +290,12 @@ class SignQuranApiService {
     suspend fun saveHalamanProgress(halamanId: String, status: Int, authToken: String, userId: String): Result<HalamanProgressResponse> {
         return try {
             android.util.Log.d("SignQuranAPI", "Saving progress - halaman: $halamanId, status: $status")
+            val numericUserId = userId.toIntOrNull()
+                ?: throw IllegalArgumentException("User ID tidak valid")
             val response = client.post("$BASE_URL/progress/halaman") {
                 headers.append("Authorization", "Bearer $authToken")
                 contentType(ContentType.Application.Json)
-                setBody(HalamanProgressRequest(halamanId.toInt(), userId, status == 1))
+                setBody(HalamanProgressRequest(halamanId.toInt(), numericUserId, status == 1))
             }
             val body = response.body<HalamanProgressResponse>()
             android.util.Log.d("SignQuranAPI", "Progress saved successfully")
@@ -234,15 +307,69 @@ class SignQuranApiService {
     }
     
     /**
+     * Get letter progress overview untuk user saat ini
+     */
+    suspend fun getLetterProgress(
+        authToken: String,
+        roomId: String? = null,
+        targetUserId: String? = null,
+        status: String? = null
+    ): Result<LetterProgressResponse> {
+        return try {
+            android.util.Log.d("SignQuranAPI", "Fetching letter progress from: $BASE_URL/progress/letter")
+            val response = client.get("$BASE_URL/progress/letter") {
+                headers.append("Authorization", "Bearer $authToken")
+                roomId?.let { parameter("roomId", it) }
+                targetUserId?.let { parameter("targetUserId", it) }
+                status?.let { parameter("status", it) }
+            }
+            val body = response.body<LetterProgressResponse>()
+            android.util.Log.d("SignQuranAPI", "Letter progress fetched: ${body.progress.size} entries")
+            Result.success(body)
+        } catch (e: Exception) {
+            android.util.Log.e("SignQuranAPI", "Get letter progress error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Get jilid progress overview untuk user saat ini
+     */
+    suspend fun getUserJilidProgress(
+        authToken: String,
+        roomId: String? = null,
+        targetUserId: String? = null,
+        status: String? = null
+    ): Result<UserJilidProgressResponse> {
+        return try {
+            android.util.Log.d("SignQuranAPI", "Fetching jilid progress from: $BASE_URL/progress/jilid")
+            val response = client.get("$BASE_URL/progress/jilid") {
+                headers.append("Authorization", "Bearer $authToken")
+                roomId?.let { parameter("roomId", it) }
+                targetUserId?.let { parameter("targetUserId", it) }
+                status?.let { parameter("status", it) }
+            }
+            val body = response.body<UserJilidProgressResponse>()
+            android.util.Log.d("SignQuranAPI", "Jilid progress fetched: ${body.progress.size} entries")
+            Result.success(body)
+        } catch (e: Exception) {
+            android.util.Log.e("SignQuranAPI", "Get jilid progress error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
      * Join room by code
      */
     suspend fun joinRoom(code: String, authToken: String, userId: String): Result<JoinRoomResponse> {
         return try {
             android.util.Log.d("SignQuranAPI", "Joining room with code: $code")
+            val numericUserId = userId.toIntOrNull()
+                ?: throw IllegalArgumentException("User ID tidak valid")
             val response = client.post("$BASE_URL/enrollments/join") {
                 headers.append("Authorization", "Bearer $authToken")
                 contentType(ContentType.Application.Json)
-                setBody(JoinRoomRequest(code, userId))
+                setBody(JoinRoomRequest(code, numericUserId))
             }
             val body = response.body<JoinRoomResponse>()
             android.util.Log.d("SignQuranAPI", "Successfully joined room: ${body.room?.name ?: "Unknown"}")
@@ -277,7 +404,7 @@ class SignQuranApiService {
             
             // Parse response directly into MyRoomsResponse
             val body = try {
-                Json.decodeFromString<MyRoomsResponse>(responseText)
+                jsonFormatter.decodeFromString<MyRoomsResponse>(responseText)
             } catch (parseError: Exception) {
                 android.util.Log.e("SignQuranAPI", "JSON Parse error: ${parseError.message}", parseError)
                 android.util.Log.e("SignQuranAPI", "Response text length: ${responseText.length}")
@@ -288,7 +415,8 @@ class SignQuranApiService {
             
             android.util.Log.d("SignQuranAPI", "Enrolled rooms: ${body.rooms.size}")
             for ((index, room) in body.rooms.withIndex()) {
-                android.util.Log.d("SignQuranAPI", "Room $index: ${room.name}, Code: ${room.roomCode}, Creator: ${room.createdByName}")
+                val displayCode = room.roomCode ?: room.code ?: "-"
+                android.util.Log.d("SignQuranAPI", "Room $index: ${room.name}, Code: $displayCode, Creator: ${room.createdByName}")
             }
             
             Result.success(body)
@@ -301,19 +429,145 @@ class SignQuranApiService {
     /**
      * Get all members in a specific room
      */
-    suspend fun getRoomMembers(roomId: Int, authToken: String): Result<RoomMembersResponse> {
+    suspend fun getRoomMembers(roomId: Int, roomCode: String?, authToken: String): Result<RoomMembersResponse> {
+        val primaryIdentifier = roomId.toString()
+        val primaryUrl = "$BASE_URL/rooms/$primaryIdentifier/students"
+        val fallbackUrl = "$BASE_URL/enrollments/room/$roomId/members"
+        
         return try {
-            android.util.Log.d("SignQuranAPI", "Fetching members for room: $roomId")
-            val response = client.get("$BASE_URL/enrollments/room/$roomId/members") {
-                headers.append("Authorization", "Bearer $authToken")
-            }
-            val body = response.body<RoomMembersResponse>()
-            android.util.Log.d("SignQuranAPI", "Room members: ${body.members.size}")
+            android.util.Log.d("SignQuranAPI", "Fetching members via rooms endpoint: $primaryUrl")
+            val body = fetchRoomMembersFromUrl(primaryUrl, authToken)
             Result.success(body)
-        } catch (e: Exception) {
-            android.util.Log.e("SignQuranAPI", "Get room members error: ${e.message}", e)
-            Result.failure(e)
+        } catch (primaryError: Exception) {
+            android.util.Log.w("SignQuranAPI", "Rooms endpoint failed: ${primaryError.message}. Trying enrollments endpoint...")
+            try {
+                val body = fetchRoomMembersFromUrl(fallbackUrl, authToken)
+                Result.success(body)
+            } catch (fallbackError: Exception) {
+                android.util.Log.e("SignQuranAPI", "Get room members error: ${fallbackError.message}", fallbackError)
+                Result.failure(fallbackError)
+            }
         }
+    }
+    
+    private suspend fun fetchRoomMembersFromUrl(url: String, authToken: String): RoomMembersResponse {
+        val response = client.get(url) {
+            headers.append("Authorization", "Bearer $authToken")
+        }
+        val responseText = response.bodyAsText()
+        android.util.Log.d("SignQuranAPI", "Room members raw response: ${responseText.take(200)}")
+        
+        val jsonElement = jsonFormatter.parseToJsonElement(responseText)
+        val members = mutableListOf<RoomMember>()
+        
+        when (jsonElement) {
+            is JsonArray -> members += parseRoomMembersArray(jsonElement, null, null)
+            is JsonObject -> {
+                extractMemberArrays(jsonElement, "teachers").forEach { array ->
+                    members += parseRoomMembersArray(array, defaultRole = "guru", isCreatorDefault = true)
+                }
+                extractMemberArrays(jsonElement, "students").forEach { array ->
+                    members += parseRoomMembersArray(array, defaultRole = "murid", isCreatorDefault = false)
+                }
+                if (members.isEmpty()) {
+                    extractMemberArrays(jsonElement, "members").forEach { array ->
+                        members += parseRoomMembersArray(array, defaultRole = null, isCreatorDefault = null)
+                    }
+                }
+                if (members.isEmpty()) {
+                    extractMemberArrays(jsonElement, "enrollments").forEach { array ->
+                        members += parseRoomMembersArray(array, defaultRole = "murid", isCreatorDefault = false)
+                    }
+                }
+                if (members.isEmpty()) {
+                    (jsonElement["data"] as? JsonArray)?.let { dataArray ->
+                        members += parseRoomMembersArray(dataArray, null, null)
+                    }
+                }
+            }
+            else -> android.util.Log.w("SignQuranAPI", "Unexpected room members payload type: ${jsonElement::class}")
+        }
+        
+        val successFlag = (jsonElement as? JsonObject)?.get("success")?.jsonPrimitive?.booleanOrNull
+        android.util.Log.d("SignQuranAPI", "Parsed ${members.size} members")
+        return RoomMembersResponse(success = successFlag, members = members)
+    }
+    
+    private fun parseRoomMembersArray(
+        array: JsonArray,
+        defaultRole: String?,
+        isCreatorDefault: Boolean?
+    ): List<RoomMember> {
+        val members = mutableListOf<RoomMember>()
+        for (element in array) {
+            parseRoomMemberElement(element, defaultRole, isCreatorDefault)?.let { members.add(it) }
+        }
+        return members
+    }
+    
+    private fun parseRoomMemberElement(
+        element: JsonElement,
+        defaultRole: String?,
+        isCreatorDefault: Boolean?
+    ): RoomMember? {
+        val container = element as? JsonObject ?: return null
+        val userObj = container["user"]?.jsonObject ?: container
+        
+        val userId = userObj["user_id"]?.jsonPrimitive?.contentOrNull
+            ?: userObj["id"]?.jsonPrimitive?.contentOrNull
+            ?: container["user_id"]?.jsonPrimitive?.contentOrNull
+            ?: container["id"]?.jsonPrimitive?.contentOrNull
+            ?: return null
+        
+        val name = userObj["name"]?.jsonPrimitive?.contentOrNull
+            ?: container["name"]?.jsonPrimitive?.contentOrNull
+            ?: "Pengguna"
+        
+        val email = userObj["email"]?.jsonPrimitive?.contentOrNull
+            ?: container["email"]?.jsonPrimitive?.contentOrNull
+            ?: ""
+        
+        val role = container["role"]?.jsonPrimitive?.contentOrNull
+            ?: userObj["role"]?.jsonPrimitive?.contentOrNull
+            ?: container["type"]?.jsonPrimitive?.contentOrNull
+            ?: defaultRole
+            ?: "murid"
+        
+        val isCreator = container["is_creator"]?.jsonPrimitive?.booleanOrNull
+            ?: userObj["is_creator"]?.jsonPrimitive?.booleanOrNull
+            ?: isCreatorDefault
+            ?: role.equals("guru", ignoreCase = true)
+        
+        val joinedAt = container["joined_at"]?.jsonPrimitive?.contentOrNull
+            ?: container["created_at"]?.jsonPrimitive?.contentOrNull
+            ?: ""
+        
+        return RoomMember(
+            userId = userId,
+            name = name,
+            email = email,
+            role = role,
+            isCreator = isCreator,
+            joinedAt = joinedAt
+        )
+    }
+    
+    private fun extractMemberArrays(jsonObject: JsonObject, key: String): List<JsonArray> {
+        val arrays = mutableListOf<JsonArray>()
+        
+        jsonObject[key]?.let { value ->
+            (value as? JsonArray)?.let { arrays.add(it) }
+        }
+        
+        jsonObject["room"]?.jsonObject?.get(key)?.let { value ->
+            (value as? JsonArray)?.let { arrays.add(it) }
+        }
+        
+        jsonObject["data"]?.jsonObject?.get(key)?.let { value ->
+            (value as? JsonArray)?.let { arrays.add(it) }
+        }
+        
+        return arrays
     }
     
     /**

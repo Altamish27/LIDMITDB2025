@@ -27,7 +27,8 @@ data class HijaiyahLetter(
     override val gestureName: String?,
     override var isCompleted: Boolean = false,
     override val position: Int,
-    val assets: String? = null  // URL to image/video asset or null
+    val assets: String? = null,  // URL to image/video asset or null
+    val diacritic: String? = null
 ) : ArabicLetter
 
 object HijaiyahData {
@@ -111,15 +112,42 @@ object HijaiyahData {
      * Mapping dari API letter ke HijaiyahLetter
      */
     private fun mapApiLetterToHijaiyahLetter(apiLetter: HijaiyahLetterApi): HijaiyahLetter {
-        val gestureName = latinToGestureMap[apiLetter.latinName]
+        val (baseLatinName, diacriticType) = extractBaseNameAndDiacritic(apiLetter.latinName)
+        val gestureName = latinToGestureMap[baseLatinName]
         return HijaiyahLetter(
             arabic = apiLetter.arabicChar,
             transliteration = apiLetter.latinName,
             gestureName = gestureName,
             isCompleted = false,
             position = apiLetter.ordinal,
-            assets = null  // Assets not available from API yet
+            assets = apiLetter.assets,
+            diacritic = diacriticType
         )
+    }
+    
+    private fun extractBaseNameAndDiacritic(rawName: String): Pair<String, String?> {
+        val lower = rawName.lowercase()
+        val diacritic = when {
+            lower.contains("fathah") -> "fathah"
+            lower.contains("kasrah") -> "kasrah"
+            lower.contains("dhammah") || lower.contains("dhommah") || lower.contains("dhomah") -> "dhammah"
+            lower.contains("dammah") -> "dhammah"
+            else -> null
+        }
+        
+        if (diacritic == null) {
+            return rawName to null
+        }
+        
+        val base = rawName.replace("Fathah", "", ignoreCase = true)
+            .replace("Kasrah", "", ignoreCase = true)
+            .replace("Dhammah", "", ignoreCase = true)
+            .replace("Dhommah", "", ignoreCase = true)
+            .replace("Dhomah", "", ignoreCase = true)
+            .replace("Tanwin", "", ignoreCase = true)
+            .trim()
+        
+        return base.ifEmpty { rawName } to diacritic
     }
     
     fun getAllLetters(): List<HijaiyahLetter> {

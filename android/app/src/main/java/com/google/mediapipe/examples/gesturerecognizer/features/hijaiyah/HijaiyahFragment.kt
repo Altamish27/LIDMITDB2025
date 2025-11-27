@@ -19,6 +19,7 @@ package com.google.mediapipe.examples.gesturerecognizer.features.hijaiyah
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -32,6 +33,8 @@ import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahLetter
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager
+import com.google.mediapipe.examples.gesturerecognizer.data.api.SignQuranApiService
+import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentHijaiyahBinding
 
 
@@ -68,6 +71,8 @@ class HijaiyahFragment : Fragment() {
     
     private lateinit var adapter: ArabicLetterAdapter
     private lateinit var progressManager: HijaiyahProgressManager
+    private lateinit var authManager: AuthManager
+    private val apiService = SignQuranApiService.getInstance()
     private var masterLetters: List<HijaiyahLetter> = emptyList()
     private var categoryLetters: List<HijaiyahLetter> = emptyList()
     private var displayedLetters: List<HijaiyahLetter> = emptyList()
@@ -86,6 +91,7 @@ class HijaiyahFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         progressManager = HijaiyahProgressManager(requireContext())
+        authManager = AuthManager(requireContext())
         
         // Check if default category is specified in arguments
         val defaultCategory = arguments?.getString("defaultCategory")
@@ -220,7 +226,14 @@ class HijaiyahFragment : Fragment() {
                 if (HijaiyahData.getAllLetters().isEmpty()) {
                     HijaiyahData.loadFromApi(requireContext())
                 }
+                
                 masterLetters = progressManager.getLettersWithProgress()
+                
+                val synced = syncServerProgressIfNeeded()
+                if (synced) {
+                    masterLetters = progressManager.getLettersWithProgress()
+                }
+                
                 applyCategoryFilter(resetSearch = true)
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Gagal memuat huruf hijaiyah: ${e.message}", Toast.LENGTH_LONG).show()
@@ -261,6 +274,46 @@ class HijaiyahFragment : Fragment() {
     
     private fun loadLetters() {
         loadHijaiyahLetters()
+    }
+    
+    private suspend fun syncServerProgressIfNeeded(): Boolean {
+        if (!this::authManager.isInitialized || !authManager.isLoggedIn) {
+            return false
+        }
+        val token = authManager.authToken
+        if (token.isEmpty()) {
+            return false
+        }
+        
+        return try {
+            val result = apiService.getLetterProgress(authToken = token)
+            result.onSuccess { response ->
+                val completedPositions = response.progress
+                    .filter { isCompletedStatus(it.status) }
+                    .mapNotNull { it.hijaiyahId }
+                    .toSet()
+                
+                if (completedPositions.isNotEmpty()) {
+                    progressManager.replaceCompletedLetters(completedPositions)
+                }
+            }.onFailure {
+                Log.e("HijaiyahFragment", "Failed syncing letter progress: ${it.message}", it)
+            }
+            result.isSuccess
+        } catch (e: Exception) {
+            Log.e("HijaiyahFragment", "Error syncing letter progress: ${e.message}", e)
+            false
+        }
+    }
+    
+    private fun isCompletedStatus(status: String?): Boolean {
+        if (status.isNullOrBlank()) return false
+        val normalized = status.lowercase()
+        return normalized == "completed" ||
+            normalized == "selesai" ||
+            normalized == "done" ||
+            normalized == "true" ||
+            normalized == "1"
     }
     
     private fun updateProgress() {

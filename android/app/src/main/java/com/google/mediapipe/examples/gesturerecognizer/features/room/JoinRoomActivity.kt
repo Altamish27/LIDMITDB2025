@@ -59,9 +59,17 @@ class JoinRoomActivity : AppCompatActivity() {
     
     private fun joinRoom(code: String) {
         val authToken = authManager.authToken
+        val userId = authManager.userId.toIntOrNull()
         
         if (authToken.isEmpty()) {
             Toast.makeText(this, "Anda harus login terlebih dahulu", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+        
+        if (userId == null) {
+            Toast.makeText(this, "Data pengguna tidak valid. Silakan login ulang.", Toast.LENGTH_SHORT).show()
+            authManager.clearAuthData()
             finish()
             return
         }
@@ -71,7 +79,7 @@ class JoinRoomActivity : AppCompatActivity() {
         binding.btnJoinRoom.text = "Bergabung..."
         
         lifecycleScope.launch {
-            val result = apiService.joinRoom(code.uppercase(), authToken, authManager.userId)
+            val result = apiService.joinRoom(code.uppercase(), authToken, userId.toString())
             
             result.onSuccess { response ->
                 Toast.makeText(

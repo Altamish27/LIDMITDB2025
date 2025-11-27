@@ -108,32 +108,24 @@ class LoginActivity : AppCompatActivity() {
                             
                             if (result.isSuccess) {
                                 val loginResponse = result.getOrNull()
-                                if (loginResponse != null) {
-                                    // Save user data and token
-                                    loginResponse.user?.let { user ->
-                                        loginResponse.token?.let { token ->
-                                            authManager.saveUserData(user, token)
-                                        }
-                                    }
-                                    
-                                    Toast.makeText(this@LoginActivity, "Login berhasil!", Toast.LENGTH_SHORT).show()
+                                val user = loginResponse?.user
+                                val token = loginResponse?.token
+                                
+                                if (user != null && !token.isNullOrBlank()) {
+                                    authManager.saveUserData(user, token)
+                                    val message = loginResponse.message ?: "Login berhasil!"
+                                    Toast.makeText(this@LoginActivity, message, Toast.LENGTH_SHORT).show()
                                     
                                     val intent = Intent(this@LoginActivity, HomeActivity::class.java)
                                     startActivity(intent)
                                     finish()
                                 } else {
-                                    Toast.makeText(this@LoginActivity, "Login gagal: Data tidak valid", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(this@LoginActivity, "Login gagal: data tidak lengkap dari server", Toast.LENGTH_SHORT).show()
                                 }
                             } else {
-                                // Extract error message if possible
-                                val exception = result.exceptionOrNull()
-                                if (exception?.message?.contains("401") == true) {
-                                    Toast.makeText(this@LoginActivity, "Email atau password salah", Toast.LENGTH_SHORT).show()
-                                } else if (exception?.message?.contains("403") == true) {
-                                    Toast.makeText(this@LoginActivity, "Silakan verifikasi email terlebih dahulu", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(this@LoginActivity, "Login gagal: ${exception?.message}", Toast.LENGTH_SHORT).show()
-                                }
+                                val errorMessage = result.exceptionOrNull()?.message
+                                    ?: "Login gagal. Silakan coba lagi."
+                                Toast.makeText(this@LoginActivity, errorMessage, Toast.LENGTH_SHORT).show()
                             }
                         }
                     } catch (e: Exception) {
