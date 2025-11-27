@@ -9,9 +9,11 @@ import androidx.appcompat.app.AppCompatActivity
 import coil.load
 import coil.request.ErrorResult
 import coil.request.ImageRequest
+import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahLetter
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
@@ -172,10 +174,12 @@ class HijaiyahDetailActivity : AppCompatActivity() {
         loadingProgress.visibility = View.VISIBLE
         
         try {
+            videoView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
             // Initialize ExoPlayer if not already initialized
             if (exoPlayer == null) {
                 exoPlayer = ExoPlayer.Builder(this).build().apply {
                     videoView.player = this
+                    videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
                 }
             }
             

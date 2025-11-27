@@ -16,15 +16,14 @@
 
 package com.google.mediapipe.examples.gesturerecognizer.features.latihan
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanJilid
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanPageData
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentLatihanJilidBinding
@@ -56,75 +55,49 @@ class LatihanJilidFragment : Fragment() {
         adapter = JilidListAdapter { jilid ->
             onJilidClicked(jilid)
         }
-        
-        // Cek apakah ada RecyclerView di layout, jika tidak gunakan click listeners lama
-        try {
-            binding.rvJilidList?.apply {
-                layoutManager = LinearLayoutManager(requireContext())
-                adapter = this@LatihanJilidFragment.adapter
-            }
-        } catch (e: Exception) {
-            // Fallback ke click listeners lama jika layout belum di-update
-            setupClickListeners()
+        binding.rvJilidList.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = this@LatihanJilidFragment.adapter
+            visibility = View.GONE
         }
     }
     
     private fun loadJilidData() {
         lifecycleScope.launch {
-            // Load jilid dari API dengan context
+            showLoading(true)
+            binding.tvJilidEmptyState.visibility = View.GONE
+            
             val success = LatihanPageData.loadJilidFromApi(requireContext())
             
             if (success) {
-                // Get data jilid
-                val jilidList = LatihanPageData.getAllJilid()
+                var jilidList = LatihanPageData.getAllJilid()
+                jilidList = jilidList
+                    .filter { it.id <= 2 }
+                    .sortedBy { it.id }
                 
-                // Update adapter jika RecyclerView ada
-                try {
-                    adapter.submitList(jilidList)
-                } catch (e: Exception) {
-                    // Jika RecyclerView tidak ada, tidak perlu update adapter
+                adapter.submitList(jilidList)
+                
+                if (jilidList.isEmpty()) {
+                    showEmptyState("Jilid belum tersedia.")
+                } else {
+                    binding.rvJilidList.visibility = View.VISIBLE
                 }
                 
                 android.util.Log.d("LatihanJilid", "Loaded ${jilidList.size} jilid from API")
             } else {
-                // Show error
-                Toast.makeText(
-                    requireContext(),
-                    "Gagal memuat data jilid. Pastikan Anda sudah login.",
-                    Toast.LENGTH_SHORT
-                ).show()
+                showEmptyState("Gagal memuat data jilid.\nPastikan Anda sudah login dan koneksi stabil.")
                 android.util.Log.e("LatihanJilid", "Failed to load jilid from API")
             }
+            
+            showLoading(false)
         }
     }
     
     private fun onJilidClicked(jilid: LatihanJilid) {
-        // Langsung navigasi ke halaman jilid
-        // Halaman akan di-load on-demand di LatihanFragment
         navigateToJilidHalaman(jilid.id, jilid.title)
-    }
-
-    private fun setupClickListeners() {
-        // Fallback untuk layout lama yang masih menggunakan CardView
-        try {
-            binding.cardJilid1?.setOnClickListener {
-                navigateToJilidHalaman(1, "Jilid 1")
-            }
-            
-            binding.cardJilid2?.setOnClickListener {
-                showLockedMessage()
-            }
-            
-            binding.cardJilid3?.setOnClickListener {
-                showLockedMessage()
-            }
-        } catch (e: Exception) {
-            // Ignore jika view tidak ada
-        }
     }
     
     private fun navigateToJilidHalaman(jilidId: Int, jilidTitle: String) {
-        // Navigate to LatihanFragment dengan jilidId
         val fragment = LatihanFragment().apply {
             arguments = Bundle().apply {
                 putInt("jilidId", jilidId)
@@ -133,17 +106,25 @@ class LatihanJilidFragment : Fragment() {
         }
         
         parentFragmentManager.beginTransaction()
-            .replace(android.R.id.content, fragment)
+            .replace(R.id.fragment_container, fragment)
             .addToBackStack(null)
             .commit()
     }
     
-    private fun showLockedMessage() {
-        Toast.makeText(
-            requireContext(),
-            "Jilid ini belum tersedia. Selesaikan jilid sebelumnya terlebih dahulu.",
-            Toast.LENGTH_SHORT
-        ).show()
+    private fun showLoading(isLoading: Boolean) {
+        binding.jilidLoadingIndicator.visibility = if (isLoading) View.VISIBLE else View.GONE
+        if (isLoading) {
+            binding.rvJilidList.visibility = View.GONE
+            binding.tvJilidEmptyState.visibility = View.GONE
+        }
+    }
+
+    private fun showEmptyState(message: String) {
+        binding.rvJilidList.visibility = View.GONE
+        binding.tvJilidEmptyState.apply {
+            text = message
+            visibility = View.VISIBLE
+        }
     }
 
     override fun onDestroyView() {
