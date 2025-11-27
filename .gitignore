@@ -124,7 +124,6 @@ yarn-error.log*
 
 # TensorFlow Lite / MediaPipe specific
 *.tflite
-models/
 assets/gesture_recognizer.task
 
 # Custom build outputs
