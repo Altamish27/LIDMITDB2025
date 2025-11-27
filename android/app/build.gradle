@@ -22,6 +22,12 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.9.10'
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
 android {
     namespace 'com.google.mediapipe.examples.gesturerecognizer'
     compileSdk 35
@@ -50,11 +56,13 @@ android {
         doNotStrip '**/*.so'
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+        // Use Java toolchain to ensure compatibility across different JDK versions
+        coreLibraryDesugaringEnabled true
     }
     kotlinOptions {
-        jvmTarget = '11'
+        jvmTarget = '17'
     }
     buildFeatures {
         viewBinding true
@@ -161,6 +169,8 @@ dependencies {
     implementation "com.google.android.exoplayer:exoplayer:2.19.1"
     implementation "com.google.android.exoplayer:exoplayer-ui:2.19.1"
 
+    // Core library desugaring for Java 8+ API support on older Android versions
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
 }
 
 

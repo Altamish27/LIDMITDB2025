@@ -120,24 +120,28 @@ class HijaiyahFragment : Fragment() {
         binding.btnCategoryHijaiyah.setOnClickListener {
             setActiveTab(0)
             currentCategory = 0
+            setupRecyclerView() // Update adapter with new diacritic type
             loadHijaiyahLetters()
         }
         
         binding.btnCategoryFathah.setOnClickListener {
             setActiveTab(1)
             currentCategory = 1
+            setupRecyclerView() // Update adapter with new diacritic type
             loadFathahLetters()
         }
         
         binding.btnCategoryKasrah.setOnClickListener {
             setActiveTab(2)
             currentCategory = 2
+            setupRecyclerView() // Update adapter with new diacritic type
             loadKasrahLetters()
         }
         
         binding.btnCategoryDhommah.setOnClickListener {
             setActiveTab(3)
             currentCategory = 3
+            setupRecyclerView() // Update adapter with new diacritic type
             loadDhammahLetters()
         }
     }
@@ -210,6 +214,14 @@ class HijaiyahFragment : Fragment() {
             3 -> "dhammah"
             else -> null
         }
+        
+        // Debug logging untuk diacritic type
+        android.util.Log.d("HijaiyahFragment", "=======================================")
+        android.util.Log.d("HijaiyahFragment", "SETUP RECYCLER VIEW DEBUG:")
+        android.util.Log.d("HijaiyahFragment", "=======================================")
+        android.util.Log.d("HijaiyahFragment", "currentCategory: $currentCategory")
+        android.util.Log.d("HijaiyahFragment", "diacriticType: '$diacriticType'")
+        android.util.Log.d("HijaiyahFragment", "=======================================")
         
         adapter = ArabicLetterAdapter({ letter ->
             navigateToGestureRecognition(letter)
