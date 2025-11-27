@@ -211,7 +211,7 @@ class SignQuranApiService {
                 if (response.pageDetail.isNotEmpty()) {
                     val sample = response.pageDetail.first()
                     val halamanNumericId = sample.hijaiyahHalamanId
-                    val description = "Halaman ${sample.nomorHalaman} - ${sample.latinName}"
+                    val description = "Halaman ${sample.nomorHalaman} - ${sample.hurufLatin}"
                     fallbackPages.add(
                         HalamanInfo(
                             halamanId = halamanNumericId,
@@ -300,7 +300,7 @@ class SignQuranApiService {
             val response = client.post("$BASE_URL/progress/halaman") {
                 headers.append("Authorization", "Bearer $authToken")
                 contentType(ContentType.Application.Json)
-                setBody(HalamanProgressRequest(halamanId.toInt(), numericUserId, status == 1))
+                setBody(HalamanProgressRequest(halamanId, if(status == 1) 1 else 0))
             }
             val body = response.body<HalamanProgressResponse>()
             android.util.Log.d("SignQuranAPI", "Progress saved successfully")
@@ -363,6 +363,34 @@ class SignQuranApiService {
             Result.success(body.progress)
         } catch (e: Exception) {
             android.util.Log.e("SignQuranAPI", "Submit letter progress error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Submit or update letter progress for a hijaiyah for individual user (not room-based)
+     */
+    suspend fun submitUserLetterProgress(
+        hijaiyahId: Int,
+        status: String,
+        authToken: String
+    ): Result<LetterProgressEntry> {
+        return try {
+            android.util.Log.d("SignQuranAPI", "Submitting user letter progress hijaiyah=$hijaiyahId, status=$status")
+            val response = client.post("$BASE_URL/progress/letter") {
+                headers.append("Authorization", "Bearer $authToken")
+                contentType(ContentType.Application.Json)
+                setBody(
+                    mapOf(
+                        "hijaiyahId" to hijaiyahId,
+                        "status" to status
+                    )
+                )
+            }
+            val body = response.body<LetterProgressSingleResponse>()
+            Result.success(body.progress)
+        } catch (e: Exception) {
+            android.util.Log.e("SignQuranAPI", "Submit user letter progress error: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -456,11 +484,7 @@ class SignQuranApiService {
             val response = client.post("$BASE_URL/enrollments/join") {
                 headers.append("Authorization", "Bearer $authToken")
                 contentType(ContentType.Application.Json)
-<<<<<<< HEAD
                 setBody(JoinRoomRequest(code))
-=======
-                setBody(JoinRoomRequest(code, numericUserId))
->>>>>>> origin/main
             }
             val body = response.body<JoinRoomResponse>()
             android.util.Log.d("SignQuranAPI", "Successfully joined room: ${body.room?.name ?: "Unknown"}")
@@ -506,7 +530,7 @@ class SignQuranApiService {
             
             android.util.Log.d("SignQuranAPI", "Enrolled rooms: ${body.rooms.size}")
             for ((index, room) in body.rooms.withIndex()) {
-                val displayCode = room.roomCode ?: room.code ?: "-"
+                val displayCode = room.code ?: "-"
                 android.util.Log.d("SignQuranAPI", "Room $index: ${room.name}, Code: $displayCode, Creator: ${room.createdByName}")
             }
             

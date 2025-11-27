@@ -1307,16 +1307,31 @@ class CameraFragment : Fragment(),
         }
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val roomId = activeRoomId ?: getActiveRoomId() ?: return@launch
-                apiService.submitLetterProgress(
-                    roomId = roomId,
+                // Try to submit user-based progress first
+                apiService.submitUserLetterProgress(
                     hijaiyahId = letterPosition,
                     status = "completed",
                     authToken = token
-                ).onSuccess {
-                    roomPreferenceManager.preferredRoomId = roomId
-                }.onFailure {
-                    Log.e(TAG, "Failed to submit letter progress: ${it.message}", it)
+                ).onSuccess { progressEntry ->
+                    Log.d(TAG, "User letter progress submitted successfully: ${progressEntry.hijaiyahId}")
+                }.onFailure { error ->
+                    Log.e(TAG, "Failed to submit user letter progress: ${error.message}", error)
+                    
+                    // Fallback to room-based progress if user-based fails
+                    val roomId = activeRoomId ?: getActiveRoomId()
+                    if (roomId != null) {
+                        apiService.submitLetterProgress(
+                            roomId = roomId,
+                            hijaiyahId = letterPosition,
+                            status = "completed",
+                            authToken = token
+                        ).onSuccess { progressEntry ->
+                            roomPreferenceManager.preferredRoomId = roomId
+                            Log.d(TAG, "Room letter progress submitted successfully: ${progressEntry.hijaiyahId}")
+                        }.onFailure { roomError ->
+                            Log.e(TAG, "Failed to submit room letter progress: ${roomError.message}", roomError)
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to submit letter progress: ${e.message}", e)

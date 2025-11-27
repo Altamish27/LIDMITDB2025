@@ -47,7 +47,7 @@ class MyRoomsActivity : AppCompatActivity() {
             val intent = Intent(this, RoomDetailActivity::class.java)
             intent.putExtra("room_id", room.roomId)
             intent.putExtra("room_name", room.name)
-            val identifier = room.roomCode ?: room.code ?: ""
+            val identifier = room.code ?: ""
             intent.putExtra("room_code", identifier)
             intent.putExtra("room_creator_name", room.createdByName)
             startActivity(intent)
@@ -92,7 +92,7 @@ class MyRoomsActivity : AppCompatActivity() {
             result.onSuccess { response ->
                 android.util.Log.d("MyRoomsActivity", "Rooms loaded successfully: ${response.rooms.size} rooms")
                 response.rooms.forEach { room ->
-                    val displayCode = room.roomCode ?: room.code ?: "-"
+                    val displayCode = room.code ?: "-"
                     android.util.Log.d("MyRoomsActivity", "Room: ${room.name} ($displayCode)")
                 }
                 

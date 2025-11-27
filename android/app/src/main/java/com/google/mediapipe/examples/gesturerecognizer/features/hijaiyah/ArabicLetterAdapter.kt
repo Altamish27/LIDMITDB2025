@@ -37,10 +37,18 @@ class ArabicLetterAdapter(
         private val arabicText: TextView = itemView.findViewById(R.id.arabicText)
         private val transliterationText: TextView = itemView.findViewById(R.id.transliterationText)
         private val container: View = itemView.findViewById(R.id.letterContainer)
+        private val letterProgress: android.widget.ProgressBar = itemView.findViewById(R.id.letterProgress)
         
         fun bind(letter: HijaiyahLetter) {
             arabicText.text = letter.arabic
             transliterationText.text = letter.transliteration
+            
+            // Set progress based on completion status
+            if (letter.isCompleted) {
+                letterProgress.progress = 100
+            } else {
+                letterProgress.progress = 0  // or some intermediate progress if tracking partial progress
+            }
             
             // Set colors based on completion status
             val context = itemView.context

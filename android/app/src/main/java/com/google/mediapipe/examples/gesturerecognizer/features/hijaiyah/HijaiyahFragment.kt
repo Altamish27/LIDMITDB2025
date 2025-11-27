@@ -238,6 +238,9 @@ class HijaiyahFragment : Fragment() {
                 }
                 
                 applyCategoryFilter(resetSearch = true)
+                
+                // Refresh the adapter with the latest data
+                adapter.updateLetters(displayedLetters)
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Gagal memuat huruf hijaiyah: ${e.message}", Toast.LENGTH_LONG).show()
             }
@@ -287,10 +290,9 @@ class HijaiyahFragment : Fragment() {
         if (token.isEmpty()) {
             return false
         }
-        val roomId = getActiveRoomId(token) ?: return false
         
         return try {
-            val result = apiService.getLetterProgress(authToken = token, roomId = roomId.toString())
+            val result = apiService.getLetterProgress(authToken = token)
             result.onSuccess { response ->
                 val completedPositions = response.progress
                     .filter { isCompletedStatus(it.status) }
@@ -371,8 +373,14 @@ class HijaiyahFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         // Refresh progress when returning from gesture recognition
-        loadLetters()
-        updateProgress()
+        lifecycleScope.launch {
+            val synced = syncServerProgressIfNeeded()
+            if (synced) {
+                masterLetters = progressManager.getLettersWithProgress()
+                applyCategoryFilter(resetSearch = false) // Keep current search state
+            }
+            updateProgress()
+        }
     }
 
     override fun onDestroyView() {

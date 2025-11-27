@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/letterContainer"
     android:layout_width="match_parent"
-    android:layout_height="100dp"
+    android:layout_height="120dp"
     android:layout_margin="4dp"
     android:background="@drawable/letter_container_default"
     android:gravity="center"
@@ -30,5 +30,17 @@
         android:textColor="@color/hijaiyah_navy"
         android:gravity="center"
         android:layout_marginTop="4dp" />
+
+    <ProgressBar
+        android:id="@+id/letterProgress"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginHorizontal="8dp"
+        android:progress="0"
+        android:progressTint="@color/hijaiyah_green"
+        android:progressBackgroundTint="@color/gray_light"
+        android:visibility="visible" />
 
 </LinearLayout>

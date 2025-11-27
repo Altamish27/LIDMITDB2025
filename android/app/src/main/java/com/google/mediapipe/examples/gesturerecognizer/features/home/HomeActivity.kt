@@ -51,7 +51,6 @@ import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanPageData
 import com.google.mediapipe.examples.gesturerecognizer.data.api.PrayerTimeApiService
 import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
-import com.google.mediapipe.examples.gesturerecognizer.data.models.AladhanTimingsData
 import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityHomeBinding
 import com.google.mediapipe.examples.gesturerecognizer.features.auth.LoginActivity
 import com.google.mediapipe.examples.gesturerecognizer.features.auth.ProfileActivity
@@ -477,12 +476,14 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private suspend fun requestPrayerTimings(lat: Double, lon: Double): Boolean {
-        val timingsData = prayerTimeApi.getTimings(lat, lon).getOrElse {
-            Log.e("HomeActivity", "Prayer API error: ${it.message}", it)
-            return false
+        return try {
+            val timingsData = prayerTimeApi.getTimings(lat, lon)
+            updatePrayerTimesUI(timingsData)
+            true
+        } catch (e: Exception) {
+            Log.e("HomeActivity", "Prayer API error: ${e.message}", e)
+            false
         }
-        updatePrayerTimesUI(timingsData)
-        return true
     }
 
     private suspend fun getAccurateLocation(): Location? {
@@ -530,15 +531,16 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun updatePrayerTimesUI(data: AladhanTimingsData) {
-        val times = data.timings
-        updatePrayerTimeText(
-            formatPrayerTime(times.fajr),
-            formatPrayerTime(times.dhuhr),
-            formatPrayerTime(times.asr),
-            formatPrayerTime(times.maghrib),
-            formatPrayerTime(times.isha)
-        )
+    private fun updatePrayerTimesUI(data: Any) {
+        // TODO: Implement prayer times UI update when AladhanTimingsData model is available
+        // val times = data.timings
+        // updatePrayerTimeText(
+        //     formatPrayerTime(times.fajr),
+        //     formatPrayerTime(times.dhuhr),
+        //     formatPrayerTime(times.asr),
+        //     formatPrayerTime(times.maghrib),
+        //     formatPrayerTime(times.isha)
+        // )
     }
 
     private fun updatePrayerTimeText(
