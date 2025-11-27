@@ -61,6 +61,10 @@
     <string name="huruf_hijai">HIJAIYAH HURUF</string>
     <string name="huruf">9 / 28 Huruf</string>
     <string name="mulai_belajar">Mulai Belajar</string>
+    <string name="title_panduan_hijaiyah_dasar">Panduan Hijaiyah Dasar</string>
+    <string name="title_panduan_fathah">Panduan Huruf Fathah</string>
+    <string name="title_panduan_kasrah">Panduan Huruf Kasrah</string>
+    <string name="title_panduan_dhammah">Panduan Huruf Dhammah</string>
     <string name="dropdown_hint">Hijaiyah</string>
     
     <!-- Dropdown Options -->

@@ -34,6 +34,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.mediapipe.examples.gesturerecognizer.core.helper.GestureRecognizerHelper
@@ -54,10 +55,14 @@ import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressMana
 import com.google.mediapipe.examples.gesturerecognizer.data.FathahData
 import com.google.mediapipe.examples.gesturerecognizer.data.KasrahData
 import com.google.mediapipe.examples.gesturerecognizer.data.DhammahData
+import com.google.mediapipe.examples.gesturerecognizer.data.api.SignQuranApiService
+import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
+import com.google.mediapipe.examples.gesturerecognizer.data.manager.RoomPreferenceManager
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.launch
 
 class CameraFragment : Fragment(),
     GestureRecognizerHelper.GestureRecognizerListener,
@@ -105,6 +110,10 @@ class CameraFragment : Fragment(),
     private var resetTimer: CountDownTimer? = null
     private var countdownTimer: CountDownTimer? = null
     private lateinit var progressManager: HijaiyahProgressManager
+    private lateinit var authManager: AuthManager
+    private lateinit var roomPreferenceManager: RoomPreferenceManager
+    private val apiService = SignQuranApiService.getInstance()
+    private var activeRoomId: Int? = null
     private var isDetecting = false
     private var currentGesture: String? = null
     private var gestureStartTime = 0L
@@ -234,8 +243,14 @@ class CameraFragment : Fragment(),
 
         // Initialize our background executor
         backgroundExecutor = Executors.newSingleThreadExecutor()
-    // Initialize progress manager for marking letters completed
-    progressManager = HijaiyahProgressManager(requireContext())
+        // Initialize managers
+        val ctx = requireContext()
+        progressManager = HijaiyahProgressManager(ctx)
+        authManager = AuthManager(ctx)
+        roomPreferenceManager = RoomPreferenceManager(ctx)
+        viewLifecycleOwner.lifecycleScope.launch {
+            activeRoomId = getActiveRoomId()
+        }
         
         // Initialize trajectory system
         trajectoryBuffer = TrajectoryRingBuffer()
@@ -1281,6 +1296,33 @@ class CameraFragment : Fragment(),
         // Show success result
         showResult(true)
     }
+
+    private fun submitLetterProgressRemote(letterPosition: Int) {
+        if (!this::authManager.isInitialized || !authManager.isLoggedIn) {
+            return
+        }
+        val token = authManager.authToken
+        if (token.isEmpty()) {
+            return
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val roomId = activeRoomId ?: getActiveRoomId() ?: return@launch
+                apiService.submitLetterProgress(
+                    roomId = roomId,
+                    hijaiyahId = letterPosition,
+                    status = "completed",
+                    authToken = token
+                ).onSuccess {
+                    roomPreferenceManager.preferredRoomId = roomId
+                }.onFailure {
+                    Log.e(TAG, "Failed to submit letter progress: ${it.message}", it)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to submit letter progress: ${e.message}", e)
+            }
+        }
+    }
     
     private fun showResult(success: Boolean) {
         fragmentCameraBinding.overlayResult.visibility = View.VISIBLE
@@ -1294,6 +1336,7 @@ class CameraFragment : Fragment(),
             val letterPosition = arguments?.getInt("letterPosition", -1) ?: -1
             if (letterPosition > 0) {
                 progressManager.markLetterCompleted(letterPosition)
+                submitLetterProgressRemote(letterPosition)
                 Log.d(TAG, "Letter $letterPosition ($targetLetterName) marked as completed")
             }
             
@@ -1547,6 +1590,20 @@ class CameraFragment : Fragment(),
             preview?.setSurfaceProvider(fragmentCameraBinding.viewFinder.surfaceProvider)
         } catch (exc: Exception) {
             Log.e(TAG, "Use case binding failed", exc)
+        }
+    }
+
+    private suspend fun getActiveRoomId(): Int? {
+        roomPreferenceManager.preferredRoomId?.let { return it }
+        if (!authManager.isLoggedIn || authManager.authToken.isEmpty()) return null
+        return try {
+            val roomsResult = apiService.getMyRooms(authManager.authToken)
+            val roomId = roomsResult.getOrNull()?.rooms?.firstOrNull()?.roomId
+            roomId?.let { roomPreferenceManager.preferredRoomId = it }
+            roomId
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to fetch rooms: ${e.message}", e)
+            null
         }
     }
 

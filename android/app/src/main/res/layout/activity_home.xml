@@ -154,6 +154,7 @@
                                 android:tint="@color/dark_blue_gray" />
 
                             <TextView
+                                android:id="@+id/tv_location"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Kuningan, Jawa Barat"
@@ -239,6 +240,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:layout_marginBottom="4dp" />
                     <TextView
+                        android:id="@+id/tv_subuh_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="04.30"
@@ -264,6 +266,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:layout_marginBottom="4dp" />
                     <TextView
+                        android:id="@+id/tv_dzuhur_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="12.05"
@@ -289,6 +292,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:layout_marginBottom="4dp" />
                     <TextView
+                        android:id="@+id/tv_ashar_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="15.12"
@@ -314,6 +318,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:layout_marginBottom="4dp" />
                     <TextView
+                        android:id="@+id/tv_maghrib_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="18.10"
@@ -339,6 +344,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:layout_marginBottom="4dp" />
                     <TextView
+                        android:id="@+id/tv_isya_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="19.12"

@@ -1,6 +1,5 @@
 package com.google.mediapipe.examples.gesturerecognizer.features.hijaiyah
 
-import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,17 +7,16 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.mediapipe.examples.gesturerecognizer.R
-import com.google.mediapipe.examples.gesturerecognizer.data.ArabicLetter
-import com.google.mediapipe.examples.gesturerecognizer.features.guide.LetterGuideActivity
+import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahLetter
+import com.google.mediapipe.examples.gesturerecognizer.core.main.MainActivity
 
 class ArabicLetterAdapter(
-    private val onLetterClick: (ArabicLetter) -> Unit,
-    private val diacriticType: String? = null // "fathah", "kasrah", "dhammah", or null for hijaiyah
+    private val onLetterClick: (HijaiyahLetter) -> Unit
 ) : RecyclerView.Adapter<ArabicLetterAdapter.LetterViewHolder>() {
     
-    private var letters: List<ArabicLetter> = emptyList()
+    private var letters: List<HijaiyahLetter> = emptyList()
     
-    fun updateLetters(newLetters: List<ArabicLetter>) {
+    fun updateLetters(newLetters: List<HijaiyahLetter>) {
         letters = newLetters
         notifyDataSetChanged()
     }
@@ -40,7 +38,7 @@ class ArabicLetterAdapter(
         private val transliterationText: TextView = itemView.findViewById(R.id.transliterationText)
         private val container: View = itemView.findViewById(R.id.letterContainer)
         
-        fun bind(letter: ArabicLetter) {
+        fun bind(letter: HijaiyahLetter) {
             arabicText.text = letter.arabic
             transliterationText.text = letter.transliteration
             
@@ -59,15 +57,17 @@ class ArabicLetterAdapter(
             }
             
             itemView.setOnClickListener {
-                // Open guide activity first, not directly camera
+                onLetterClick(letter)
                 val context = itemView.context
-                val intent = Intent(context, LetterGuideActivity::class.java).apply {
+                val intent = android.content.Intent(context, MainActivity::class.java).apply {
+                    putExtra("openCamera", true)
                     putExtra("selectedLetter", letter.arabic)
                     putExtra("target_letter", letter.arabic)
                     putExtra("letterName", letter.transliteration)
                     putExtra("target_letter_name", letter.transliteration)
-                    putExtra("letterType", diacriticType ?: "hijaiyah")
-                    putExtra("diacritic", diacriticType)
+                    val diacritic = letter.diacritic ?: "hijaiyah"
+                    putExtra("letterType", diacritic)
+                    putExtra("diacritic", letter.diacritic)
                     putExtra("letterPosition", letter.position)
                 }
                 context.startActivity(intent)

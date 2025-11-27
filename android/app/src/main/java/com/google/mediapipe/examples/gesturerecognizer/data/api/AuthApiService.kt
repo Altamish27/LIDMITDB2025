@@ -11,6 +11,12 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import io.ktor.client.statement.bodyAsText
 
 /**
  * Authentication API Service for the SignQuran app
@@ -54,8 +60,14 @@ class AuthApiService {
                 contentType(ContentType.Application.Json)
                 setBody(RegisterRequest(name, email, password, role))
             }
-            val body = response.body<RegisterResponse>()
-            Result.success(body)
+            
+            if (response.status.value in 200..299) {
+                val body = response.body<RegisterResponse>()
+                Result.success(body)
+            } else {
+                val errorMessage = response.extractErrorMessage()
+                Result.failure(Exception(errorMessage))
+            }
         } catch (e: Exception) {
             android.util.Log.e("AuthApiService", "Registration error: ${e.message}", e)
             Result.failure(e)
@@ -81,13 +93,7 @@ class AuthApiService {
                 android.util.Log.d("AuthApiService", "Login successful for: $email")
                 Result.success(body)
             } else {
-                // Handle error responses
-                val errorMessage = when (response.status.value) {
-                    400 -> "Email and password are required"
-                    401 -> "Email or password is incorrect"
-                    403 -> "Please verify your email before logging in"
-                    else -> "Login failed with status ${response.status}"
-                }
+                val errorMessage = response.extractErrorMessage()
                 android.util.Log.e("AuthApiService", "Login failed: $errorMessage")
                 Result.failure(Exception(errorMessage))
             }
@@ -167,5 +173,25 @@ class AuthApiService {
      */
     fun close() {
         client.close()
+    }
+    
+    private suspend fun HttpResponse.extractErrorMessage(): String {
+        return try {
+            val raw = bodyAsText()
+            if (raw.isBlank()) {
+                "Permintaan gagal (${status.value})"
+            } else {
+                val jsonElement = Json.parseToJsonElement(raw)
+                if (jsonElement is JsonObject) {
+                    jsonElement["message"]?.jsonPrimitive?.contentOrNull
+                        ?: jsonElement["error"]?.jsonPrimitive?.contentOrNull
+                        ?: raw
+                } else {
+                    raw
+                }
+            }
+        } catch (e: Exception) {
+            "Permintaan gagal (${status.value})"
+        }
     }
 }

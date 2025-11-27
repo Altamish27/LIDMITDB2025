@@ -46,6 +46,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import android.view.View
 import android.view.animation.AnimationUtils
+import com.google.android.material.snackbar.Snackbar
 import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityLatihanPracticeBinding
 import com.google.mediapipe.examples.gesturerecognizer.features.camera.fragment.CameraFragment
@@ -90,8 +91,7 @@ class LatihanPracticeActivity : AppCompatActivity() {
     private var sequenceMode = false
     // Track completed letter positions in this activity session
     private val completedPositions = mutableSetOf<Int>()
-    // Auto-start camera on first launch of this activity
-    private var firstLaunch = true
+    private var hasStartedSequenceForPage = false
     
     // Current page data
     private var currentHalaman: LatihanHalaman? = null
@@ -146,7 +146,7 @@ class LatihanPracticeActivity : AppCompatActivity() {
                         
                         // Check if current baris is completed and auto advance if possible
                         if (isCurrentBarisCompleted() && canGoNextBaris()) {
-                            Toast.makeText(this@LatihanPracticeActivity, "Baris selesai! Auto pindah ke baris selanjutnya...", Toast.LENGTH_SHORT).show()
+                            showInfoMessage("Baris selesai! Pindah ke baris berikutnya...")
                             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                                 currentBarisId++
                                 loadCurrentBaris()
@@ -444,6 +444,8 @@ class LatihanPracticeActivity : AppCompatActivity() {
             
             // Debug info untuk memastikan completed positions ter-track
             android.util.Log.d("LatihanPractice", "Baris $currentBarisId loaded. Completed positions: $completedPositions")
+
+            triggerAutoSequenceIfNeeded()
         } ?: run {
             android.util.Log.w("LatihanPractice", "currentBaris is null in loadCurrentBaris()")
             Toast.makeText(this, "Error: Tidak dapat memuat baris", Toast.LENGTH_SHORT).show()
@@ -500,15 +502,15 @@ class LatihanPracticeActivity : AppCompatActivity() {
     }
 
     private fun startSequenceFromCurrentBaris() {
+        sequenceMode = true
         currentBaris?.let { baris ->
-            // find first not-completed letter
             val next = baris.hurufList.firstOrNull { !completedPositions.contains(it.position) }
             if (next == null) {
-                Toast.makeText(this, "Semua huruf di baris ini sudah selesai", Toast.LENGTH_SHORT).show()
+                showInfoMessage("Semua huruf di baris ini sudah selesai")
                 return
             }
             embedCameraForLetter(next, true)
-        }
+        } ?: showErrorMessage("Baris tidak ditemukan")
     }
 
     private fun advanceSequence(completedLetterPosition: Int) {
@@ -530,7 +532,7 @@ class LatihanPracticeActivity : AppCompatActivity() {
             } else {
                 // finished baris, check if we can auto advance to next baris
                 if (canGoNextBaris()) {
-                    Toast.makeText(this, "Selesai baris ini. Pindah ke baris selanjutnya...", Toast.LENGTH_SHORT).show()
+                    showInfoMessage("Selesai baris ini. Pindah ke baris selanjutnya...")
                     // Auto advance to next baris after a short delay
                     hideEmbeddedCamera()
                     currentBarisId++
@@ -543,7 +545,7 @@ class LatihanPracticeActivity : AppCompatActivity() {
                     }, 1000) // 1 second delay
                 } else {
                     // No more baris available
-                    Toast.makeText(this, "Selesai halaman ini!", Toast.LENGTH_SHORT).show()
+                    showInfoMessage("Halaman selesai! Menyimpan progress...")
                     sequenceMode = false
                     hideEmbeddedCamera()
                     
@@ -597,6 +599,20 @@ class LatihanPracticeActivity : AppCompatActivity() {
         // }
     }
 
+    private fun triggerAutoSequenceIfNeeded() {
+        if (hasStartedSequenceForPage) return
+        val baris = currentBaris ?: return
+        val nextHuruf = baris.hurufList.firstOrNull { !completedPositions.contains(it.position) }
+        if (nextHuruf != null) {
+            sequenceMode = true
+            hasStartedSequenceForPage = true
+            showInfoMessage("Mulai dengan huruf ${nextHuruf.arabic}")
+            embedCameraForLetter(nextHuruf, true)
+        } else if (isCurrentHalamanCompleted()) {
+            showInfoMessage("Halaman ini sudah selesai.")
+        }
+    }
+
     // Helper function to check if current baris is completed
     private fun isCurrentBarisCompleted(): Boolean {
         return currentBaris?.hurufList?.all { completedPositions.contains(it.position) } ?: false
@@ -619,6 +635,7 @@ class LatihanPracticeActivity : AppCompatActivity() {
     private fun showPageCompletionDialog() {
         // Save progress to API
         savePageCompletion()
+        showInfoMessage("Halaman $currentHalamanId selesai! Menyimpan progress...")
         
         val dialog = AlertDialog.Builder(this)
         val dialogView = layoutInflater.inflate(R.layout.dialog_page_completed, null)
@@ -651,6 +668,7 @@ class LatihanPracticeActivity : AppCompatActivity() {
      */
     private fun checkPageCompletionStatus() {
         lifecycleScope.launch {
+            hasStartedSequenceForPage = false
             try {
                 // Generate halaman_id in format "jilidId-halamanId"
                 val halamanId = "$currentJilidId-$currentHalamanId"
@@ -665,12 +683,7 @@ class LatihanPracticeActivity : AppCompatActivity() {
                         
                         runOnUiThread {
                             if (isPageAlreadyCompleted) {
-                                // Show completion badge or indicator
-                                Toast.makeText(
-                                    this@LatihanPracticeActivity,
-                                    "✓ Halaman ini sudah selesai",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                showInfoMessage("✓ Halaman ini sudah selesai. Anda bisa mengulang untuk latihan.")
                             }
                         }
                     }
@@ -703,40 +716,31 @@ class LatihanPracticeActivity : AppCompatActivity() {
                 val halamanId = "$currentJilidId-$currentHalamanId"
                 
                 // Only save if user is logged in and page not already completed
-                if (authManager.isLoggedIn && authManager.authToken.isNotEmpty() && !isPageAlreadyCompleted) {
+                val numericUserId = authManager.userId.toIntOrNull()
+                if (authManager.isLoggedIn && authManager.authToken.isNotEmpty() && !isPageAlreadyCompleted && numericUserId != null) {
                     val result = apiService.saveHalamanProgress(
                         halamanId = halamanId,
                         status = 1, // 1 = completed
                         authToken = authManager.authToken,
-                        userId = authManager.userId
+                        userId = numericUserId.toString()
                     )
                     
                     result.onSuccess { response ->
                         android.util.Log.d("LatihanPractice", "✓ Progress saved successfully")
                         isPageAlreadyCompleted = true
                         
-                        runOnUiThread {
-                            Toast.makeText(
-                                this@LatihanPracticeActivity,
-                                "Progress tersimpan!",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
+                        showInfoMessage("Progress halaman tersimpan.")
                     }
                     
                     result.onFailure { error ->
                         android.util.Log.e("LatihanPractice", "Failed to save progress: ${error.message}")
-                        runOnUiThread {
-                            Toast.makeText(
-                                this@LatihanPracticeActivity,
-                                "Gagal menyimpan progress",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
+                        showErrorMessage("Gagal menyimpan progress halaman.")
                     }
                 } else {
                     if (!authManager.isLoggedIn) {
                         android.util.Log.d("LatihanPractice", "User not logged in, progress not saved")
+                    } else if (numericUserId == null) {
+                        android.util.Log.w("LatihanPractice", "User ID invalid, cannot save progress")
                     } else if (isPageAlreadyCompleted) {
                         android.util.Log.d("LatihanPractice", "Page already completed, skipping save")
                     }
@@ -756,6 +760,7 @@ class LatihanPracticeActivity : AppCompatActivity() {
             // Next page available, navigate to it
             currentHalamanId = nextHalamanId
             currentBarisId = 1 // Reset to first baris of new page
+            hasStartedSequenceForPage = false
             
             // Clear completed positions for new page to avoid conflicts
             // Keep only positions that might be relevant for the new page
@@ -765,7 +770,7 @@ class LatihanPracticeActivity : AppCompatActivity() {
             loadPageData()
             loadCurrentBaris()
             
-            Toast.makeText(this, "Pindah ke Halaman $currentHalamanId", Toast.LENGTH_SHORT).show()
+            showInfoMessage("Pindah ke Halaman $currentHalamanId")
             
             // Auto start sequence mode for new page
             sequenceMode = true
@@ -780,6 +785,22 @@ class LatihanPracticeActivity : AppCompatActivity() {
                 .setPositiveButton("OK") { _, _ ->
                     finish() // Go back to page list
                 }
+                .show()
+        }
+    }
+
+    private fun showInfoMessage(message: String) {
+        runOnUiThread {
+            Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
+                .setTextMaxLines(3)
+                .show()
+        }
+    }
+
+    private fun showErrorMessage(message: String) {
+        runOnUiThread {
+            Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
+                .setTextMaxLines(4)
                 .show()
         }
     }

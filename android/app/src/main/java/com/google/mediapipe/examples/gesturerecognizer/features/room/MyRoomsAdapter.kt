@@ -35,8 +35,11 @@ class MyRoomsAdapter(
         
         fun bind(room: EnrolledRoom) {
             binding.tvRoomName.text = room.name
-            binding.tvRoomDescription.text = room.description
-            binding.tvRoomCode.text = "Kode: ${room.code}"
+            binding.tvRoomDescription.text = room.description ?: "Tidak ada deskripsi"
+            val displayCode = room.roomCode?.takeIf { it.isNotBlank() }
+                ?: room.code?.takeIf { it.isNotBlank() }
+                ?: "-"
+            binding.tvRoomCode.text = "Kode: $displayCode"
             binding.tvGuruName.text = "Guru: ${room.createdByName}"
             
             // Format joined date

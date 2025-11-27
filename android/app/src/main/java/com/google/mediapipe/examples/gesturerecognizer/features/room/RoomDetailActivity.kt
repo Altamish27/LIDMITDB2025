@@ -19,6 +19,8 @@ class RoomDetailActivity : AppCompatActivity() {
     private lateinit var membersAdapter: RoomMembersAdapter
     private var roomId: Int = 0
     private var roomName: String = ""
+    private var roomCode: String? = null
+    private var roomCreatorName: String? = null
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +31,8 @@ class RoomDetailActivity : AppCompatActivity() {
         
         roomId = intent.getIntExtra("room_id", 0)
         roomName = intent.getStringExtra("room_name") ?: "Room Detail"
+        roomCode = intent.getStringExtra("room_code")
+        roomCreatorName = intent.getStringExtra("room_creator_name")
         
         setupUI()
         setupRecyclerView()
@@ -69,19 +73,36 @@ class RoomDetailActivity : AppCompatActivity() {
         binding.progressBar.visibility = View.VISIBLE
         
         lifecycleScope.launch {
-            val result = apiService.getRoomMembers(roomId, authToken)
+            val result = apiService.getRoomMembers(roomId, roomCode, authToken)
             
             binding.progressBar.visibility = View.GONE
             
             result.onSuccess { response ->
-                val guru = response.members.filter { it.role == "guru" }
-                val murid = response.members.filter { it.role == "murid" }
+                val members = response.members.toMutableList()
+                
+                if (roomCreatorName?.isNotBlank() == true &&
+                    members.none { it.isCreator || it.role.equals("guru", true) }) {
+                    members.add(
+                        0,
+                        com.google.mediapipe.examples.gesturerecognizer.data.models.RoomMember(
+                            userId = "creator-$roomId",
+                            name = roomCreatorName ?: "Guru",
+                            email = "",
+                            role = "guru",
+                            isCreator = true,
+                            joinedAt = ""
+                        )
+                    )
+                }
+                
+                val guru = members.filter { it.role.equals("guru", true) || it.isCreator }
+                val murid = members.filter { it.role.equals("murid", true) && !it.isCreator }
                 
                 binding.tvGuruCount.text = "${guru.size} Guru"
                 binding.tvMuridCount.text = "${murid.size} Murid"
-                binding.tvTotalMembers.text = "Total ${response.members.size} anggota"
+                binding.tvTotalMembers.text = "Total ${members.size} anggota"
                 
-                membersAdapter.submitList(response.members)
+                membersAdapter.submitList(members)
             }.onFailure { error ->
                 Toast.makeText(
                     this@RoomDetailActivity,

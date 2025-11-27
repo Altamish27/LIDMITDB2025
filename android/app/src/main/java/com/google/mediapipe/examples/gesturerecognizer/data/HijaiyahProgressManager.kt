@@ -23,7 +23,7 @@ class HijaiyahProgressManager(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("hijaiyah_progress", Context.MODE_PRIVATE)
     
     fun markLetterCompleted(letterPosition: Int) {
-        prefs.edit().putBoolean("letter_$letterPosition", true).apply()
+        setLetterCompletion(letterPosition, true)
     }
     
     fun isLetterCompleted(letterPosition: Int): Boolean {
@@ -50,5 +50,22 @@ class HijaiyahProgressManager(context: Context) {
         return HijaiyahData.getAllLetters().map { letter ->
             letter.copy(isCompleted = isLetterCompleted(letter.position))
         }
+    }
+
+    fun setLetterCompletion(letterPosition: Int, isCompleted: Boolean) {
+        prefs.edit().putBoolean("letter_$letterPosition", isCompleted).apply()
+    }
+    
+    fun replaceCompletedLetters(completedPositions: Set<Int>) {
+        val editor = prefs.edit()
+        // Clear existing flags
+        prefs.all.keys
+            .filter { it.startsWith("letter_") }
+            .forEach { editor.remove(it) }
+        // Apply new snapshot
+        completedPositions.forEach { position ->
+            editor.putBoolean("letter_$position", true)
+        }
+        editor.apply()
     }
 }

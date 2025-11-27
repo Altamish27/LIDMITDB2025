@@ -112,32 +112,18 @@ class RegisterActivity : AppCompatActivity() {
                             
                             if (result.isSuccess) {
                                 val registerResponse = result.getOrNull()
-                                if (registerResponse != null) {
-                                    Toast.makeText(this@RegisterActivity, 
-                                        "Registrasi berhasil! Silakan periksa email Anda untuk verifikasi.", 
-                                        Toast.LENGTH_LONG).show()
-                                    
-                                    val intent = Intent(this@RegisterActivity, LoginActivity::class.java)
-                                    startActivity(intent)
-                                    finish()
-                                } else {
-                                    Toast.makeText(this@RegisterActivity, 
-                                        "Registrasi gagal: Data tidak valid", 
-                                        Toast.LENGTH_SHORT).show()
-                                }
+                                val message = registerResponse?.message
+                                    ?: "Registrasi berhasil! Silakan periksa email Anda untuk verifikasi."
+                                
+                                Toast.makeText(this@RegisterActivity, message, Toast.LENGTH_LONG).show()
+                                
+                                val intent = Intent(this@RegisterActivity, LoginActivity::class.java)
+                                startActivity(intent)
+                                finish()
                             } else {
-                                // Extract error message if possible
-                                val exception = result.exceptionOrNull()
-                                if (exception?.message?.contains("400") == true && 
-                                    exception.message?.contains("Email already exists") == true) {
-                                    Toast.makeText(this@RegisterActivity, 
-                                        "Email sudah terdaftar", 
-                                        Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(this@RegisterActivity, 
-                                        "Registrasi gagal: ${exception?.message}", 
-                                        Toast.LENGTH_SHORT).show()
-                                }
+                                val errorMessage = result.exceptionOrNull()?.message
+                                    ?: "Registrasi gagal. Silakan coba lagi."
+                                Toast.makeText(this@RegisterActivity, errorMessage, Toast.LENGTH_SHORT).show()
                             }
                         }
                     } catch (e: Exception) {

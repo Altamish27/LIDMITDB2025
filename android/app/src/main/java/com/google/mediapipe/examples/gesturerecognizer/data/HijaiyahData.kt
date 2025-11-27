@@ -27,40 +27,47 @@ data class HijaiyahLetter(
     override val gestureName: String?,
     override var isCompleted: Boolean = false,
     override val position: Int,
-    val assets: String? = null  // URL to image/video asset or null
+    val assets: String? = null,  // URL to image/video asset or null
+    val diacritic: String? = null
 ) : ArabicLetter
 
 object HijaiyahData {
     // Mapping dari latin name API ke gesture name
     private val latinToGestureMap = mapOf(
-        "Alif" to "01_alif",
-        "Ba" to "02_ba",
-        "Ta" to "03_ta",
-        "Tsa" to "04_tsa",
-        "Jim" to "05_jim",
-        "Ha" to "06_ha",
-        "Kha" to "07_kha",
-        "Dal" to "08_dal",
-        "Dzal" to "09_dzal",
-        "Ra" to "10_ra",
-        "Za" to "11_za",
-        "Sin" to "12_sin",
-        "Syin" to "13_syin",
-        "Shod" to "14_shad",
-        "Dhod" to "15_dhad",
-        "Tho" to "16_tha",
-        "Zho" to "17_zha",
-        "Ain" to "18_ain",
-        "Ghoin" to "19_ghain",
-        "Fa" to "20_fa",
-        "Qof" to "21_qaf",
-        "Kaf" to "22_kaf",
-        "Lam" to "23_lam",
-        "Mim" to "24_mim",
-        "Nun" to "25_nun",
-        "Wau" to "26_waw",
-        "Ha'" to "27_ha'",
-        "Ya" to "28_ya"
+        "Alif" to "Alif",
+        "Ba" to "Ba",
+        "Ta" to "Ta",
+        "Tsa" to "Tsa",
+        "Jim" to "Jim",
+        "Ha" to "Ha",
+        "Kha" to "Kha",
+        "Dal" to "Dal",
+        "Dzal" to "Dzal",
+        "Ra" to "Ra",
+        "Za" to "Zai",
+        "Sin" to "Sin",
+        "Syin" to "Syin",
+        "Shod" to "Sad",
+        "Dhod" to "Dad",
+        "Tho" to "Tha",
+        "Zho" to "Zha",
+        "Ain" to "Ain",
+        "Ghoin" to "Gain",
+        "Fa" to "Fa",
+        "Qof" to "Qaf",
+        "Kaf" to "Kaf",
+        "Lam" to "Lam",
+        "Mim" to "Mim",
+        "Nun" to "Nun",
+        "Wau" to "Waw",
+        "Ha'" to "Ha Besar",
+        "Ya" to "Ya",
+        "Shad" to "Sad",
+        "Dhad" to "Dad",
+        "Zaa" to "Zai",
+        "Ghain" to "Gain",
+        "Kho" to "Kha",
+        "Hamzah" to "Ha Besar"
     )
     
     // Cache untuk menyimpan data dari API
@@ -111,15 +118,42 @@ object HijaiyahData {
      * Mapping dari API letter ke HijaiyahLetter
      */
     private fun mapApiLetterToHijaiyahLetter(apiLetter: HijaiyahLetterApi): HijaiyahLetter {
-        val gestureName = latinToGestureMap[apiLetter.latinName]
+        val (baseLatinName, diacriticType) = extractBaseNameAndDiacritic(apiLetter.latinName)
+        val gestureName = latinToGestureMap[baseLatinName] ?: baseLatinName
         return HijaiyahLetter(
             arabic = apiLetter.arabicChar,
             transliteration = apiLetter.latinName,
             gestureName = gestureName,
             isCompleted = false,
             position = apiLetter.ordinal,
-            assets = null  // Assets not available from API yet
+            assets = apiLetter.assets,
+            diacritic = diacriticType
         )
+    }
+    
+    private fun extractBaseNameAndDiacritic(rawName: String): Pair<String, String?> {
+        val lower = rawName.lowercase()
+        val diacritic = when {
+            lower.contains("fathah") -> "fathah"
+            lower.contains("kasrah") -> "kasrah"
+            lower.contains("dhammah") || lower.contains("dhommah") || lower.contains("dhomah") -> "dhammah"
+            lower.contains("dammah") -> "dhammah"
+            else -> null
+        }
+        
+        if (diacritic == null) {
+            return rawName to null
+        }
+        
+        val base = rawName.replace("Fathah", "", ignoreCase = true)
+            .replace("Kasrah", "", ignoreCase = true)
+            .replace("Dhammah", "", ignoreCase = true)
+            .replace("Dhommah", "", ignoreCase = true)
+            .replace("Dhomah", "", ignoreCase = true)
+            .replace("Tanwin", "", ignoreCase = true)
+            .trim()
+        
+        return base.ifEmpty { rawName } to diacritic
     }
     
     fun getAllLetters(): List<HijaiyahLetter> {

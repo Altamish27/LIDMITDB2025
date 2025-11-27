@@ -15,42 +15,83 @@
  */
 package com.google.mediapipe.examples.gesturerecognizer.features.home
 
+import android.Manifest
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Typeface
+import android.location.Geocoder
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.BounceInterpolator
-import android.view.animation.OvershootInterpolator
 import android.view.animation.DecelerateInterpolator
+import android.view.animation.OvershootInterpolator
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.mediapipe.examples.gesturerecognizer.R
-import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityHomeBinding
-import com.google.mediapipe.examples.gesturerecognizer.core.main.MainActivity
-import com.google.mediapipe.examples.gesturerecognizer.features.panduan.PanduanHijaiyahActivity
-import com.google.mediapipe.examples.gesturerecognizer.features.surat.SuratListActivity
-import com.google.mediapipe.examples.gesturerecognizer.features.auth.ProfileActivity
-import com.google.mediapipe.examples.gesturerecognizer.features.auth.LoginActivity
 import com.google.mediapipe.examples.gesturerecognizer.core.animation.ViewAnimationUtils
+import com.google.mediapipe.examples.gesturerecognizer.core.main.MainActivity
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanPageData
+import com.google.mediapipe.examples.gesturerecognizer.data.api.PrayerTimeApiService
 import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
+import com.google.mediapipe.examples.gesturerecognizer.data.models.AladhanTimingsData
+import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityHomeBinding
+import com.google.mediapipe.examples.gesturerecognizer.features.auth.LoginActivity
+import com.google.mediapipe.examples.gesturerecognizer.features.auth.ProfileActivity
+import com.google.mediapipe.examples.gesturerecognizer.features.panduan.PanduanHijaiyahActivity
+import com.google.mediapipe.examples.gesturerecognizer.features.surat.SuratListActivity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHomeBinding
     private lateinit var authManager: AuthManager
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private val prayerTimeApi = PrayerTimeApiService.getInstance()
+    private var clockJob: Job? = null
+    private var prayerJob: Job? = null
+
+    private val locationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions.any { it.value }
+        if (granted) {
+            fetchPrayerScheduleWithLocation()
+        } else {
+            prayerJob?.cancel()
+            prayerJob = lifecycleScope.launch {
+                setPrayerLoadingState("Menggunakan lokasi default")
+                binding.tvLocation.text = DEFAULT_LOCATION_LABEL
+                requestPrayerTimings(DEFAULT_LATITUDE, DEFAULT_LONGITUDE)
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,6 +106,7 @@ class HomeActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         authManager = AuthManager(this)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         // Load data dari API di background
         loadApiData()
@@ -73,6 +115,8 @@ class HomeActivity : AppCompatActivity() {
         setupClickListeners()
         setupCustomFonts()
         setupSidebar()
+        startClockTicker()
+        startPrayerScheduleFlow()
         
         // Delay animations to ensure views are laid out properly
         binding.root.post {
@@ -380,6 +424,153 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
+    private fun startClockTicker() {
+        clockJob?.cancel()
+        val formatter = DateTimeFormatter.ofPattern("HH.mm")
+        clockJob = lifecycleScope.launch {
+            while (isActive) {
+                val now = LocalTime.now(ZoneId.systemDefault())
+                binding.tvCurrentTime.text = now.format(formatter)
+                delay(30_000)
+            }
+        }
+    }
+
+    private fun startPrayerScheduleFlow() {
+        if (hasLocationPermission()) {
+            fetchPrayerScheduleWithLocation()
+        } else {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        val fine = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+        val coarse = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+        return fine == PackageManager.PERMISSION_GRANTED || coarse == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun fetchPrayerScheduleWithLocation() {
+        prayerJob?.cancel()
+        prayerJob = lifecycleScope.launch {
+            setPrayerLoadingState("Mencari lokasi...")
+            val location = getAccurateLocation()
+            if (location != null) {
+                val label = reverseGeocodeLabel(location) ?: DEFAULT_LOCATION_LABEL
+                binding.tvLocation.text = label
+                val success = requestPrayerTimings(location.latitude, location.longitude)
+                if (!success) {
+                    binding.tvLocation.text = DEFAULT_LOCATION_LABEL
+                    requestPrayerTimings(DEFAULT_LATITUDE, DEFAULT_LONGITUDE)
+                }
+            } else {
+                setPrayerLoadingState("Lokasi tidak tersedia")
+                binding.tvLocation.text = DEFAULT_LOCATION_LABEL
+                requestPrayerTimings(DEFAULT_LATITUDE, DEFAULT_LONGITUDE)
+            }
+        }
+    }
+
+    private suspend fun requestPrayerTimings(lat: Double, lon: Double): Boolean {
+        val timingsData = prayerTimeApi.getTimings(lat, lon).getOrElse {
+            Log.e("HomeActivity", "Prayer API error: ${it.message}", it)
+            return false
+        }
+        updatePrayerTimesUI(timingsData)
+        return true
+    }
+
+    private suspend fun getAccurateLocation(): Location? {
+        val lastKnown = try {
+            fusedLocationClient.lastLocation.await()
+        } catch (e: Exception) {
+            Log.w("HomeActivity", "Last location unavailable: ${e.message}")
+            null
+        }
+        if (lastKnown != null) return lastKnown
+        return fetchCurrentLocation()
+    }
+
+    private suspend fun fetchCurrentLocation(): Location? {
+        val tokenSource = CancellationTokenSource()
+        return try {
+            fusedLocationClient.getCurrentLocation(
+                Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+                tokenSource.token
+            ).await()
+        } catch (e: Exception) {
+            Log.e("HomeActivity", "Current location request failed: ${e.message}", e)
+            null
+        } finally {
+            tokenSource.cancel()
+        }
+    }
+
+    private suspend fun reverseGeocodeLabel(location: Location): String? = withContext(Dispatchers.IO) {
+        val geocoder = Geocoder(this@HomeActivity, Locale("id", "ID"))
+        val address = try {
+            @Suppress("DEPRECATION")
+            geocoder.getFromLocation(location.latitude, location.longitude, 1)?.firstOrNull()
+        } catch (e: Exception) {
+            Log.e("HomeActivity", "Reverse geocode failed: ${e.message}", e)
+            null
+        }
+        address?.let {
+            listOfNotNull(
+                it.subLocality,
+                it.locality,
+                it.subAdminArea,
+                it.adminArea
+            ).distinct().joinToString(", ").ifBlank { null }
+        }
+    }
+
+    private fun updatePrayerTimesUI(data: AladhanTimingsData) {
+        val times = data.timings
+        updatePrayerTimeText(
+            formatPrayerTime(times.fajr),
+            formatPrayerTime(times.dhuhr),
+            formatPrayerTime(times.asr),
+            formatPrayerTime(times.maghrib),
+            formatPrayerTime(times.isha)
+        )
+    }
+
+    private fun updatePrayerTimeText(
+        subuh: String,
+        dzuhur: String,
+        ashar: String,
+        maghrib: String,
+        isya: String
+    ) {
+        binding.tvSubuhTime.text = subuh
+        binding.tvDzuhurTime.text = dzuhur
+        binding.tvAsharTime.text = ashar
+        binding.tvMaghribTime.text = maghrib
+        binding.tvIsyaTime.text = isya
+    }
+
+    private fun formatPrayerTime(raw: String?): String {
+        if (raw.isNullOrBlank()) return PRAYER_PLACEHOLDER
+        return raw.replace(":", ".")
+    }
+
+    private fun setPrayerLoadingState(status: String) {
+        binding.tvLocation.text = status
+        updatePrayerTimeText(
+            PRAYER_PLACEHOLDER,
+            PRAYER_PLACEHOLDER,
+            PRAYER_PLACEHOLDER,
+            PRAYER_PLACEHOLDER,
+            PRAYER_PLACEHOLDER
+        )
+    }
+
     private fun updateProfileSection(navigationDrawer: View) {
         val usernameView = navigationDrawer.findViewById<TextView>(R.id.tv_username)
         val userEmailView = navigationDrawer.findViewById<TextView>(R.id.tv_user_email)
@@ -413,6 +604,16 @@ class HomeActivity : AppCompatActivity() {
             updateProfileSection(navigationDrawer)
             setupSidebar() // Refresh sidebar setup
         }
+        startClockTicker()
+        if (hasLocationPermission()) {
+            fetchPrayerScheduleWithLocation()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        clockJob?.cancel()
+        prayerJob?.cancel()
     }
 
     override fun onBackPressed() {
@@ -421,5 +622,12 @@ class HomeActivity : AppCompatActivity() {
         } else {
             super.onBackPressed()
         }
+    }
+
+    companion object {
+        private const val DEFAULT_LATITUDE = -6.200000
+        private const val DEFAULT_LONGITUDE = 106.816666
+        private const val DEFAULT_LOCATION_LABEL = "Jakarta (default)"
+        private const val PRAYER_PLACEHOLDER = "--:--"
     }
 }

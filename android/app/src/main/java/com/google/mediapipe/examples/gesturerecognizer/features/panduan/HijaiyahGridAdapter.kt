@@ -11,8 +11,13 @@ import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahLetter
 import com.google.mediapipe.examples.gesturerecognizer.features.praga.PragaActivity
 
 class HijaiyahGridAdapter(
-    private val letters: List<HijaiyahLetter>
+    private var letters: List<HijaiyahLetter> = emptyList()
 ) : RecyclerView.Adapter<HijaiyahGridAdapter.ViewHolder>() {
+
+    fun updateLetters(newLetters: List<HijaiyahLetter>) {
+        letters = newLetters
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)

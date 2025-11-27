@@ -10,9 +10,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import coil.load
 import coil.request.ImageRequest
+import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.core.main.MainActivity
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
@@ -245,12 +247,14 @@ class PragaActivity : AppCompatActivity() {
     private fun displayVideo(videoUrl: String) {
         binding.cardVideoContainer.visibility = View.VISIBLE
         binding.loadingProgress.visibility = View.VISIBLE
+        binding.playerViewTutorial.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
         
         try {
             // Initialize ExoPlayer jika belum ada
             if (exoPlayer == null) {
                 exoPlayer = ExoPlayer.Builder(this).build().apply {
                     binding.playerViewTutorial.player = this
+                    videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
                 }
             }
             
