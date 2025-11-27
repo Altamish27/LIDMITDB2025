@@ -18,7 +18,12 @@ import com.google.mediapipe.examples.gesturerecognizer.data.models.EnrollmentsRe
 import com.google.mediapipe.examples.gesturerecognizer.data.models.EnrolledRoom
 import com.google.mediapipe.examples.gesturerecognizer.data.models.SimpleRoomsResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.HalamanInfo
+import com.google.mediapipe.examples.gesturerecognizer.data.models.LetterProgressEntry
 import com.google.mediapipe.examples.gesturerecognizer.data.models.LetterProgressResponse
+import com.google.mediapipe.examples.gesturerecognizer.data.models.LetterProgressSingleResponse
+import com.google.mediapipe.examples.gesturerecognizer.data.models.PracticeProgressEntry
+import com.google.mediapipe.examples.gesturerecognizer.data.models.PracticeProgressListResponse
+import com.google.mediapipe.examples.gesturerecognizer.data.models.PracticeProgressSingleResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.UserJilidProgressResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -331,6 +336,36 @@ class SignQuranApiService {
             Result.failure(e)
         }
     }
+
+    /**
+     * Submit or update letter progress for a hijaiyah in a room
+     */
+    suspend fun submitLetterProgress(
+        roomId: Int,
+        hijaiyahId: Int,
+        status: String,
+        authToken: String
+    ): Result<LetterProgressEntry> {
+        return try {
+            android.util.Log.d("SignQuranAPI", "Submitting letter progress room=$roomId, hijaiyah=$hijaiyahId, status=$status")
+            val response = client.post("$BASE_URL/progress/letter") {
+                headers.append("Authorization", "Bearer $authToken")
+                contentType(ContentType.Application.Json)
+                setBody(
+                    mapOf(
+                        "roomId" to roomId,
+                        "hijaiyahId" to hijaiyahId,
+                        "status" to status
+                    )
+                )
+            }
+            val body = response.body<LetterProgressSingleResponse>()
+            Result.success(body.progress)
+        } catch (e: Exception) {
+            android.util.Log.e("SignQuranAPI", "Submit letter progress error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
     
     /**
      * Get jilid progress overview untuk user saat ini
@@ -354,6 +389,58 @@ class SignQuranApiService {
             Result.success(body)
         } catch (e: Exception) {
             android.util.Log.e("SignQuranAPI", "Get jilid progress error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Submit practice progress for a specific hijaiyah
+     */
+    suspend fun submitPracticeProgress(
+        hijaiyahId: Int,
+        status: String,
+        attempts: Int = 1,
+        authToken: String
+    ): Result<PracticeProgressEntry> {
+        return try {
+            android.util.Log.d("SignQuranAPI", "Submitting practice progress: hijaiyah=$hijaiyahId status=$status attempts=$attempts")
+            val response = client.post("$BASE_URL/practice") {
+                headers.append("Authorization", "Bearer $authToken")
+                contentType(ContentType.Application.Json)
+                setBody(
+                    mapOf(
+                        "hijaiyahId" to hijaiyahId,
+                        "status" to status,
+                        "attempts" to attempts
+                    )
+                )
+            }
+            val body = response.body<PracticeProgressSingleResponse>()
+            android.util.Log.d("SignQuranAPI", "Practice progress saved with id ${body.practice.practiceId}")
+            Result.success(body.practice)
+        } catch (e: Exception) {
+            android.util.Log.e("SignQuranAPI", "Submit practice progress error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Get practice progress list for logged in user
+     */
+    suspend fun getPracticeProgress(
+        authToken: String,
+        status: String? = null
+    ): Result<List<PracticeProgressEntry>> {
+        return try {
+            android.util.Log.d("SignQuranAPI", "Fetching practice progress")
+            val response = client.get("$BASE_URL/practice") {
+                headers.append("Authorization", "Bearer $authToken")
+                status?.let { parameter("status", it) }
+            }
+            val body = response.body<PracticeProgressListResponse>()
+            Result.success(body.practices)
+        } catch (e: Exception) {
+            android.util.Log.e("SignQuranAPI", "Get practice progress error: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -430,23 +517,14 @@ class SignQuranApiService {
      * Get all members in a specific room
      */
     suspend fun getRoomMembers(roomId: Int, roomCode: String?, authToken: String): Result<RoomMembersResponse> {
-        val primaryIdentifier = roomId.toString()
-        val primaryUrl = "$BASE_URL/rooms/$primaryIdentifier/students"
-        val fallbackUrl = "$BASE_URL/enrollments/room/$roomId/members"
-        
+        val url = "$BASE_URL/enrollments/room/$roomId/members"
         return try {
-            android.util.Log.d("SignQuranAPI", "Fetching members via rooms endpoint: $primaryUrl")
-            val body = fetchRoomMembersFromUrl(primaryUrl, authToken)
+            android.util.Log.d("SignQuranAPI", "Fetching room members from enrollments endpoint: $url")
+            val body = fetchRoomMembersFromUrl(url, authToken)
             Result.success(body)
-        } catch (primaryError: Exception) {
-            android.util.Log.w("SignQuranAPI", "Rooms endpoint failed: ${primaryError.message}. Trying enrollments endpoint...")
-            try {
-                val body = fetchRoomMembersFromUrl(fallbackUrl, authToken)
-                Result.success(body)
-            } catch (fallbackError: Exception) {
-                android.util.Log.e("SignQuranAPI", "Get room members error: ${fallbackError.message}", fallbackError)
-                Result.failure(fallbackError)
-            }
+        } catch (error: Exception) {
+            android.util.Log.e("SignQuranAPI", "Get room members error: ${error.message}", error)
+            Result.failure(error)
         }
     }
     

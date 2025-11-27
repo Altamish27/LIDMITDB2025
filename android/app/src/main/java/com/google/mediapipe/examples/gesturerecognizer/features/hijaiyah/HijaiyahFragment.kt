@@ -35,6 +35,7 @@ import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahLetter
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager
 import com.google.mediapipe.examples.gesturerecognizer.data.api.SignQuranApiService
 import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
+import com.google.mediapipe.examples.gesturerecognizer.data.manager.RoomPreferenceManager
 import com.google.mediapipe.examples.gesturerecognizer.databinding.FragmentHijaiyahBinding
 
 
@@ -72,6 +73,7 @@ class HijaiyahFragment : Fragment() {
     private lateinit var adapter: ArabicLetterAdapter
     private lateinit var progressManager: HijaiyahProgressManager
     private lateinit var authManager: AuthManager
+    private lateinit var roomPreferenceManager: RoomPreferenceManager
     private val apiService = SignQuranApiService.getInstance()
     private var masterLetters: List<HijaiyahLetter> = emptyList()
     private var categoryLetters: List<HijaiyahLetter> = emptyList()
@@ -92,6 +94,7 @@ class HijaiyahFragment : Fragment() {
         
         progressManager = HijaiyahProgressManager(requireContext())
         authManager = AuthManager(requireContext())
+        roomPreferenceManager = RoomPreferenceManager(requireContext())
         
         // Check if default category is specified in arguments
         val defaultCategory = arguments?.getString("defaultCategory")
@@ -284,9 +287,10 @@ class HijaiyahFragment : Fragment() {
         if (token.isEmpty()) {
             return false
         }
+        val roomId = getActiveRoomId(token) ?: return false
         
         return try {
-            val result = apiService.getLetterProgress(authToken = token)
+            val result = apiService.getLetterProgress(authToken = token, roomId = roomId.toString())
             result.onSuccess { response ->
                 val completedPositions = response.progress
                     .filter { isCompletedStatus(it.status) }
@@ -314,6 +318,22 @@ class HijaiyahFragment : Fragment() {
             normalized == "done" ||
             normalized == "true" ||
             normalized == "1"
+    }
+
+    private suspend fun getActiveRoomId(token: String): Int? {
+        roomPreferenceManager.preferredRoomId?.let { return it }
+        return try {
+            val roomsResult = apiService.getMyRooms(token)
+            val roomId = roomsResult.getOrNull()
+                ?.rooms
+                ?.firstOrNull()
+                ?.roomId
+            roomId?.let { roomPreferenceManager.preferredRoomId = it }
+            roomId
+        } catch (e: Exception) {
+            Log.e("HijaiyahFragment", "Failed to fetch rooms: ${e.message}", e)
+            null
+        }
     }
     
     private fun updateProgress() {

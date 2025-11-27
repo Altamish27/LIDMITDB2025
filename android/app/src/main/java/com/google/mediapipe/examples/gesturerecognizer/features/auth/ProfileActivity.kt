@@ -2,16 +2,21 @@ package com.google.mediapipe.examples.gesturerecognizer.features.auth
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.lifecycle.lifecycleScope
 import com.google.mediapipe.examples.gesturerecognizer.R
+import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager
+import com.google.mediapipe.examples.gesturerecognizer.data.LatihanPageData
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanProgressManager
 import com.google.mediapipe.examples.gesturerecognizer.data.api.AuthApiService
+import com.google.mediapipe.examples.gesturerecognizer.data.api.SignQuranApiService
 import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
 import com.google.mediapipe.examples.gesturerecognizer.core.animation.ViewAnimationUtils
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +27,7 @@ class ProfileActivity : AppCompatActivity() {
 
     private lateinit var authManager: AuthManager
     private lateinit var authApiService: AuthApiService
+    private val signQuranApiService = SignQuranApiService.getInstance()
     private lateinit var btnSettings: CardView
     private lateinit var btnMyRooms: CardView
     private lateinit var ivProfilePhoto: ImageView
@@ -31,7 +37,6 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var tvUserEmail: TextView
     private lateinit var tvUserRole: TextView
     private lateinit var progressQuiz: ProgressBar
-    private lateinit var progressSurat: ProgressBar
     private lateinit var progressHijaiyah: ProgressBar
     private lateinit var btnLogout: CardView
     private lateinit var progressBar: ProgressBar
@@ -91,7 +96,6 @@ class ProfileActivity : AppCompatActivity() {
         }
         
         progressQuiz = findViewById(R.id.progress_quiz)
-        progressSurat = findViewById(R.id.progress_surat)
         progressHijaiyah = findViewById(R.id.progress_hijaiyah)
         btnLogout = findViewById(R.id.btn_logout)
         
@@ -252,40 +256,24 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun loadProgressData() {
-        // Initialize progress managers
-        val hijaiyahProgressManager = HijaiyahProgressManager(this)
-        val latihanProgressManager = LatihanProgressManager(this)
-        
-        // Get Hijaiyah progress
-        val hijaiyahProgress = hijaiyahProgressManager.getTotalProgress()
-        val hijaiyahPercentage = if (hijaiyahProgress.second > 0) {
-            (hijaiyahProgress.first.toFloat() / hijaiyahProgress.second.toFloat() * 100).toInt()
-        } else {
-            0
+        if (!authManager.isLoggedIn || authManager.authToken.isEmpty()) {
+            setProgressFromLocalFallback()
+            return
         }
         
-        // Get Latihan (Quiz) progress
-        val latihanProgress = latihanProgressManager.getTotalProgress()
-        val latihanPercentage = if (latihanProgress.second > 0) {
-            (latihanProgress.first.toFloat() / latihanProgress.second.toFloat() * 100).toInt()
-        } else {
-            0
+        lifecycleScope.launch {
+            try {
+                val token = authManager.authToken
+                val hijaiyahSummary = fetchHijaiyahProgressSummary(token)
+                val latihanSummary = fetchLatihanProgressSummary(token)
+                
+                progressHijaiyah.progress = hijaiyahSummary.percentage
+                progressQuiz.progress = latihanSummary.percentage
+            } catch (e: Exception) {
+                Log.e("ProfileActivity", "Failed to load progress from API: ${e.message}", e)
+                setProgressFromLocalFallback()
+            }
         }
-        
-        // Get Surat progress (from SharedPreferences)
-        val sharedPreferences = getSharedPreferences("SuratPrefs", MODE_PRIVATE)
-        val suratCompleted = sharedPreferences.getInt("surat_completed", 2)
-        val suratTotal = sharedPreferences.getInt("surat_total", 10)
-        val suratPercentage = if (suratTotal > 0) {
-            (suratCompleted.toFloat() / suratTotal.toFloat() * 100).toInt()
-        } else {
-            0
-        }
-        
-        // Set progress bars
-        progressQuiz.progress = latihanPercentage
-        progressSurat.progress = suratPercentage
-        progressHijaiyah.progress = hijaiyahPercentage
     }
 
     private fun showLogoutConfirmation() {
@@ -362,6 +350,83 @@ class ProfileActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
+    }
+
+    private fun setProgressFromLocalFallback() {
+        val hijaiyahProgressManager = HijaiyahProgressManager(this)
+        val latihanProgressManager = LatihanProgressManager(this)
+        
+        val hijaiyahProgress = hijaiyahProgressManager.getTotalProgress()
+        val latihanProgress = latihanProgressManager.getTotalProgress()
+        
+        val hijaiyahPercentage = if (hijaiyahProgress.second > 0) {
+            (hijaiyahProgress.first.toFloat() / hijaiyahProgress.second.toFloat() * 100).toInt()
+        } else 0
+        
+        val latihanPercentage = if (latihanProgress.second > 0) {
+            (latihanProgress.first.toFloat() / latihanProgress.second.toFloat() * 100).toInt()
+        } else 0
+        
+        progressHijaiyah.progress = hijaiyahPercentage
+        progressQuiz.progress = latihanPercentage
+    }
+    
+    private suspend fun fetchHijaiyahProgressSummary(token: String): ProgressSummary {
+        if (HijaiyahData.getAllLetters().isEmpty()) {
+            HijaiyahData.loadFromApi(this)
+        }
+        val totalLetters = HijaiyahData.getAllLetters().takeIf { it.isNotEmpty() }?.size ?: 28
+        val fallback = HijaiyahProgressManager(this).getCompletedCount()
+        
+        val result = signQuranApiService.getPracticeProgress(authToken = token)
+        val completed = result.getOrNull()
+            ?.count { isCompletedStatus(it.status) }
+            ?: fallback
+        
+        return ProgressSummary(
+            completed = completed.coerceAtMost(totalLetters),
+            total = totalLetters
+        )
+    }
+    
+    private suspend fun fetchLatihanProgressSummary(token: String): ProgressSummary {
+        if (LatihanPageData.getAllJilid().isEmpty()) {
+            LatihanPageData.loadJilidFromApi(this)
+        }
+        val totalJilid = LatihanPageData.getAllJilid().takeIf { it.isNotEmpty() }?.size ?: 1
+        
+        val result = signQuranApiService.getUserJilidProgress(authToken = token)
+        val completed = result.getOrNull()
+            ?.progress
+            ?.count { isCompletedStatus(it.status) }
+            ?: 0
+        
+        return ProgressSummary(
+            completed = completed.coerceAtMost(totalJilid),
+            total = totalJilid
+        )
+    }
+    
+    private fun isCompletedStatus(status: String?): Boolean {
+        if (status.isNullOrBlank()) return false
+        val normalized = status.lowercase()
+        return normalized == "completed" ||
+            normalized == "selesai" ||
+            normalized == "done" ||
+            normalized == "true" ||
+            normalized == "1"
+    }
+    
+    private data class ProgressSummary(
+        val completed: Int,
+        val total: Int
+    ) {
+        val percentage: Int
+            get() = if (total > 0) {
+                ((completed.toFloat() / total.toFloat()) * 100).toInt().coerceIn(0, 100)
+            } else {
+                0
+            }
     }
 
     override fun onBackPressed() {
