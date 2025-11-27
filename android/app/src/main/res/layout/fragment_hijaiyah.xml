@@ -110,58 +110,6 @@
             android:clickable="true"
             android:focusable="true" />
 
-        <!-- Category Dropdown in Header -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardCategoryDropdown"
-            android:layout_width="200dp"
-            android:layout_height="45dp"
-            android:layout_below="@id/progressContainer"
-            android:layout_marginTop="16dp"
-            android:layout_centerHorizontal="true"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@color/white">
-            
-            <Spinner
-                android:id="@+id/spinnerCategory"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@android:color/transparent"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp" />
-                
-        </androidx.cardview.widget.CardView>
-
-        <!-- Current Letter Card -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardCurrentLetter"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:layout_below="@id/cardCategoryDropdown"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/white"
-                android:padding="16dp">
-
-                <TextView
-                    android:id="@+id/tvCurrentLetter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:text="Hijaiyah"
-                    android:textColor="@color/hijaiyah_navy"
-                    android:textSize="18sp"
-                    android:textStyle="bold"/>
-
-            </RelativeLayout>
-
-        </androidx.cardview.widget.CardView>
-
     </RelativeLayout>
 
     <!-- Main Content Section -->
@@ -171,6 +119,7 @@
         android:orientation="vertical"
         android:background="@android:color/transparent"
         android:padding="16dp">
+        
         <!-- "Mulai Belajar" Title -->
         <TextView
             android:id="@+id/tvMulaiBelajar"
@@ -181,7 +130,85 @@
             android:textSize="20sp"
             android:textStyle="bold"
             android:gravity="center"
-            android:layout_marginBottom="12dp"/>
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Category Tabs (Horizontal) -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCategoryHijaiyah"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:text="Hijaiyah"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    app:backgroundTint="@color/hijaiyah_green"
+                    app:cornerRadius="24dp"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:layout_marginEnd="8dp"
+                    android:textAllCaps="false" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCategoryFathah"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:text="Fathah"
+                    android:textSize="14sp"
+                    android:textColor="@color/hijaiyah_navy"
+                    app:backgroundTint="@color/white"
+                    app:strokeColor="@color/hijaiyah_navy"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="24dp"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:layout_marginEnd="8dp"
+                    android:textAllCaps="false" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCategoryKasrah"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:text="Kasrah"
+                    android:textSize="14sp"
+                    android:textColor="@color/hijaiyah_navy"
+                    app:backgroundTint="@color/white"
+                    app:strokeColor="@color/hijaiyah_navy"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="24dp"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:layout_marginEnd="8dp"
+                    android:textAllCaps="false" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCategoryDhommah"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:text="Dhommah"
+                    android:textSize="14sp"
+                    android:textColor="@color/hijaiyah_navy"
+                    app:backgroundTint="@color/white"
+                    app:strokeColor="@color/hijaiyah_navy"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="24dp"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:textAllCaps="false" />
+
+            </LinearLayout>
+        </HorizontalScrollView>
 
         <!-- Search Bar -->
         <androidx.cardview.widget.CardView
@@ -197,14 +224,14 @@
                 android:layout_height="match_parent"
                 android:background="@android:color/transparent"
                 android:hint="Cari Huruf Hijaiyah"
-                android:textColorHint="#2C3E50"
-                android:textColor="#2C3E50"
+                android:textColorHint="@color/hijaiyah_navy"
+                android:textColor="@color/hijaiyah_navy"
                 android:textSize="13sp"
                 android:paddingStart="20dp"
                 android:paddingEnd="20dp"
                 android:singleLine="true"
                 android:drawableEnd="@drawable/ic_search"
-                android:drawableTint="#2C3E50"/>
+                android:drawableTint="@color/hijaiyah_navy"/>
 
         </androidx.cardview.widget.CardView>
 

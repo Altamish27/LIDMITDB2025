@@ -55,4 +55,8 @@
     <color name="background_light">#F5F6FA</color>
     <color name="progress_yellow_start">#FFD700</color>
     <color name="progress_yellow_end">#FFA500</color>
+    
+    <!-- Gray colors -->
+    <color name="gray_light">#CCCCCC</color>
+    <color name="gray_dark">#666666</color>
 </resources>

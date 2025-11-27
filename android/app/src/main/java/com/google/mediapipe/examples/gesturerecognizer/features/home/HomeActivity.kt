@@ -17,18 +17,24 @@ package com.google.mediapipe.examples.gesturerecognizer.features.home
 
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.BounceInterpolator
+import android.view.animation.OvershootInterpolator
+import android.view.animation.DecelerateInterpolator
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.lifecycleScope
 import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityHomeBinding
 import com.google.mediapipe.examples.gesturerecognizer.core.main.MainActivity
@@ -36,20 +42,58 @@ import com.google.mediapipe.examples.gesturerecognizer.features.panduan.PanduanH
 import com.google.mediapipe.examples.gesturerecognizer.features.surat.SuratListActivity
 import com.google.mediapipe.examples.gesturerecognizer.features.auth.ProfileActivity
 import com.google.mediapipe.examples.gesturerecognizer.features.auth.LoginActivity
+import com.google.mediapipe.examples.gesturerecognizer.core.animation.ViewAnimationUtils
+import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
+import com.google.mediapipe.examples.gesturerecognizer.data.LatihanPageData
+import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
+import kotlinx.coroutines.launch
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHomeBinding
+    private lateinit var authManager: AuthManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Enable hardware acceleration for smooth animations
+        window.setFlags(
+            android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+            android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
+        )
+        
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        authManager = AuthManager(this)
+
+        // Load data dari API di background
+        loadApiData()
+        
         setupUI()
         setupClickListeners()
         setupCustomFonts()
         setupSidebar()
-        startAnimations()
+        
+        // Delay animations to ensure views are laid out properly
+        binding.root.post {
+            startEntranceAnimations()
+        }
+    }
+    
+    /**
+     * Load data dari API secara async saat app dimulai
+     */
+    private fun loadApiData() {
+        lifecycleScope.launch {
+            try {
+                // Load hijaiyah dan jilid data dari API with context for auth
+                HijaiyahData.loadFromApi(this@HomeActivity)
+                LatihanPageData.loadJilidFromApi(this@HomeActivity)
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Failed to load API data: ${e.message}", e)
+                // Data fallback akan digunakan otomatis
+            }
+        }
     }
 
     private fun setupUI() {
@@ -66,6 +110,16 @@ class HomeActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+        
+        // Prepare views for entrance animations
+        binding.root.alpha = 0f
+        ViewAnimationUtils.prepareViewsForAnimation(
+            binding.btnMenu,
+            binding.cardHijaiyah,
+            binding.cardQuiz,
+            binding.cardSurat,
+            binding.btnLihatSemuaTabel
+        )
     }
 
     private fun setupClickListeners() {
@@ -144,48 +198,63 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun startAnimations() {
-        // No animations needed for buttons since we removed the detection button
-        Log.d("HomeActivity", "Animations started")
+    private fun startEntranceAnimations() {
+        // Step 1: Fade in the entire screen first
+        ViewAnimationUtils.fadeInScreen(binding.root, 300)
+        
+        // Step 2: Animate menu button with rotation
+        binding.btnMenu?.let { view ->
+            ViewAnimationUtils.animateViewEntrance(
+                view = view,
+                delay = 200,
+                duration = 700,
+                translationY = -50f,
+                rotationDegrees = 180f,
+                overshoot = 1.8f
+            )
+        }
+        
+        // Step 3: Animate cards with cascading effect
+        binding.cardHijaiyah?.let { ViewAnimationUtils.animateCardEntrance(it, 400) }
+        binding.cardQuiz?.let { ViewAnimationUtils.animateCardEntrance(it, 500) }
+        binding.cardSurat?.let { ViewAnimationUtils.animateCardEntrance(it, 600) }
+        
+        // Step 4: Animate button
+        binding.btnLihatSemuaTabel?.let { ViewAnimationUtils.animateButtonEntrance(it, 1000) }
+        
+        Log.d("HomeActivity", "Entrance animations started")
     }
-
+    
     private fun animateButtonClick(view: View, action: () -> Unit) {
-        val scaleDown = AnimatorSet().apply {
-            playTogether(
-                ObjectAnimator.ofFloat(view, "scaleX", 1f, 0.95f),
-                ObjectAnimator.ofFloat(view, "scaleY", 1f, 0.95f)
-            )
-            duration = 100
-        }
-        
-        val scaleUp = AnimatorSet().apply {
-            playTogether(
-                ObjectAnimator.ofFloat(view, "scaleX", 0.95f, 1f),
-                ObjectAnimator.ofFloat(view, "scaleY", 0.95f, 1f)
-            )
-            duration = 100
-            startDelay = 100
-        }
-        
-        scaleDown.start()
-        scaleUp.start()
-        
-        view.postDelayed(action, 200)
+        ViewAnimationUtils.animateClick(view, action)
     }
-
+    
     private fun setupSidebar() {
         // Get navigation drawer views
         val navigationDrawer = findViewById<View>(R.id.navigation_drawer) ?: return
         
+        // Update profile section with user data if logged in
+        updateProfileSection(navigationDrawer)
+        
         // Setup profile section click listener
         navigationDrawer.findViewById<View>(R.id.profile_section)?.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
-            try {
-                val intent = Intent(this, ProfileActivity::class.java)
-                startActivity(intent)
-            } catch (e: Exception) {
-                Log.e("HomeActivity", "Failed to start ProfileActivity: ${e.message}", e)
-                Toast.makeText(this, "Error opening profile: ${e.message}", Toast.LENGTH_LONG).show()
+            if (authManager.isLoggedIn) {
+                try {
+                    val intent = Intent(this, ProfileActivity::class.java)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Failed to start ProfileActivity: ${e.message}", e)
+                    Toast.makeText(this, "Error opening profile: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            } else {
+                try {
+                    val intent = Intent(this, LoginActivity::class.java)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Failed to start LoginActivity: ${e.message}", e)
+                    Toast.makeText(this, "Error opening login: ${e.message}", Toast.LENGTH_LONG).show()
+                }
             }
         }
         
@@ -197,12 +266,22 @@ class HomeActivity : AppCompatActivity() {
         
         navigationDrawer.findViewById<View>(R.id.menu_profile)?.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
-            try {
-                val intent = Intent(this, ProfileActivity::class.java)
-                startActivity(intent)
-            } catch (e: Exception) {
-                Log.e("HomeActivity", "Failed to start ProfileActivity: ${e.message}", e)
-                Toast.makeText(this, "Error opening profile: ${e.message}", Toast.LENGTH_LONG).show()
+            if (authManager.isLoggedIn) {
+                try {
+                    val intent = Intent(this, ProfileActivity::class.java)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Failed to start ProfileActivity: ${e.message}", e)
+                    Toast.makeText(this, "Error opening profile: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            } else {
+                try {
+                    val intent = Intent(this, LoginActivity::class.java)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Failed to start LoginActivity: ${e.message}", e)
+                    Toast.makeText(this, "Error opening login: ${e.message}", Toast.LENGTH_LONG).show()
+                }
             }
         }
         
@@ -232,7 +311,7 @@ class HomeActivity : AppCompatActivity() {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
             try {
                 val intent = Intent(this, MainActivity::class.java)
-                // Navigate to default hijaiyah_fragment (no extra needed)
+                intent.putExtra("navigate_to", "latihan")
                 startActivity(intent)
             } catch (e: Exception) {
                 Log.e("HomeActivity", "Failed to start Learning: ${e.message}", e)
@@ -242,11 +321,38 @@ class HomeActivity : AppCompatActivity() {
         
         navigationDrawer.findViewById<View>(R.id.menu_settings)?.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
-            Toast.makeText(this, "Pengaturan - Akan segera tersedia", Toast.LENGTH_SHORT).show()
+            try {
+                val intent = Intent(this, com.google.mediapipe.examples.gesturerecognizer.features.settings.SettingsActivity::class.java)
+                startActivity(intent)
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Failed to start SettingsActivity: ${e.message}", e)
+                Toast.makeText(this, "Error opening settings: ${e.message}", Toast.LENGTH_LONG).show()
+            }
         }
 
-            // Footer login button (no icon)
-            navigationDrawer.findViewById<View>(R.id.menu_button_login)?.setOnClickListener {
+        // Update login button based on auth status
+        val loginButton = navigationDrawer.findViewById<View>(R.id.menu_button_login)
+        if (authManager.isLoggedIn) {
+            // If user is logged in, hide login button and show logout button
+            loginButton?.visibility = View.GONE
+            // Show logout button if it exists
+            val logoutButton = navigationDrawer.findViewById<View?>(R.id.menu_button_logout)
+            logoutButton?.visibility = View.VISIBLE
+            logoutButton?.setOnClickListener {
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
+                // Perform logout
+                authManager.clearAuthData()
+                Toast.makeText(this, "Berhasil logout", Toast.LENGTH_SHORT).show()
+                
+                // Update UI after logout
+                updateProfileSection(navigationDrawer)
+                // Reconfigure menu items to reflect logged-out state
+                updateMenuItemsForLoggedOut(navigationDrawer)
+            }
+        } else {
+            // If user is not logged in, show login button
+            loginButton?.visibility = View.VISIBLE
+            loginButton?.setOnClickListener {
                 binding.drawerLayout.closeDrawer(GravityCompat.START)
                 try {
                     val intent = Intent(this, LoginActivity::class.java)
@@ -256,10 +362,56 @@ class HomeActivity : AppCompatActivity() {
                     Toast.makeText(this, "Error opening login: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
+            
+            // Hide logout button if exists
+            val logoutButton = navigationDrawer.findViewById<View?>(R.id.menu_button_logout)
+            logoutButton?.visibility = View.GONE
+        }
         
         navigationDrawer.findViewById<View>(R.id.menu_about)?.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
-            Toast.makeText(this, "Tentang Aplikasi - Akan segera tersedia", Toast.LENGTH_SHORT).show()
+            try {
+                val intent = Intent(this, com.google.mediapipe.examples.gesturerecognizer.features.about.AboutActivity::class.java)
+                startActivity(intent)
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Failed to start AboutActivity: ${e.message}", e)
+                Toast.makeText(this, "Error opening about: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun updateProfileSection(navigationDrawer: View) {
+        val usernameView = navigationDrawer.findViewById<TextView>(R.id.tv_username)
+        val userEmailView = navigationDrawer.findViewById<TextView>(R.id.tv_user_email)
+        
+        if (authManager.isLoggedIn) {
+            // Show user info
+            usernameView?.text = authManager.userName
+            userEmailView?.text = authManager.userEmail
+            
+            // Update login button text if needed
+            val loginButton = navigationDrawer.findViewById<View>(R.id.menu_button_login)
+            loginButton?.findViewById<TextView>(android.R.id.text1)?.text = "Login"
+        } else {
+            // Show placeholder text
+            usernameView?.text = "Guest User"
+            userEmailView?.text = "Silakan login"
+        }
+    }
+    
+    private fun updateMenuItemsForLoggedOut(navigationDrawer: View) {
+        // Update profile menu item text
+        val profileMenuItem = navigationDrawer.findViewById<TextView>(R.id.menu_profile)
+        profileMenuItem?.text = "Login / Register"
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Update UI when returning to home activity (e.g. after logging out from profile)
+        val navigationDrawer = findViewById<View>(R.id.navigation_drawer)
+        if (navigationDrawer != null) {
+            updateProfileSection(navigationDrawer)
+            setupSidebar() // Refresh sidebar setup
         }
     }
 

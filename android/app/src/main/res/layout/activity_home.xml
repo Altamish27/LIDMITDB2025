@@ -11,11 +11,16 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:paddingBottom="32dp">
 
             <!-- Background Atas (Top) - bgatashome.png -->
             <ImageView
@@ -1075,7 +1080,7 @@
                                 android:id="@+id/btn_lihat_semua_tabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Lihat Semua Huruf (28 total)"
+                                android:text="Lihat Semua Huruf"
                                 android:textColor="@color/hijaiyah_green"
                                 android:textSize="14sp"
                                 android:textStyle="bold"

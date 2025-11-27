@@ -42,8 +42,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import android.view.View
+import android.view.animation.AnimationUtils
 import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityLatihanPracticeBinding
 import com.google.mediapipe.examples.gesturerecognizer.features.camera.fragment.CameraFragment
@@ -52,6 +54,9 @@ import com.google.mediapipe.examples.gesturerecognizer.data.LatihanPageData
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanHalaman
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanBaris
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanHuruf
+import com.google.mediapipe.examples.gesturerecognizer.data.api.SignQuranApiService
+import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
+import kotlinx.coroutines.launch
 
 // Keep old HurufItem for backward compatibility if needed
 data class HurufItem(
@@ -66,14 +71,20 @@ class LatihanPracticeActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLatihanPracticeBinding
     private lateinit var adapter: LatihanHurufGridAdapter
+    private lateinit var authManager: AuthManager
+    private lateinit var apiService: SignQuranApiService
     
     // New structure variables
     private var currentJilidId = 1
     private var currentHalamanId = 1
+    private var realHalamanId = "1-1"  // Real halaman_id from database (e.g., "1-1")
     private var currentBarisId = 1
     
     private var exerciseId = 1
     private var exerciseTitle = "Latihan 1"
+    
+    // Track page completion status
+    private var isPageAlreadyCompleted = false
     
     // Track whether we are running a sequential row test
     private var sequenceMode = false
@@ -107,64 +118,236 @@ class LatihanPracticeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityLatihanPracticeBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        // Listen for results from embedded CameraFragment
-        supportFragmentManager.setFragmentResultListener(
-            "camera_result",
-            this
-        ) { _, bundle ->
-            val success = bundle.getBoolean("success", false)
-            val letterPos = bundle.getInt("letterPosition", -1)
-            if (success && letterPos > 0) {
-                // mark as completed locally and refresh UI
-                completedPositions.add(letterPos)
-                loadCurrentBaris()
-
-                if (sequenceMode) {
-                    // continue to next letter in the same row
-                    advanceSequence(letterPos)
-                } else {
-                    // hide camera container if not sequence
-                    hideEmbeddedCamera()
-                    
-                    // Check if current baris is completed and auto advance if possible
-                    if (isCurrentBarisCompleted() && canGoNextBaris()) {
-                        Toast.makeText(this@LatihanPracticeActivity, "Baris selesai! Auto pindah ke baris selanjutnya...", Toast.LENGTH_SHORT).show()
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            currentBarisId++
-                            loadCurrentBaris()
-                        }, 1500) // 1.5 second delay
-                    } else if (isCurrentHalamanCompleted()) {
-                        // Check if entire halaman is completed
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            showPageCompletionDialog()
-                        }, 1500) // 1.5 second delay
-                    }
-                }
-            } else {
-                // on failure just hide embedded camera for now
-                hideEmbeddedCamera()
-            }
-        }
-
-        // Get data from intent
-        exerciseId = intent.getIntExtra("exerciseId", 1)
-        exerciseTitle = intent.getStringExtra("exerciseTitle") ?: "Latihan 1"
-
-        // Load new structure data
-        loadPageData()
         
-        setupUI()
-        setupRecyclerView()
-        setupClickListeners()
-        loadCurrentBaris()
+        try {
+            binding = ActivityLatihanPracticeBinding.inflate(layoutInflater)
+            setContentView(binding.root)
+
+            android.util.Log.d("LatihanPractice", "onCreate started")
+
+            // Listen for results from embedded CameraFragment
+            supportFragmentManager.setFragmentResultListener(
+                "camera_result",
+                this
+            ) { _, bundle ->
+                val success = bundle.getBoolean("success", false)
+                val letterPos = bundle.getInt("letterPosition", -1)
+                if (success && letterPos > 0) {
+                    // mark as completed locally and refresh UI
+                    completedPositions.add(letterPos)
+                    loadCurrentBaris()
+
+                    if (sequenceMode) {
+                        // continue to next letter in the same row
+                        advanceSequence(letterPos)
+                    } else {
+                        // hide camera container if not sequence
+                        hideEmbeddedCamera()
+                        
+                        // Check if current baris is completed and auto advance if possible
+                        if (isCurrentBarisCompleted() && canGoNextBaris()) {
+                            Toast.makeText(this@LatihanPracticeActivity, "Baris selesai! Auto pindah ke baris selanjutnya...", Toast.LENGTH_SHORT).show()
+                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                currentBarisId++
+                                loadCurrentBaris()
+                            }, 1500) // 1.5 second delay
+                        } else if (isCurrentHalamanCompleted()) {
+                            // Check if entire halaman is completed
+                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                showPageCompletionDialog()
+                            }, 1500) // 1.5 second delay
+                        }
+                    }
+                } else {
+                    // on failure just hide embedded camera for now
+                    hideEmbeddedCamera()
+                }
+            }
+
+            // Get data from intent
+            exerciseId = intent.getIntExtra("exerciseId", 1)
+            exerciseTitle = intent.getStringExtra("exerciseTitle") ?: "Latihan 1"
+            currentJilidId = intent.getIntExtra("jilidId", 1)
+            currentHalamanId = intent.getIntExtra("halamanId", 1)
+            realHalamanId = intent.getStringExtra("realHalamanId") ?: "$currentJilidId-$currentHalamanId"
+            currentBarisId = 1 // Always start from first baris
+
+            android.util.Log.d("LatihanPractice", "Intent data: jilidId=$currentJilidId, halamanId=$currentHalamanId, realHalamanId=$realHalamanId, exerciseTitle=$exerciseTitle")
+
+            // Initialize auth manager and API service
+            authManager = AuthManager(this)
+            apiService = SignQuranApiService.getInstance()
+
+            // Setup UI first
+            setupUI()
+            setupRecyclerView()
+            setupClickListeners()
+            
+            // Check page completion status first, then load data
+            checkPageCompletionStatus()
+            
+            android.util.Log.d("LatihanPractice", "onCreate completed successfully")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("LatihanPractice", "Error in onCreate: ${e.message}", e)
+            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+            finish()
+        }
     }
 
     private fun loadPageData() {
-        currentHalaman = LatihanPageData.getHalamanById(currentJilidId, currentHalamanId)
-        currentBaris = currentHalaman?.barisList?.find { it.id == currentBarisId }
+        lifecycleScope.launch {
+            android.util.Log.d("LatihanPractice", "========================================")
+            android.util.Log.d("LatihanPractice", "Loading page: jilid=$currentJilidId, halaman=$currentHalamanId")
+            
+            try {
+                // Show loading indicator
+                runOnUiThread {
+                    binding.tvSubtitle.text = "Memuat data..."
+                }
+                
+                android.util.Log.d("LatihanPractice", "About to call LatihanPageData.loadHalamanFromApi with:")
+                android.util.Log.d("LatihanPractice", "  - jilidId: $currentJilidId")
+                android.util.Log.d("LatihanPractice", "  - halamanId: $currentHalamanId")
+                android.util.Log.d("LatihanPractice", "  - context: ${this@LatihanPracticeActivity}")
+                
+                // Load halaman dari API dengan context
+                val halaman = LatihanPageData.loadHalamanFromApi(currentJilidId, currentHalamanId, this@LatihanPracticeActivity)
+                
+                android.util.Log.d("LatihanPractice", "LatihanPageData.loadHalamanFromApi returned: $halaman")
+                
+                if (halaman != null) {
+                    android.util.Log.d("LatihanPractice", "✓ API Success!")
+                    android.util.Log.d("LatihanPractice", "  - Title: ${halaman.title}")
+                    android.util.Log.d("LatihanPractice", "  - Baris count: ${halaman.barisList.size}")
+                    halaman.barisList.forEachIndexed { index, baris ->
+                        android.util.Log.d("LatihanPractice", "  - Baris ${baris.id}: ${baris.hurufList.size} huruf")
+                    }
+                    
+                    currentHalaman = halaman
+                    currentBaris = halaman.barisList.find { it.id == currentBarisId }
+                    
+                    if (currentBaris != null) {
+                        android.util.Log.d("LatihanPractice", "✓ Current baris loaded: ${currentBaris!!.hurufList.size} huruf")
+                        
+                        // Update UI on main thread
+                        runOnUiThread {
+                            updateUI()
+                            loadCurrentBaris()
+                        }
+                    } else {
+                        android.util.Log.e("LatihanPractice", "✗ Baris $currentBarisId not found!")
+                        android.util.Log.w("LatihanPractice", "Available baris: ${halaman.barisList.map { it.id }}")
+                        
+                        // Try to use first available baris instead of finishing
+                        val firstBaris = halaman.barisList.firstOrNull()
+                        if (firstBaris != null) {
+                            android.util.Log.w("LatihanPractice", "Using first available baris: ${firstBaris.id}")
+                            currentBarisId = firstBaris.id
+                            currentBaris = firstBaris
+                            
+                            runOnUiThread {
+                                Toast.makeText(
+                                    this@LatihanPracticeActivity,
+                                    "Baris $currentBarisId tidak ditemukan. Menggunakan baris ${firstBaris.id}.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                updateUI()
+                                loadCurrentBaris()
+                            }
+                        } else {
+                            runOnUiThread {
+                                Toast.makeText(
+                                    this@LatihanPracticeActivity, 
+                                    "Tidak ada baris ditemukan di halaman ini", 
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                finish()
+                            }
+                        }
+                    }
+                } else {
+                    android.util.Log.e("LatihanPractice", "✗ API Failed: halaman is null")
+                    android.util.Log.e("LatihanPractice", "  Check network connection and API URL")
+                    android.util.Log.e("LatihanPractice", "  jilidId=$currentJilidId, halamanId=$currentHalamanId")
+                    
+                    runOnUiThread {
+                        Toast.makeText(
+                            this@LatihanPracticeActivity, 
+                            "Gagal memuat data halaman. Menggunakan data default.", 
+                            Toast.LENGTH_LONG
+                        ).show()
+                        
+                        // Try fallback with default data
+                        setupDefaultData()
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("LatihanPractice", "✗ Exception: ${e.message}", e)
+                runOnUiThread {
+                    Toast.makeText(
+                        this@LatihanPracticeActivity, 
+                        "Error loading data. Using default data.", 
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    
+                    // Try fallback with default data
+                    setupDefaultData()
+                }
+            }
+            
+            android.util.Log.d("LatihanPractice", "========================================")
+        }
+    }
+    
+    private fun setupDefaultData() {
+        android.util.Log.d("LatihanPractice", "Setting up default data for testing")
+        
+        try {
+            // Create a simple default halaman for testing
+            currentHalaman = com.google.mediapipe.examples.gesturerecognizer.data.LatihanHalaman(
+                id = currentHalamanId,
+                title = "Halaman $currentHalamanId - Default",
+                description = "Default halaman untuk testing",
+                barisList = listOf(
+                    com.google.mediapipe.examples.gesturerecognizer.data.LatihanBaris(
+                        id = 1,
+                        hurufList = listOf(
+                            com.google.mediapipe.examples.gesturerecognizer.data.LatihanHuruf(
+                                arabic = "أ", 
+                                latin = "Alif", 
+                                gestureName = "alif", 
+                                position = 1
+                            ),
+                            com.google.mediapipe.examples.gesturerecognizer.data.LatihanHuruf(
+                                arabic = "ب", 
+                                latin = "Ba", 
+                                gestureName = "ba", 
+                                position = 2
+                            ),
+                            com.google.mediapipe.examples.gesturerecognizer.data.LatihanHuruf(
+                                arabic = "ت", 
+                                latin = "Ta", 
+                                gestureName = "ta", 
+                                position = 3
+                            )
+                        )
+                    )
+                )
+            )
+            
+            currentBaris = currentHalaman?.barisList?.firstOrNull()
+            
+            updateUI()
+            loadCurrentBaris()
+            
+            android.util.Log.d("LatihanPractice", "Default data setup successful")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("LatihanPractice", "Failed to setup default data: ${e.message}", e)
+            Toast.makeText(this, "Tidak dapat memuat data latihan", Toast.LENGTH_SHORT).show()
+            finish()
+        }
     }
 
     private fun setupUI() {
@@ -209,21 +392,51 @@ class LatihanPracticeActivity : AppCompatActivity() {
     }
 
     private fun loadCurrentBaris() {
+        android.util.Log.d("LatihanPractice", "loadCurrentBaris: jilidId=$currentJilidId, halamanId=$currentHalamanId, barisId=$currentBarisId")
+        
         currentBaris = LatihanPageData.getBarisById(currentJilidId, currentHalamanId, currentBarisId)
         
+        if (currentBaris == null) {
+            android.util.Log.e("LatihanPractice", "Failed to get baris from LatihanPageData, trying fallback...")
+            
+            // Fallback: try to get from currentHalaman if available
+            currentBaris = currentHalaman?.barisList?.find { it.id == currentBarisId }
+            
+            if (currentBaris == null) {
+                android.util.Log.e("LatihanPractice", "Baris still null, using first available baris")
+                currentBaris = currentHalaman?.barisList?.firstOrNull()
+                if (currentBaris != null) {
+                    currentBarisId = currentBaris!!.id
+                }
+            }
+        }
+        
         currentBaris?.let { baris ->
+            android.util.Log.d("LatihanPractice", "✓ Loaded baris ${baris.id} with ${baris.hurufList.size} huruf")
+            
             // Merge persisted completed letters from progress manager
             try {
                 val persisted = com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager(this).getCompletedLetters()
                 completedPositions.addAll(persisted)
-            } catch (_: Exception) {}
+                android.util.Log.d("LatihanPractice", "Added ${persisted.size} persisted completed positions")
+            } catch (e: Exception) {
+                android.util.Log.w("LatihanPractice", "Could not load persisted progress: ${e.message}")
+            }
 
-            // Update adapter with current baris data
-            adapter.updateHuruf(baris.hurufList)
-            adapter.updateCompletedPositions(completedPositions)
+            // Update adapter with current baris data only if adapter is initialized
+            if (::adapter.isInitialized) {
+                adapter.updateHuruf(baris.hurufList)
+                adapter.updateCompletedPositions(completedPositions)
+            } else {
+                android.util.Log.w("LatihanPractice", "Adapter not initialized yet, skipping update")
+            }
             
             // Update UI
             updateUI()
+            
+            // Apply fade in animation to RecyclerView
+            val fadeIn = AnimationUtils.loadAnimation(this, R.anim.fade_in)
+            binding.recyclerViewGrid.startAnimation(fadeIn)
             
             // Enable/disable navigation buttons
             binding.btnPrevious.isEnabled = canGoPreviousBaris()
@@ -231,6 +444,9 @@ class LatihanPracticeActivity : AppCompatActivity() {
             
             // Debug info untuk memastikan completed positions ter-track
             android.util.Log.d("LatihanPractice", "Baris $currentBarisId loaded. Completed positions: $completedPositions")
+        } ?: run {
+            android.util.Log.w("LatihanPractice", "currentBaris is null in loadCurrentBaris()")
+            Toast.makeText(this, "Error: Tidak dapat memuat baris", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -364,13 +580,21 @@ class LatihanPracticeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Reload data when returning from camera
-        loadCurrentBaris()
-        // Automatically start camera on first resume so user doesn't need to press the button
-        if (firstLaunch) {
-            firstLaunch = false
-            openCamera()
-        }
+        android.util.Log.d("LatihanPractice", "onResume called")
+        
+        // REMOVED: loadCurrentBaris() - this was causing race condition
+        // loadCurrentBaris() is now only called AFTER loadPageData() completes successfully
+        
+        // REMOVED: Automatically start camera on first resume 
+        // This was causing the "balik-balik" issue where camera would auto-start
+        // and interfere with normal navigation
+        
+        // Optional: Only auto-start camera if user explicitly wants it
+        // You can uncomment this if you want auto-camera behavior:
+        // if (firstLaunch) {
+        //     firstLaunch = false
+        //     openCamera()
+        // }
     }
 
     // Helper function to check if current baris is completed
@@ -393,6 +617,9 @@ class LatihanPracticeActivity : AppCompatActivity() {
 
     // Show completion dialog when page is finished
     private fun showPageCompletionDialog() {
+        // Save progress to API
+        savePageCompletion()
+        
         val dialog = AlertDialog.Builder(this)
         val dialogView = layoutInflater.inflate(R.layout.dialog_page_completed, null)
         dialog.setView(dialogView)
@@ -417,6 +644,107 @@ class LatihanPracticeActivity : AppCompatActivity() {
         }
         
         alertDialog.show()
+    }
+    
+    /**
+     * Check if current page is already completed
+     */
+    private fun checkPageCompletionStatus() {
+        lifecycleScope.launch {
+            try {
+                // Generate halaman_id in format "jilidId-halamanId"
+                val halamanId = "$currentJilidId-$currentHalamanId"
+                
+                // Only check if user is logged in
+                if (authManager.isLoggedIn && authManager.authToken.isNotEmpty()) {
+                    val result = apiService.checkHalamanProgress(halamanId, authManager.authToken)
+                    
+                    result.onSuccess { response ->
+                        isPageAlreadyCompleted = response.completed
+                        android.util.Log.d("LatihanPractice", "Page completion status: $isPageAlreadyCompleted")
+                        
+                        runOnUiThread {
+                            if (isPageAlreadyCompleted) {
+                                // Show completion badge or indicator
+                                Toast.makeText(
+                                    this@LatihanPracticeActivity,
+                                    "✓ Halaman ini sudah selesai",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+                    
+                    result.onFailure { error ->
+                        android.util.Log.e("LatihanPractice", "Failed to check progress: ${error.message}")
+                    }
+                } else {
+                    android.util.Log.d("LatihanPractice", "User not logged in, skipping progress check")
+                }
+                
+                // Continue loading page data
+                loadPageData()
+                
+            } catch (e: Exception) {
+                android.util.Log.e("LatihanPractice", "Error checking completion: ${e.message}", e)
+                // Continue loading page data even if check fails
+                loadPageData()
+            }
+        }
+    }
+    
+    /**
+     * Save page completion to API
+     */
+    private fun savePageCompletion() {
+        lifecycleScope.launch {
+            try {
+                // Generate halaman_id in format "jilidId-halamanId"
+                val halamanId = "$currentJilidId-$currentHalamanId"
+                
+                // Only save if user is logged in and page not already completed
+                if (authManager.isLoggedIn && authManager.authToken.isNotEmpty() && !isPageAlreadyCompleted) {
+                    val result = apiService.saveHalamanProgress(
+                        halamanId = halamanId,
+                        status = 1, // 1 = completed
+                        authToken = authManager.authToken,
+                        userId = authManager.userId
+                    )
+                    
+                    result.onSuccess { response ->
+                        android.util.Log.d("LatihanPractice", "✓ Progress saved successfully")
+                        isPageAlreadyCompleted = true
+                        
+                        runOnUiThread {
+                            Toast.makeText(
+                                this@LatihanPracticeActivity,
+                                "Progress tersimpan!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                    
+                    result.onFailure { error ->
+                        android.util.Log.e("LatihanPractice", "Failed to save progress: ${error.message}")
+                        runOnUiThread {
+                            Toast.makeText(
+                                this@LatihanPracticeActivity,
+                                "Gagal menyimpan progress",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                } else {
+                    if (!authManager.isLoggedIn) {
+                        android.util.Log.d("LatihanPractice", "User not logged in, progress not saved")
+                    } else if (isPageAlreadyCompleted) {
+                        android.util.Log.d("LatihanPractice", "Page already completed, skipping save")
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("LatihanPractice", "Error saving completion: ${e.message}", e)
+            }
+        }
     }
 
     // Navigate to next page or show warning if not available

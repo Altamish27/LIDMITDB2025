@@ -25,6 +25,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -280,9 +283,14 @@ class CameraFragment : Fragment(),
     }
     
     private fun setupHijaiyahUI() {
+        // Check if this is embedded mode (latihan) or regular learning mode
+        val isEmbedded = arguments?.getBoolean("embedded", false) ?: false
+        
         // Setup target letter display
         targetLetter?.let { letter ->
-            fragmentCameraBinding.textTargetLetter.text = letter
+            // For embedded (latihan) mode: show the actual letter
+            // For regular learning mode: show question mark as hint
+            fragmentCameraBinding.textTargetLetter.text = if (isEmbedded) letter else "?"
         }
         
         targetLetterName?.let { name ->
@@ -294,6 +302,11 @@ class CameraFragment : Fragment(),
         fragmentCameraBinding.buttonBack.setOnClickListener {
             Navigation.findNavController(requireActivity(), R.id.fragment_container)
                 .navigateUp()
+        }
+        
+        // Setup help/tutorial button
+        fragmentCameraBinding.buttonHelp.setOnClickListener {
+            showTutorialDialog()
         }
         
         // Start automatic detection
@@ -1934,6 +1947,119 @@ class CameraFragment : Fragment(),
             }, 2000)
         } catch (e: Exception) {
             Log.e(TAG, "Error showing success dialog", e)
+        }
+    }
+    
+    private fun showTutorialDialog() {
+        try {
+            val dialogView = layoutInflater.inflate(R.layout.dialog_tutorial, null)
+            val dialog = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create()
+            
+            // Setup dialog content
+            val textTutorialLetter = dialogView.findViewById<TextView>(R.id.textTutorialLetter)
+            val textTutorialLetterName = dialogView.findViewById<TextView>(R.id.textTutorialLetterName)
+            val imageTutorialGesture = dialogView.findViewById<ImageView>(R.id.imageTutorialGesture)
+            val textTutorialSteps = dialogView.findViewById<TextView>(R.id.textTutorialSteps)
+            val textTutorialDiacriticInfo = dialogView.findViewById<TextView>(R.id.textTutorialDiacriticInfo)
+            val buttonCloseTutorial = dialogView.findViewById<Button>(R.id.buttonCloseTutorial)
+            
+            // Set letter info
+            textTutorialLetter.text = targetLetter ?: "ا"
+            textTutorialLetterName.text = targetLetterName ?: "Alif"
+            
+            // Get gesture name and load image
+            val gestureName = when {
+                isFathahMode -> {
+                    val fathahLetter = if (targetLetter != null) {
+                        FathahData.getLetterByArabic(targetLetter!!)
+                    } else {
+                        FathahData.getAllLetters().find { it.transliteration.equals(targetLetterName, ignoreCase = true) }
+                    }
+                    val baseHijaiyah = fathahLetter?.let { HijaiyahData.getLetterById(it.position) }
+                    baseHijaiyah?.gestureName
+                }
+                isKasrahMode -> {
+                    val kasrahLetter = if (targetLetter != null) {
+                        KasrahData.getLetterByArabic(targetLetter!!)
+                    } else {
+                        KasrahData.getAllLetters().find { it.transliteration.equals(targetLetterName, ignoreCase = true) }
+                    }
+                    val baseHijaiyah = kasrahLetter?.let { HijaiyahData.getLetterByPosition(it.position) }
+                    baseHijaiyah?.gestureName
+                }
+                isDhammahMode -> {
+                    val dhammahLetter = if (targetLetter != null) {
+                        DhammahData.getLetterByArabic(targetLetter!!)
+                    } else {
+                        DhammahData.getAllLetters().find { it.transliteration.equals(targetLetterName, ignoreCase = true) }
+                    }
+                    val baseHijaiyah = dhammahLetter?.let { HijaiyahData.getLetterByPosition(it.position) }
+                    baseHijaiyah?.gestureName
+                }
+                else -> {
+                    val hijaiyahLetter = if (targetLetter != null) {
+                        HijaiyahData.letters.find { it.arabic == targetLetter }
+                    } else {
+                        HijaiyahData.letters.find { it.transliteration.equals(targetLetterName, ignoreCase = true) }
+                    }
+                    hijaiyahLetter?.gestureName
+                }
+            }
+            
+            // Load gesture image - convert "01_alif" to "praga_alif"
+            if (gestureName != null) {
+                val imageResName = "praga_" + gestureName.substring(3) // Remove "01_" prefix
+                val imageResId = resources.getIdentifier(imageResName, "drawable", requireContext().packageName)
+                if (imageResId != 0) {
+                    imageTutorialGesture.setImageResource(imageResId)
+                    Log.d(TAG, "Loaded gesture image: $imageResName")
+                } else {
+                    // Try fallback to placeholder
+                    val placeholderResId = resources.getIdentifier("placeholder_gesture", "drawable", requireContext().packageName)
+                    if (placeholderResId != 0) {
+                        imageTutorialGesture.setImageResource(placeholderResId)
+                    }
+                    Log.w(TAG, "Gesture image not found: $imageResName, using placeholder")
+                }
+            }
+            
+            // Set instructions based on mode
+            val instructionText = when {
+                isFathahMode -> {
+                    textTutorialDiacriticInfo.visibility = View.VISIBLE
+                    textTutorialDiacriticInfo.text = "MODE FATHAH:\nSetelah gesture huruf terdeteksi, gerakkan tangan ke KIRI untuk harakat Fathah"
+                    "1. Tunjukkan gesture huruf $targetLetterName\n2. Tahan posisi tangan tetap diam selama 1 detik\n3. Setelah terdeteksi, gerakkan tangan ke KIRI\n4. Pola: DIAM → KIRI → DIAM"
+                }
+                isKasrahMode -> {
+                    textTutorialDiacriticInfo.visibility = View.VISIBLE
+                    textTutorialDiacriticInfo.text = "MODE KASRAH:\nSetelah gesture huruf terdeteksi, gerakkan tangan ke BAWAH untuk harakat Kasrah"
+                    "1. Tunjukkan gesture huruf $targetLetterName\n2. Tahan posisi tangan tetap diam selama 1 detik\n3. Setelah terdeteksi, gerakkan tangan ke BAWAH\n4. Pola: DIAM → BAWAH → DIAM"
+                }
+                isDhammahMode -> {
+                    textTutorialDiacriticInfo.visibility = View.VISIBLE
+                    textTutorialDiacriticInfo.text = "MODE DHAMMAH:\nSetelah gesture huruf terdeteksi, lakukan gerakan melingkar ke atas untuk harakat Dhammah"
+                    "1. Tunjukkan gesture huruf $targetLetterName\n2. Tahan posisi tangan tetap diam selama 1 detik\n3. Lakukan gerakan: BAWAH → diagonal kiri-bawah → KIRI → diagonal kiri-atas → ATAS\n4. Pola: Gerakan melingkar ke atas"
+                }
+                else -> {
+                    textTutorialDiacriticInfo.visibility = View.GONE
+                    "1. Tunjukkan gesture huruf $targetLetterName\n2. Tahan posisi tangan tetap diam selama 1 detik\n3. Tunggu hingga progress bar penuh\n4. Gesture berhasil terdeteksi!"
+                }
+            }
+            
+            textTutorialSteps.text = instructionText
+            
+            // Close button
+            buttonCloseTutorial.setOnClickListener {
+                dialog.dismiss()
+            }
+            
+            dialog.show()
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error showing tutorial dialog", e)
+            Toast.makeText(requireContext(), "Tidak dapat menampilkan tutorial", Toast.LENGTH_SHORT).show()
         }
     }
 }

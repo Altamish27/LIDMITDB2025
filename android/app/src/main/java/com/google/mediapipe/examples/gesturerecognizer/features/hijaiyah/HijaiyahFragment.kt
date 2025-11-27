@@ -110,54 +110,110 @@ class HijaiyahFragment : Fragment() {
 
     private fun setupUI() {
         // Progress will be updated dynamically
-        binding.tvCurrentLetter.text = "Belajar Hijaiyah"
+        setupCategoryTabs()
+    }
+    
+    private fun setupCategoryTabs() {
+        // Set Hijaiyah as active by default
+        setActiveTab(0)
+        
+        binding.btnCategoryHijaiyah.setOnClickListener {
+            setActiveTab(0)
+            currentCategory = 0
+            loadHijaiyahLetters()
+        }
+        
+        binding.btnCategoryFathah.setOnClickListener {
+            setActiveTab(1)
+            currentCategory = 1
+            loadFathahLetters()
+        }
+        
+        binding.btnCategoryKasrah.setOnClickListener {
+            setActiveTab(2)
+            currentCategory = 2
+            loadKasrahLetters()
+        }
+        
+        binding.btnCategoryDhommah.setOnClickListener {
+            setActiveTab(3)
+            currentCategory = 3
+            loadDhammahLetters()
+        }
+    }
+    
+    private fun setActiveTab(position: Int) {
+        // Reset all tabs to inactive state
+        binding.btnCategoryHijaiyah.apply {
+            backgroundTintList = android.content.res.ColorStateList.valueOf(
+                resources.getColor(R.color.white, null))
+            setTextColor(resources.getColor(R.color.hijaiyah_navy, null))
+            strokeWidth = 2
+        }
+        binding.btnCategoryFathah.apply {
+            backgroundTintList = android.content.res.ColorStateList.valueOf(
+                resources.getColor(R.color.white, null))
+            setTextColor(resources.getColor(R.color.hijaiyah_navy, null))
+            strokeWidth = 2
+        }
+        binding.btnCategoryKasrah.apply {
+            backgroundTintList = android.content.res.ColorStateList.valueOf(
+                resources.getColor(R.color.white, null))
+            setTextColor(resources.getColor(R.color.hijaiyah_navy, null))
+            strokeWidth = 2
+        }
+        binding.btnCategoryDhommah.apply {
+            backgroundTintList = android.content.res.ColorStateList.valueOf(
+                resources.getColor(R.color.white, null))
+            setTextColor(resources.getColor(R.color.hijaiyah_navy, null))
+            strokeWidth = 2
+        }
+        
+        // Set active tab
+        when (position) {
+            0 -> binding.btnCategoryHijaiyah.apply {
+                backgroundTintList = android.content.res.ColorStateList.valueOf(
+                    resources.getColor(R.color.hijaiyah_green, null))
+                setTextColor(resources.getColor(R.color.white, null))
+                strokeWidth = 0
+            }
+            1 -> binding.btnCategoryFathah.apply {
+                backgroundTintList = android.content.res.ColorStateList.valueOf(
+                    resources.getColor(R.color.hijaiyah_green, null))
+                setTextColor(resources.getColor(R.color.white, null))
+                strokeWidth = 0
+            }
+            2 -> binding.btnCategoryKasrah.apply {
+                backgroundTintList = android.content.res.ColorStateList.valueOf(
+                    resources.getColor(R.color.hijaiyah_green, null))
+                setTextColor(resources.getColor(R.color.white, null))
+                strokeWidth = 0
+            }
+            3 -> binding.btnCategoryDhommah.apply {
+                backgroundTintList = android.content.res.ColorStateList.valueOf(
+                    resources.getColor(R.color.hijaiyah_green, null))
+                setTextColor(resources.getColor(R.color.white, null))
+                strokeWidth = 0
+            }
+        }
     }
     
     private fun setupSpinner() {
-        try {
-            val categories = arrayOf("Hijaiyah", "Fathah", "Kasrah", "Dhammah")
-            val spinnerAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, categories)
-            spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            binding.spinnerCategory.adapter = spinnerAdapter
-            
-            // Set dropdown to show below spinner with extra margin
-            binding.spinnerCategory.dropDownVerticalOffset = binding.spinnerCategory.height + 100
-            
-            binding.spinnerCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                    currentCategory = position
-                    when (position) {
-                        0 -> { // Hijaiyah
-                            loadHijaiyahLetters()
-                        }
-                        1 -> { // Fathah
-                            loadFathahLetters()
-                        }
-                        2 -> { // Kasrah
-                            loadKasrahLetters()
-                        }
-                        3 -> { // Dhammah
-                            loadDhammahLetters()
-                        }
-                    }
-                }
-                
-                override fun onNothingSelected(parent: AdapterView<*>?) {
-                    // Do nothing
-                }
-            }
-            
-            // Set spinner to default category
-            binding.spinnerCategory.setSelection(currentCategory, false)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        // Deprecated - using tabs now
     }
     
     private fun setupRecyclerView() {
-        adapter = ArabicLetterAdapter { letter ->
-            navigateToGestureRecognition(letter)
+        // Determine diacritic type based on current category
+        val diacriticType = when(currentCategory) {
+            1 -> "fathah"
+            2 -> "kasrah"
+            3 -> "dhammah"
+            else -> null
         }
+        
+        adapter = ArabicLetterAdapter({ letter ->
+            navigateToGestureRecognition(letter)
+        }, diacriticType)
         
         binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.recyclerView.adapter = adapter

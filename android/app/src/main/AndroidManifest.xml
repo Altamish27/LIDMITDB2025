@@ -77,6 +77,13 @@
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer">
         </activity>
+
+        <activity
+            android:name=".features.praga.PragaActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer">
+        </activity>
+
         <activity
             android:name=".features.auth.LoginActivity"
             android:exported="false"
@@ -84,7 +91,43 @@
         </activity>
         
         <activity
+            android:name=".features.auth.RegisterActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer">
+        </activity>
+        
+        <activity
             android:name=".features.auth.ProfileActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer">
+        </activity>
+        
+        <activity
+            android:name=".features.room.MyRoomsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer">
+        </activity>
+        
+        <activity
+            android:name=".features.room.JoinRoomActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer">
+        </activity>
+        
+        <activity
+            android:name=".features.room.RoomDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer">
+        </activity>
+        
+        <activity
+            android:name=".features.about.AboutActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer">
+        </activity>
+        
+        <activity
+            android:name=".features.settings.SettingsActivity"
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer">
         </activity>
@@ -99,6 +142,12 @@
         
         <activity
             android:name=".features.latihan.LatihanPracticeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GestureRecognizer" />
+
+        <!-- Guide Activity -->
+        <activity
+            android:name=".features.guide.LetterGuideActivity"
             android:exported="false"
             android:theme="@style/Theme.GestureRecognizer" />
 

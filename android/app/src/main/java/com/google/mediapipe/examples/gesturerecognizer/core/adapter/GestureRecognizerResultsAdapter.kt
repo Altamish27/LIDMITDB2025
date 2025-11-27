@@ -20,6 +20,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.google.mediapipe.examples.gesturerecognizer.databinding.ItemGestureRecognizerResultBinding
+import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
 import com.google.mediapipe.tasks.components.containers.Category
 import java.util.Locale
 import kotlin.math.min
@@ -76,7 +77,19 @@ class GestureRecognizerResultsAdapter :
 
         fun bind(label: String?, score: Float?) {
             with(binding) {
-                tvLabel.text = label ?: NO_VALUE
+                // Convert gesture name (e.g., "01_alif") to Arabic letter
+                val displayLabel = if (label != null && label != NO_VALUE) {
+                    val hijaiyahLetter = HijaiyahData.getLetterByGesture(label)
+                    if (hijaiyahLetter != null) {
+                        "${hijaiyahLetter.arabic} (${hijaiyahLetter.transliteration})"
+                    } else {
+                        label
+                    }
+                } else {
+                    NO_VALUE
+                }
+                
+                tvLabel.text = displayLabel
                 tvScore.text = if (score != null) String.format(
                     Locale.US,
                     "%.2f",

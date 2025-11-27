@@ -4,25 +4,28 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/white">
+    android:background="@color/background_light">
 
-    <!-- Header Section -->
+    <!-- Header Section with Gradient -->
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:background="@drawable/header_gradient_background"
+        android:layout_height="120dp"
+        android:background="@drawable/gradient_header_hijaiyah"
         android:padding="16dp">
 
         <!-- Back Arrow -->
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
             android:src="@drawable/ic_arrow_back"
             android:clickable="true"
-            android:focusable="true"/>
+            android:focusable="true"
+            app:tint="@color/white"
+            android:background="@android:color/transparent"
+            android:padding="4dp"/>
 
         <!-- Title -->
         <TextView
@@ -32,7 +35,7 @@
             android:layout_centerInParent="true"
             android:text="Latihan 1"
             android:textColor="@color/white"
-            android:textSize="20sp"
+            android:textSize="22sp"
             android:textStyle="bold"/>
 
         <!-- Subtitle -->
@@ -44,7 +47,9 @@
             android:layout_centerHorizontal="true"
             android:text="Halaman 1"
             android:textColor="@color/white"
-            android:textSize="14sp"/>
+            android:alpha="0.9"
+            android:textSize="14sp"
+            android:layout_marginTop="4dp"/>
 
     </RelativeLayout>
 
@@ -56,18 +61,39 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Row Title -->
-        <TextView
-            android:id="@+id/tvRowTitle"
-            android:layout_width="wrap_content"
+        <!-- Row Title Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Baris 1"
-            android:textColor="@color/hijaiyah_navy"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp"/>
-
-    <!-- Huruf Grid is rendered as an overlay inside the camera area -->
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/white">
+            
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:gravity="center_vertical">
+                
+                <TextView
+                    android:id="@+id/tvRowTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Baris 1"
+                    android:textColor="@color/hijaiyah_navy"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+                    
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_arrow_forward"
+                    app:tint="@color/hijaiyah_green"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
         <!-- Camera + overlay area: camera fills area, UI overlays on top -->
         <FrameLayout
@@ -76,13 +102,11 @@
             android:layout_weight="1">
 
             <!-- Full-size camera fragment container -->
-            <androidx.fragment.app.FragmentContainerView
+            <FrameLayout
                 android:id="@+id/camera_fragment_container"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:name="com.google.mediapipe.examples.gesturerecognizer.fragment.CameraFragment"
-                android:visibility="gone"
-                app:defaultNavHost="false" />
+                android:visibility="gone" />
 
             <!-- Overlay layout: top list + camera button at bottom center -->
             <LinearLayout
@@ -97,16 +121,23 @@
                     android:layout_height="0dp"
                     android:layout_weight="0.3" />
 
-                <!-- Huruf Grid (overlay) -->
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recyclerViewGrid"
+                <!-- Huruf Grid (overlay) with Card Background -->
+                <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
-                    android:layout_height="140dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="-8dp"
                     android:layout_marginBottom="8dp"
-                    android:background="@android:color/transparent" />
-
-                <!-- Camera button removed because camera auto-starts on entry -->
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/white">
+                    
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recyclerViewGrid"
+                        android:layout_width="match_parent"
+                        android:layout_height="140dp"
+                        android:padding="12dp"
+                        android:background="@android:color/transparent" />
+                </androidx.cardview.widget.CardView>
 
             </LinearLayout>
 
@@ -120,57 +151,39 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="16dp"
+        android:background="@color/white"
+        android:elevation="4dp"
         android:gravity="center_vertical">
 
         <!-- Previous Button -->
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnPrevious"
             android:layout_width="0dp"
             android:layout_height="50dp"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            app:cardCornerRadius="25dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@android:color/darker_gray">
-
-            <TextView
-                android:id="@+id/btnPrevious"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:text="◀ Sebelumnya"
-                android:textColor="@color/white"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?android:attr/selectableItemBackground"/>
-
-        </androidx.cardview.widget.CardView>
+            android:text="◀ Sebelumnya"
+            android:textColor="@color/hijaiyah_navy"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/white"
+            app:strokeColor="@color/hijaiyah_navy"
+            app:strokeWidth="2dp"
+            app:cornerRadius="25dp"/>
 
         <!-- Next Button -->
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnNext"
             android:layout_width="0dp"
             android:layout_height="50dp"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            app:cardCornerRadius="25dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@color/hijaiyah_navy">
-
-            <TextView
-                android:id="@+id/btnNext"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:text="Selanjutnya ▶"
-                android:textColor="@color/white"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?android:attr/selectableItemBackground"/>
-
-        </androidx.cardview.widget.CardView>
+            android:text="Selanjutnya ▶"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/hijaiyah_green"
+            app:cornerRadius="25dp"/>
 
     </LinearLayout>
 

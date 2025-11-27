@@ -16,45 +16,111 @@
 
 package com.google.mediapipe.examples.gesturerecognizer.data
 
+import com.google.mediapipe.examples.gesturerecognizer.data.api.SignQuranApiService
+import com.google.mediapipe.examples.gesturerecognizer.data.models.HijaiyahLetterApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
 data class HijaiyahLetter(
     override val arabic: String,
     override val transliteration: String,
     override val gestureName: String?,
     override var isCompleted: Boolean = false,
-    override val position: Int
+    override val position: Int,
+    val assets: String? = null  // URL to image/video asset or null
 ) : ArabicLetter
 
 object HijaiyahData {
-    val letters = listOf(
-        HijaiyahLetter("ا", "Alif", "01_alif", false, 1),
-        HijaiyahLetter("ب", "Ba", "02_ba", false, 2),
-        HijaiyahLetter("ت", "Ta", "03_ta", false, 3),
-        HijaiyahLetter("ث", "Tsa", "04_tsa", false, 4),
-        HijaiyahLetter("ج", "Jim", "05_jim", false, 5),
-        HijaiyahLetter("ح", "Ha", "06_ha", false, 6),
-        HijaiyahLetter("خ", "Kha", "07_kha", false, 7),
-        HijaiyahLetter("د", "Dal", "08_dal", false, 8),
-        HijaiyahLetter("ذ", "Dzal", "09_dzal", false, 9),
-        HijaiyahLetter("ر", "Ra", "10_ra", false, 10),
-        HijaiyahLetter("ز", "Za", "11_za", false, 11),
-        HijaiyahLetter("س", "Sin", "12_sin", false, 12),
-        HijaiyahLetter("ش", "Syin", "13_syin", false, 13),
-        HijaiyahLetter("ص", "Shod", "14_shad", false, 14),
-        HijaiyahLetter("ض", "Dhod", "15_dhad", false, 15),
-        HijaiyahLetter("ط", "Tho", "16_tha", false, 16),
-        HijaiyahLetter("ظ", "Zho", "17_zha", false, 17),
-        HijaiyahLetter("ع", "Ain", "18_ain", false, 18),
-        HijaiyahLetter("غ", "Ghoin", "19_ghain", false, 19),
-        HijaiyahLetter("ف", "Fa", "20_fa", false, 20),
-        HijaiyahLetter("ق", "Qof", "21_qaf", false, 21),
-        HijaiyahLetter("ك", "Kaf", "22_kaf", false, 22),
-        HijaiyahLetter("ل", "Lam", "23_lam", false, 23),
-        HijaiyahLetter("م", "Mim", "24_mim", false, 24),
-        HijaiyahLetter("ن", "Nun", "25_nun", false, 25),
-        HijaiyahLetter("و", "Wau", "26_waw", false, 26),
-        HijaiyahLetter("ه", "Ha'", "27_ha'", false, 27),
-        HijaiyahLetter("ي", "Ya", "28_ya", false, 28)
+    // Mapping dari latin name API ke gesture name
+    private val latinToGestureMap = mapOf(
+        "Alif" to "01_alif",
+        "Ba" to "02_ba",
+        "Ta" to "03_ta",
+        "Tsa" to "04_tsa",
+        "Jim" to "05_jim",
+        "Ha" to "06_ha",
+        "Kha" to "07_kha",
+        "Dal" to "08_dal",
+        "Dzal" to "09_dzal",
+        "Ra" to "10_ra",
+        "Za" to "11_za",
+        "Sin" to "12_sin",
+        "Syin" to "13_syin",
+        "Shod" to "14_shad",
+        "Dhod" to "15_dhad",
+        "Tho" to "16_tha",
+        "Zho" to "17_zha",
+        "Ain" to "18_ain",
+        "Ghoin" to "19_ghain",
+        "Fa" to "20_fa",
+        "Qof" to "21_qaf",
+        "Kaf" to "22_kaf",
+        "Lam" to "23_lam",
+        "Mim" to "24_mim",
+        "Nun" to "25_nun",
+        "Wau" to "26_waw",
+        "Ha'" to "27_ha'",
+        "Ya" to "28_ya"
     )
+    
+    // Cache untuk menyimpan data dari API
+    private var cachedLetters: List<HijaiyahLetter>? = null
+    
+    // Property untuk backward compatibility - HANYA dari API
+    val letters: List<HijaiyahLetter>
+        get() = cachedLetters ?: emptyList()
+    
+    /**
+     * Load data dari API
+     */
+    suspend fun loadFromApi(context: android.content.Context? = null): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val apiService = SignQuranApiService.getInstance()
+                
+                // Get auth token if context is provided
+                val token = if (context != null) {
+                    val authManager = com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager(context)
+                    if (authManager.isLoggedIn) authManager.authToken else null
+                } else null
+                
+                val result = apiService.getHijaiyahLetters(token)
+                
+                result.onSuccess { response ->
+                    cachedLetters = response.letters.map { apiLetter ->
+                        mapApiLetterToHijaiyahLetter(apiLetter)
+                    }
+                    return@withContext true
+                }
+                
+                result.onFailure { error ->
+                    android.util.Log.e("HijaiyahData", "API Failed: ${error.message}", error)
+                    cachedLetters = emptyList()
+                }
+                
+                return@withContext false
+            } catch (e: Exception) {
+                android.util.Log.e("HijaiyahData", "API Error: ${e.message}", e)
+                cachedLetters = emptyList()
+                return@withContext false
+            }
+        }
+    }
+    
+    /**
+     * Mapping dari API letter ke HijaiyahLetter
+     */
+    private fun mapApiLetterToHijaiyahLetter(apiLetter: HijaiyahLetterApi): HijaiyahLetter {
+        val gestureName = latinToGestureMap[apiLetter.latinName]
+        return HijaiyahLetter(
+            arabic = apiLetter.arabicChar,
+            transliteration = apiLetter.latinName,
+            gestureName = gestureName,
+            isCompleted = false,
+            position = apiLetter.ordinal,
+            assets = null  // Assets not available from API yet
+        )
+    }
     
     fun getAllLetters(): List<HijaiyahLetter> {
         return letters

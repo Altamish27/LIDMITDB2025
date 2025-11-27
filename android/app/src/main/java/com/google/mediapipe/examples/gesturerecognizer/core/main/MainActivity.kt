@@ -30,6 +30,7 @@
     import com.google.mediapipe.examples.gesturerecognizer.core.viewmodel.MainViewModel
     import com.google.mediapipe.examples.gesturerecognizer.R
     import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityMainBinding
+    import com.google.mediapipe.examples.gesturerecognizer.core.animation.ViewAnimationUtils
 
     class MainActivity : AppCompatActivity() {
         private lateinit var activityMainBinding: ActivityMainBinding
@@ -60,9 +61,19 @@
 
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
+            
+            // Enable hardware acceleration
+            window.setFlags(
+                android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
+            )
+            
             activityMainBinding = ActivityMainBinding.inflate(layoutInflater)
             setContentView(activityMainBinding.root)
 
+            // Prepare for animation
+            activityMainBinding.root.alpha = 0f
+            
             // Check camera permission first
             checkCameraPermission()
         }
@@ -86,13 +97,32 @@
                     supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
                 navController = navHostFragment.navController
 
-                // Check if we need to navigate to a specific destination
-                val navigateTo = intent.getStringExtra("navigate_to")
-                when (navigateTo) {
-                    "latihan" -> {
-                        navController.navigate(R.id.latihan_fragment)
+                // Check if we need to open camera directly with parameters
+                val openCamera = intent.getBooleanExtra("openCamera", false)
+                if (openCamera) {
+                    // Navigate to camera with parameters
+                    val bundle = Bundle().apply {
+                        putString("selectedLetter", intent.getStringExtra("selectedLetter"))
+                        putString("target_letter", intent.getStringExtra("target_letter"))
+                        putString("letterName", intent.getStringExtra("letterName"))
+                        putString("target_letter_name", intent.getStringExtra("target_letter_name"))
+                        putString("letterType", intent.getStringExtra("letterType"))
+                        putString("diacritic", intent.getStringExtra("diacritic"))
+                        putInt("letterPosition", intent.getIntExtra("letterPosition", -1))
                     }
-                    // Default stays at hijaiyah_fragment (start destination)
+                    navController.navigate(R.id.camera_fragment, bundle)
+                } else {
+                    // Check if we need to navigate to a specific destination
+                    val navigateTo = intent.getStringExtra("navigate_to")
+                    when (navigateTo) {
+                        "latihan" -> {
+                            // Use fragment transaction for latihan jilid
+                            supportFragmentManager.beginTransaction()
+                                .replace(R.id.fragment_container, com.google.mediapipe.examples.gesturerecognizer.features.latihan.LatihanJilidFragment())
+                                .commit()
+                        }
+                        // Default stays at hijaiyah_fragment (start destination)
+                    }
                 }
 
                 // Handle back press with modern API
@@ -101,6 +131,11 @@
                         finish()
                     }
                 })
+                
+                // Start entrance animation after navigation is ready
+                activityMainBinding.root.post {
+                    ViewAnimationUtils.fadeInScreen(activityMainBinding.root, 300)
+                }
                 
                 Log.d(TAG, "Navigation setup completed")
             } catch (e: Exception) {

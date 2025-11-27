@@ -1,70 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="8dp"
     android:layout_marginBottom="12dp"
-    android:background="@drawable/card_bg">
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="#FFFFFF">
 
-    <!-- Check icon top-right -->
-    <ImageView
-        android:id="@+id/iv_check"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_alignParentEnd="true"
-        android:src="@drawable/ic_check"
-        android:visibility="gone" />
-
-    <!-- Number circle -->
-    <TextView
-        android:id="@+id/tv_ayat_number"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_alignParentStart="true"
-        android:background="@drawable/circle_green"
-        android:textColor="@android:color/white"
-        android:gravity="center"
-        android:text="1"
-        android:textStyle="bold" />
-
-    <!-- Content container to the right of number -->
-    <LinearLayout
-        android:id="@+id/content_container"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_toEndOf="@id/tv_ayat_number"
-        android:orientation="vertical"
-        android:layout_marginStart="12dp">
+        android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tv_arab"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="26sp"
-            android:textStyle="bold"
-            android:gravity="end"
-            android:text="آية" />
+        <!-- Check icon top-right -->
+        <ImageView
+            android:id="@+id/iv_check"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:src="@drawable/ic_check"
+            android:tint="#4CAF50"
+            android:visibility="gone" />
 
-        <!-- Representasi bahasa isyarat per huruf (tampil sebagai teks hijaiyah) -->
+        <!-- Number circle -->
         <TextView
-            android:id="@+id/tv_isyarat"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textSize="20sp"
-            android:textColor="@color/hijaiyah_navy"
-            android:fontFamily="@font/hijaiyah_font_family"
-            android:gravity="start" />
-
-        <TextView
-            android:id="@+id/tv_terjemahan"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:id="@+id/tv_ayat_number"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/circle_green"
+            android:textColor="#FFFFFF"
+            android:gravity="center"
+            android:text="1"
             android:textSize="14sp"
-            android:textColor="@color/hijaiyah_navy"
-            android:layout_marginTop="8dp"
-            android:text="Terjemahan ayat" />
+            android:textStyle="bold" />
 
-    </LinearLayout>
+        <!-- Ayat title (e.g., "Ayat 1") -->
+        <TextView
+            android:id="@+id/tv_ayat_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/tv_ayat_number"
+            android:layout_alignTop="@id/tv_ayat_number"
+            android:layout_marginStart="12dp"
+            android:text="Ayat 1"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#2C3E50" />
 
-</RelativeLayout>
+        <!-- Content container below number -->
+        <LinearLayout
+            android:id="@+id/content_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_ayat_number"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical">
+
+            <!-- Arabic text - aligned to right -->
+            <TextView
+                android:id="@+id/tv_arab"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#2C3E50"
+                android:gravity="end"
+                android:lineSpacingExtra="6dp"
+                android:text="أَرَءَيۡتَ ٱلَّذِي يُكَذِّبُ بِٱلدِّينِ" />
+
+            <!-- Representasi bahasa isyarat per huruf (tampil sebagai teks hijaiyah dengan watermark style) -->
+            <TextView
+                android:id="@+id/tv_isyarat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textSize="16sp"
+                android:textColor="#B0BEC5"
+                android:alpha="0.6"
+                android:fontFamily="@font/hijaiyah_font_family"
+                android:gravity="start"
+                android:lineSpacingExtra="4dp" />
+
+            <!-- Translation text -->
+            <TextView
+                android:id="@+id/tv_terjemahan"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="#34495E"
+                android:lineSpacingExtra="4dp"
+                android:layout_marginTop="12dp"
+                android:text="Tahukah kamu (orang) yang mendustakan agama?" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</androidx.cardview.widget.CardView>

@@ -4,9 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:paddingVertical="14dp"
-    android:paddingHorizontal="8dp"
-    android:layout_marginBottom="1dp">
+    android:paddingVertical="18dp"
+    android:paddingHorizontal="12dp"
+    android:layout_marginBottom="0dp"
+    android:gravity="center_vertical">
     
     <TextView
         android:id="@+id/tv_huruf"
@@ -15,7 +16,7 @@
         android:layout_weight="1"
         android:text="ا"
         android:textColor="@color/hijaiyah_navy"
-        android:textSize="22sp"
+        android:textSize="28sp"
         android:textStyle="bold"
         android:gravity="center" />
     
@@ -25,9 +26,9 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="ا"
-        android:textSize="22sp"
+        android:textSize="32sp"
         android:textStyle="bold"
-        android:textColor="@color/hijaiyah_navy"
+        android:textColor="@color/hijaiyah_green"
         android:fontFamily="@font/hijaiyah_font_family"
         android:gravity="center" />
     

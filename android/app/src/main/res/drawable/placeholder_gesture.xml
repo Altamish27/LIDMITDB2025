@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    
+    <!-- Background -->
+    <path
+        android:fillColor="#F5F5F5"
+        android:pathData="M0,0h200v200h-200z"/>
+    
+    <!-- Hand icon -->
+    <path
+        android:fillColor="#147E7E"
+        android:pathData="M100,60 L100,100 L80,120 L85,125 L105,105 L125,125 L130,120 L110,100 L110,60 Z"/>
+    
+    <!-- Camera icon -->
+    <path
+        android:fillColor="#666666"
+        android:pathData="M70,140 L130,140 L135,150 L135,170 L65,170 L65,150 Z
+                         M100,155 A10,10 0 1,1 100,155.1"/>
+    
+    <!-- Text: Gambar Gesture -->
+    <path
+        android:fillColor="#999999"
+        android:pathData="M60,190 h80"/>
+</vector>
