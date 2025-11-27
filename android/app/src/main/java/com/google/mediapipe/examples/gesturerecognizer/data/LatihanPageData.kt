@@ -16,6 +16,15 @@
 
 package com.google.mediapipe.examples.gesturerecognizer.data
 
+import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import com.google.mediapipe.examples.gesturerecognizer.data.api.SignQuranApiService
+import com.google.mediapipe.examples.gesturerecognizer.data.models.PageDetailItem
+import com.google.mediapipe.examples.gesturerecognizer.data.models.JilidApi
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
+
 /**
  * Data class untuk setiap huruf dalam latihan
  */
@@ -237,7 +246,7 @@ object LatihanPageData {
                         Log.d(TAG, "  - Response pageDetail size: ${response.pageDetail.size}")
                         if (response.pageDetail.isNotEmpty()) {
                             val firstItem = response.pageDetail[0]
-                            Log.d(TAG, "  - First item sample: baris=${firstItem.baris}, urutan=${firstItem.urutan}, latin='${firstItem.latinName}', arab='${firstItem.arabicChar}'")
+                            Log.d(TAG, "  - First item sample: baris=${firstItem.baris}, urutan=${firstItem.urutan}, latin='${firstItem.hurufLatin}', arab='${firstItem.hurufArab}'")
                             Log.d(TAG, "  - Baris groups: ${response.pageDetail.groupBy { it.baris }.keys}")
                             
                             Log.d(TAG, "Starting data mapping...")
@@ -293,16 +302,16 @@ object LatihanPageData {
             Log.d(TAG, "  - Urutan sequence: ${sortedItems.map { it.urutan }}")
             
             val hurufList = sortedItems.mapIndexed { index, item ->
-                val gestureName = latinToGestureMap[item.latinName] ?: item.latinName.lowercase()
+                val gestureName = latinToGestureMap[item.hurufLatin] ?: item.hurufLatin.lowercase()
                 
                 // Position calculation: for this context we'll use a combination of barisId and urutan
                 val position = (barisId * 100) + item.urutan  // Simple position calculation
                 
-                Log.d(TAG, "    [$index] Urutan ${item.urutan}: latin='${item.latinName}' -> gesture='$gestureName', arab='${item.arabicChar}', pos=$position")
+                Log.d(TAG, "    [$index] Urutan ${item.urutan}: latin='${item.hurufLatin}' -> gesture='$gestureName', arab='${item.hurufArab}', pos=$position")
                 
                 LatihanHuruf(
-                    arabic = item.arabicChar,
-                    latin = item.latinName.uppercase(),
+                    arabic = item.hurufArab,
+                    latin = item.hurufLatin.uppercase(),
                     gestureName = gestureName,
                     position = position,
                     isCompleted = false,

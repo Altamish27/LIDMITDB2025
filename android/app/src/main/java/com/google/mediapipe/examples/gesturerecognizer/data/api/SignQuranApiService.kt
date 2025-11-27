@@ -183,7 +183,7 @@ class SignQuranApiService {
         } catch (e: Exception) {
             android.util.Log.e("SignQuranAPI", "Get jilid progress error: ${e.message}", e)
             // Return empty list on error (user might not have any progress yet)
-            Result.success(JilidProgressListResponse(success = true, progress = emptyList()))
+            Result.success(JilidProgressListResponse(progress = emptyList()))
         }
     }
     
@@ -204,7 +204,7 @@ class SignQuranApiService {
             // 404 berarti belum ada progress (belum dikerjakan)
             if (e.message?.contains("404") == true) {
                 android.util.Log.d("SignQuranAPI", "No progress found (not started yet)")
-                Result.success(HalamanProgressCheckResponse(success = true, completed = false))
+                Result.success(HalamanProgressCheckResponse(completed = false))
             } else {
                 android.util.Log.e("SignQuranAPI", "Progress check error: ${e.message}", e)
                 Result.failure(e)
@@ -222,7 +222,7 @@ class SignQuranApiService {
             val response = client.post("$BASE_URL/progress/halaman") {
                 headers.append("Authorization", "Bearer $authToken")
                 contentType(ContentType.Application.Json)
-                setBody(HalamanProgressRequest(halamanId.toInt(), userId, status == 1))
+                setBody(HalamanProgressRequest(halamanId, if(status == 1) 1 else 0))
             }
             val body = response.body<HalamanProgressResponse>()
             android.util.Log.d("SignQuranAPI", "Progress saved successfully")
@@ -242,7 +242,7 @@ class SignQuranApiService {
             val response = client.post("$BASE_URL/enrollments/join") {
                 headers.append("Authorization", "Bearer $authToken")
                 contentType(ContentType.Application.Json)
-                setBody(JoinRoomRequest(code, userId))
+                setBody(JoinRoomRequest(code))
             }
             val body = response.body<JoinRoomResponse>()
             android.util.Log.d("SignQuranAPI", "Successfully joined room: ${body.room?.name ?: "Unknown"}")
@@ -288,7 +288,7 @@ class SignQuranApiService {
             
             android.util.Log.d("SignQuranAPI", "Enrolled rooms: ${body.rooms.size}")
             for ((index, room) in body.rooms.withIndex()) {
-                android.util.Log.d("SignQuranAPI", "Room $index: ${room.name}, Code: ${room.roomCode}, Creator: ${room.createdByName}")
+                android.util.Log.d("SignQuranAPI", "Room $index: ${room.name}, Code: ${room.code}, Creator: ${room.createdByName}")
             }
             
             Result.success(body)

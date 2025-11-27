@@ -55,7 +55,8 @@ class LatihanFragment : Fragment() {
     }
     
     private fun setupHalamanAdapter() {
-        halamanAdapter = HalamanListAdapter { halaman ->
+        // Explicitly specify the parameter type for the lambda
+        halamanAdapter = HalamanListAdapter { halaman: HalamanInfo ->
             navigateToHalaman(halaman.halamanId.toString(), halaman.nomorHalaman, "Halaman ${halaman.nomorHalaman}", halaman.deskripsi)
         }
         
@@ -99,7 +100,7 @@ class LatihanFragment : Fragment() {
                             
                             // Create a map of halaman_id -> completed status
                             val progressMap = progressResponse.progress.associate { 
-                                it.halamanId to it.completed 
+                                it.halamanId to (it.status == 1)
                             }
                             
                             // Update pages with completion status

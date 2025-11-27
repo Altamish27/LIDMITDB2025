@@ -36,7 +36,7 @@ class MyRoomsAdapter(
         fun bind(room: EnrolledRoom) {
             binding.tvRoomName.text = room.name
             binding.tvRoomDescription.text = room.description
-            binding.tvRoomCode.text = "Kode: ${room.roomCode}"
+            binding.tvRoomCode.text = "Kode: ${room.code}"
             binding.tvGuruName.text = "Guru: ${room.createdByName}"
             
             // Format joined date
