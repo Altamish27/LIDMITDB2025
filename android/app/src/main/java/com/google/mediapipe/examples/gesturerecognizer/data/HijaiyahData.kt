@@ -118,7 +118,7 @@ object HijaiyahData {
             gestureName = gestureName,
             isCompleted = false,
             position = apiLetter.ordinal,
-            assets = apiLetter.assets  // Include assets URL from API
+            assets = null  // Assets not available from API yet
         )
     }
     

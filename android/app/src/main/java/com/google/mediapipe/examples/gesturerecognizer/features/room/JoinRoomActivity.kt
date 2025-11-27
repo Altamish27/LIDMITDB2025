@@ -71,12 +71,12 @@ class JoinRoomActivity : AppCompatActivity() {
         binding.btnJoinRoom.text = "Bergabung..."
         
         lifecycleScope.launch {
-            val result = apiService.joinRoom(code.uppercase(), authToken)
+            val result = apiService.joinRoom(code.uppercase(), authToken, authManager.userId)
             
             result.onSuccess { response ->
                 Toast.makeText(
                     this@JoinRoomActivity,
-                    "Berhasil bergabung ke ${response.room.name}",
+                    "Berhasil bergabung ke ${response.room?.name ?: "room"}",
                     Toast.LENGTH_LONG
                 ).show()
                 

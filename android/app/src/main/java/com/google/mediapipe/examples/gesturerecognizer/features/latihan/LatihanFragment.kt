@@ -56,7 +56,7 @@ class LatihanFragment : Fragment() {
     
     private fun setupHalamanAdapter() {
         halamanAdapter = HalamanListAdapter { halaman ->
-            navigateToHalaman(halaman.halamanId, halaman.nomorHalaman, "Halaman ${halaman.nomorHalaman}", halaman.deskripsi)
+            navigateToHalaman(halaman.halamanId.toString(), halaman.nomorHalaman, "Halaman ${halaman.nomorHalaman}", halaman.deskripsi)
         }
         
         // Check if we have a RecyclerView in the layout (for future dynamic implementation)
@@ -99,7 +99,7 @@ class LatihanFragment : Fragment() {
                             
                             // Create a map of halaman_id -> completed status
                             val progressMap = progressResponse.progress.associate { 
-                                it.halamanId to (it.status > 0) 
+                                it.halamanId to it.completed 
                             }
                             
                             // Update pages with completion status
@@ -191,7 +191,7 @@ class LatihanFragment : Fragment() {
                     val page = availablePages[i]
                     descTextView.text = page.deskripsi
                     cardView.setOnClickListener {
-                        navigateToHalaman(page.halamanId, page.nomorHalaman, "Halaman ${page.nomorHalaman}", page.deskripsi)
+                        navigateToHalaman(page.halamanId.toString(), page.nomorHalaman, "Halaman ${page.nomorHalaman}", page.deskripsi)
                     }
                     
                     // Update card color if completed

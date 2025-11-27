@@ -89,7 +89,7 @@ class MyRoomsActivity : AppCompatActivity() {
             result.onSuccess { response ->
                 android.util.Log.d("MyRoomsActivity", "Rooms loaded successfully: ${response.rooms.size} rooms")
                 response.rooms.forEach { room ->
-                    android.util.Log.d("MyRoomsActivity", "Room: ${room.name} (${room.code})")
+                    android.util.Log.d("MyRoomsActivity", "Room: ${room.name} (${room.roomCode})")
                 }
                 
                 if (response.rooms.isEmpty()) {

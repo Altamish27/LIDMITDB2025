@@ -110,7 +110,11 @@ class LoginActivity : AppCompatActivity() {
                                 val loginResponse = result.getOrNull()
                                 if (loginResponse != null) {
                                     // Save user data and token
-                                    authManager.saveUserData(loginResponse.user, loginResponse.token)
+                                    loginResponse.user?.let { user ->
+                                        loginResponse.token?.let { token ->
+                                            authManager.saveUserData(user, token)
+                                        }
+                                    }
                                     
                                     Toast.makeText(this@LoginActivity, "Login berhasil!", Toast.LENGTH_SHORT).show()
                                     

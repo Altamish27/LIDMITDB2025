@@ -707,7 +707,8 @@ class LatihanPracticeActivity : AppCompatActivity() {
                     val result = apiService.saveHalamanProgress(
                         halamanId = halamanId,
                         status = 1, // 1 = completed
-                        authToken = authManager.authToken
+                        authToken = authManager.authToken,
+                        userId = authManager.userId
                     )
                     
                     result.onSuccess { response ->
