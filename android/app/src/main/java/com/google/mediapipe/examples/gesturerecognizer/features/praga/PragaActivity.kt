@@ -86,9 +86,6 @@ class PragaActivity : AppCompatActivity() {
         // Display Arabic letter with hijaiyah_font_family (same as home table's Isyarat column)
         binding.tvGestureName.text = hurufArab
 
-        // Set description based on letter
-        binding.tvDescription.text = getDescription(hurufLatin)
-
         // Process assets dinamis berdasarkan data dari API
         currentLetter?.let { letter ->
             processAssets(letter.assets)
@@ -152,15 +149,6 @@ class PragaActivity : AppCompatActivity() {
         binding.btnNext.alpha = if (currentIndex < HijaiyahData.letters.size - 1) 1.0f else 0.5f
     }
 
-    private fun getDescription(latin: String): String {
-        return when (latin) {
-            "Alif" -> "Telapak tangan menghadap ke luar. Jari-jari rapat dan lurus menunjuk ke atas. Jari-jari menggambarkan gigi-gigi pada huruf sin."
-            "Ba" -> "Tangan membentuk kepalan dengan ibu jari di dalam. Posisikan kepalan di depan dada."
-            "Ta" -> "Tangan membentuk kepalan dengan ibu jari di luar. Posisikan kepalan di depan dada."
-            "Tsa" -> "Tangan membentuk huruf 'O' dengan semua jari bertemu di satu titik."
-            else -> "Pelajari dengan seksama bentuk gesture untuk huruf $latin ini."
-        }
-    }
 
 
     /**
