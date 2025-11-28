@@ -280,30 +280,8 @@ class HijaiyahFragment : Fragment() {
     }
     
     private suspend fun syncServerProgressIfNeeded(): Boolean {
-        if (!this::authManager.isInitialized || !authManager.isLoggedIn) {
-            return false
-        }
-        val token = authManager.authToken
-        if (token.isEmpty()) {
-            return false
-        }
-        val roomId = getActiveRoomId(token) ?: return false
-        
         return try {
-            val result = apiService.getLetterProgress(authToken = token, roomId = roomId.toString())
-            result.onSuccess { response ->
-                val completedPositions = response.progress
-                    .filter { isCompletedStatus(it.status) }
-                    .mapNotNull { it.hijaiyahId }
-                    .toSet()
-                
-                if (completedPositions.isNotEmpty()) {
-                    progressManager.replaceCompletedLetters(completedPositions)
-                }
-            }.onFailure {
-                Log.e("HijaiyahFragment", "Failed syncing letter progress: ${it.message}", it)
-            }
-            result.isSuccess
+            progressManager.syncProgressFromServer()
         } catch (e: Exception) {
             Log.e("HijaiyahFragment", "Error syncing letter progress: ${e.message}", e)
             false
