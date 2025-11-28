@@ -247,3 +247,39 @@ data class UserJilidProgressEntry(
     @SerialName("user_name")
     val userName: String? = null
 )
+
+/**
+ * Request model for updating letter progress
+ */
+@Serializable
+data class UpdateLetterProgressRequest(
+    @SerialName("hijaiyahId")
+    val hijaiyahId: Int
+)
+
+/**
+ * Letter progress data from API response
+ */
+@Serializable
+data class LetterProgressData(
+    @SerialName("progress_id")
+    val progressId: Int? = null,
+    
+    @SerialName("user_id")
+    val userId: Int,
+    
+    @SerialName("hijaiyah_id")
+    val hijaiyahId: Int,
+    
+    @SerialName("last_update")
+    val lastUpdate: String
+)
+
+/**
+ * Response model for letter progress update
+ */
+@Serializable
+data class UpdateLetterProgressResponse(
+    @SerialName("progress")
+    val progress: LetterProgressData
+)
