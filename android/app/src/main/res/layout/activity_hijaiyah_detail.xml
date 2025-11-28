@@ -129,13 +129,36 @@
         </FrameLayout>
 
         <!-- Loading indicator -->
-        <ProgressBar
-            android:id="@+id/loading_progress"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/loading_progress_container"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_margin="16dp"
-            android:visibility="gone" />
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone">
+            
+            <ProgressBar
+                android:id="@+id/loading_progress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginBottom="8dp"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="@color/hijaiyah_green"
+                android:progressBackgroundTint="@color/hijaiyah_grey" />
+            
+            <TextView
+                android:id="@+id/tv_loading_percentage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0%"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <!-- Info section -->
         <androidx.cardview.widget.CardView

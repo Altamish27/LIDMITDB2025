@@ -224,14 +224,38 @@
 
             </androidx.cardview.widget.CardView>
 
-            <!-- Loading Progress -->
-            <ProgressBar
-                android:id="@+id/loadingProgress"
-                android:layout_width="wrap_content"
+            <!-- Loading Progress Container -->
+            <LinearLayout
+                android:id="@+id/loadingProgressContainer"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginBottom="16dp"
-                android:visibility="gone" />
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:visibility="gone"
+                android:gravity="center">
+                
+                <ProgressBar
+                    android:id="@+id/loadingProgress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressTint="@color/hijaiyah_green"
+                    android:progressBackgroundTint="@color/hijaiyah_grey" />
+                
+                <TextView
+                    android:id="@+id/tvLoadingPercentage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0%"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <!-- Description Card -->
             <androidx.cardview.widget.CardView
