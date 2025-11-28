@@ -65,6 +65,9 @@ android {
     }
     kotlinOptions {
         jvmTarget = '11'
+        freeCompilerArgs += [
+            '-opt-in=kotlin.RequiresOptIn'
+        ]
     }
     buildFeatures {
         viewBinding true
@@ -73,6 +76,17 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion '1.5.0'
     }
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        allWarningsAsErrors = false
+        suppressWarnings = true
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-Xlint:-deprecation']
 }
 
 // import DownloadMPTasks task
