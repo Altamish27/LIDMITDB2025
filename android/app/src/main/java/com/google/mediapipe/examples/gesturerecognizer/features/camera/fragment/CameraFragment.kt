@@ -58,6 +58,8 @@ import com.google.mediapipe.examples.gesturerecognizer.data.DhammahData
 import com.google.mediapipe.examples.gesturerecognizer.data.api.SignQuranApiService
 import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
 import com.google.mediapipe.examples.gesturerecognizer.data.manager.RoomPreferenceManager
+import com.google.mediapipe.examples.gesturerecognizer.features.praga.PragaActivity
+import android.content.Intent
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -2543,78 +2545,24 @@ class CameraFragment : Fragment(),
     
     private fun showTutorialDialog() {
         try {
-            val dialogView = layoutInflater.inflate(R.layout.dialog_tutorial, null)
-            val dialog = androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setView(dialogView)
-                .create()
+            // Get current letter data
+            val hurufArab = targetLetter ?: "ا"
+            val hurufLatin = targetLetterName ?: "Alif"
+            val gestureName = getGestureNameWithFallback() ?: ""
             
-            // Setup dialog content
-            val textTutorialLetter = dialogView.findViewById<TextView>(R.id.textTutorialLetter)
-            val textTutorialLetterName = dialogView.findViewById<TextView>(R.id.textTutorialLetterName)
-            val imageTutorialGesture = dialogView.findViewById<ImageView>(R.id.imageTutorialGesture)
-            val textTutorialSteps = dialogView.findViewById<TextView>(R.id.textTutorialSteps)
-            val textTutorialDiacriticInfo = dialogView.findViewById<TextView>(R.id.textTutorialDiacriticInfo)
-            val buttonCloseTutorial = dialogView.findViewById<Button>(R.id.buttonCloseTutorial)
+            Log.d(TAG, "Opening PragaActivity for letter: $hurufArab ($hurufLatin) with gesture: $gestureName")
             
-            // Set letter info
-            textTutorialLetter.text = targetLetter ?: "ا"
-            textTutorialLetterName.text = targetLetterName ?: "Alif"
-            
-            // Get gesture name and load image
-            val gestureName = getGestureNameWithFallback()
-            
-            // Load gesture image - convert "01_alif" to "praga_alif"
-            if (gestureName != null) {
-                val imageResName = "praga_" + gestureName.substring(3) // Remove "01_" prefix
-                val imageResId = resources.getIdentifier(imageResName, "drawable", requireContext().packageName)
-                if (imageResId != 0) {
-                    imageTutorialGesture.setImageResource(imageResId)
-                    Log.d(TAG, "Loaded gesture image: $imageResName")
-                } else {
-                    // Try fallback to placeholder
-                    val placeholderResId = resources.getIdentifier("placeholder_gesture", "drawable", requireContext().packageName)
-                    if (placeholderResId != 0) {
-                        imageTutorialGesture.setImageResource(placeholderResId)
-                    }
-                    Log.w(TAG, "Gesture image not found: $imageResName, using placeholder")
-                }
+            // Open PragaActivity with letter data
+            val intent = Intent(requireContext(), PragaActivity::class.java).apply {
+                putExtra("huruf_arab", hurufArab)
+                putExtra("huruf_latin", hurufLatin)
+                putExtra("gesture_name", gestureName)
             }
-            
-            // Set instructions based on mode
-            val instructionText = when {
-                isFathahMode -> {
-                    textTutorialDiacriticInfo.visibility = View.VISIBLE
-                    textTutorialDiacriticInfo.text = "MODE FATHAH:\nSetelah gesture huruf terdeteksi, gerakkan tangan ke KIRI"
-                    "1. Tunjukkan gesture huruf $targetLetterName\n2. Tunggu sampai gesture terdeteksi\n3. Gerakkan tangan ke KIRI ←\n4. Selesai!"
-                }
-                isKasrahMode -> {
-                    textTutorialDiacriticInfo.visibility = View.VISIBLE
-                    textTutorialDiacriticInfo.text = "MODE KASRAH:\nSetelah gesture huruf terdeteksi, gerakkan tangan ke BAWAH"
-                    "1. Tunjukkan gesture huruf $targetLetterName\n2. Tunggu sampai gesture terdeteksi\n3. Gerakkan tangan ke BAWAH ↓\n4. Selesai!"
-                }
-                isDhammahMode -> {
-                    textTutorialDiacriticInfo.visibility = View.VISIBLE
-                    textTutorialDiacriticInfo.text = "MODE DHAMMAH:\nSetelah gesture huruf terdeteksi, gerakkan tangan membentuk huruf U"
-                    "1. Tunjukkan gesture huruf $targetLetterName\n2. Tunggu sampai gesture terdeteksi\n3. Gerakkan tangan membentuk huruf U ∪\n4. Selesai!"
-                }
-                else -> {
-                    textTutorialDiacriticInfo.visibility = View.GONE
-                    "1. Tunjukkan gesture huruf $targetLetterName\n2. Tahan posisi tangan tetap diam\n3. Tunggu hingga progress bar penuh\n4. Gesture berhasil terdeteksi!"
-                }
-            }
-            
-            textTutorialSteps.text = instructionText
-            
-            // Close button
-            buttonCloseTutorial.setOnClickListener {
-                dialog.dismiss()
-            }
-            
-            dialog.show()
+            startActivity(intent)
             
         } catch (e: Exception) {
-            Log.e(TAG, "Error showing tutorial dialog", e)
-            Toast.makeText(requireContext(), "Tidak dapat menampilkan tutorial", Toast.LENGTH_SHORT).show()
+            Log.e(TAG, "Error opening panduan page", e)
+            Toast.makeText(requireContext(), "Tidak dapat membuka halaman panduan", Toast.LENGTH_SHORT).show()
         }
     }
 }

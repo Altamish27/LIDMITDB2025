@@ -64,14 +64,77 @@ class PragaActivity : AppCompatActivity() {
             // Load data hijaiyah dari API
             HijaiyahData.loadFromApi()
             
-            // Find current index
-            currentIndex = HijaiyahData.letters.indexOfFirst { it.transliteration == hurufLatin }
+            // Find current index using multiple matching strategies
+            currentIndex = findLetterIndex()
             if (currentIndex == -1) currentIndex = 0
 
             setupViews()
             setupClickListeners()
             updateNavigationButtons()
         }
+    }
+    
+    /**
+     * Find letter index using multiple matching strategies:
+     * 1. Exact transliteration match
+     * 2. Arabic character match
+     * 3. Case-insensitive transliteration match
+     * 4. Base transliteration match (for diacritic letters like "Ba Fathah" -> match "Ba")
+     */
+    private fun findLetterIndex(): Int {
+        // Strategy 1: Exact transliteration match
+        var index = HijaiyahData.letters.indexOfFirst { it.transliteration == hurufLatin }
+        if (index != -1) {
+            Log.d(TAG, "Found letter by exact transliteration: $hurufLatin at index $index")
+            return index
+        }
+        
+        // Strategy 2: Arabic character match
+        index = HijaiyahData.letters.indexOfFirst { it.arabic == hurufArab }
+        if (index != -1) {
+            Log.d(TAG, "Found letter by Arabic character: $hurufArab at index $index")
+            return index
+        }
+        
+        // Strategy 3: Case-insensitive transliteration match
+        index = HijaiyahData.letters.indexOfFirst { 
+            it.transliteration.equals(hurufLatin, ignoreCase = true) 
+        }
+        if (index != -1) {
+            Log.d(TAG, "Found letter by case-insensitive transliteration: $hurufLatin at index $index")
+            return index
+        }
+        
+        // Strategy 4: Base transliteration match (for diacritic letters)
+        // Extract base name without diacritic (e.g., "Ba Fathah" -> "Ba")
+        val baseName = extractBaseName(hurufLatin)
+        index = HijaiyahData.letters.indexOfFirst { 
+            it.transliteration.equals(baseName, ignoreCase = true) ||
+            extractBaseName(it.transliteration).equals(baseName, ignoreCase = true)
+        }
+        if (index != -1) {
+            Log.d(TAG, "Found letter by base transliteration: $baseName at index $index")
+            return index
+        }
+        
+        Log.w(TAG, "Letter not found: arab='$hurufArab', latin='$hurufLatin'. Defaulting to index 0")
+        return -1
+    }
+    
+    /**
+     * Extract base name from transliteration by removing diacritic suffixes
+     */
+    private fun extractBaseName(name: String): String {
+        val lower = name.lowercase()
+        return when {
+            lower.contains(" fathah") -> name.replace(" Fathah", "", ignoreCase = true).replace(" fathah", "", ignoreCase = true)
+            lower.contains(" kasrah") -> name.replace(" Kasrah", "", ignoreCase = true).replace(" kasrah", "", ignoreCase = true)
+            lower.contains(" kasroh") -> name.replace(" Kasroh", "", ignoreCase = true).replace(" kasroh", "", ignoreCase = true)
+            lower.contains(" dhammah") -> name.replace(" Dhammah", "", ignoreCase = true).replace(" dhammah", "", ignoreCase = true)
+            lower.contains(" dhommah") -> name.replace(" Dhommah", "", ignoreCase = true).replace(" dhommah", "", ignoreCase = true)
+            lower.contains(" dammah") -> name.replace(" Dammah", "", ignoreCase = true).replace(" dammah", "", ignoreCase = true)
+            else -> name
+        }.trim()
     }
 
     private fun setupViews() {
