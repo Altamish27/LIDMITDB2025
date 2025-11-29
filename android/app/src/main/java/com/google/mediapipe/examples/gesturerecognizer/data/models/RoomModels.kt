@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class JoinRoomRequest(
-    @SerialName("room_code")
+    @SerialName("code")
     val roomCode: String,
     
     @SerialName("user_id")
@@ -20,14 +20,11 @@ data class JoinRoomRequest(
  */
 @Serializable
 data class JoinRoomResponse(
-    @SerialName("success")
-    val success: Boolean,
-    
     @SerialName("message")
-    val message: String,
+    val message: String? = null,
     
-    @SerialName("room")
-    val room: RoomInfo? = null
+    @SerialName("error")
+    val error: String? = null
 )
 
 /**
