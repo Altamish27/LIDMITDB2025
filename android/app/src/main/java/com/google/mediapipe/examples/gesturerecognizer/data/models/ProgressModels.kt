@@ -1,36 +1,66 @@
 package com.google.mediapipe.examples.gesturerecognizer.data.models
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 /**
- * Request model untuk halaman progress
+ * Serializer that can handle both String and Number JSON types, converting them to String.
  */
-@Serializable
-data class HalamanProgressRequest(
-    @SerialName("halaman_id")
-    val halamanId: Int,
-    
-    @SerialName("user_id")
-    val userId: Int,
-    
-    @SerialName("completed")
-    val completed: Boolean = true
-)
+object FlexibleStringSerializer : KSerializer<String> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("FlexibleString", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): String {
+        return if (decoder is JsonDecoder) {
+            val element = decoder.decodeJsonElement()
+            if (element is JsonPrimitive) {
+                element.contentOrNull ?: ""
+            } else {
+                element.toString()
+            }
+        } else {
+            decoder.decodeString()
+        }
+    }
+
+    override fun serialize(encoder: Encoder, value: String) {
+        encoder.encodeString(value)
+    }
+}
 
 /**
- * Response model untuk halaman progress
+ * Response model untuk halaman progress - matches POST /api/progress/halaman
  */
 @Serializable
 data class HalamanProgressResponse(
-    @SerialName("success")
-    val success: Boolean,
+    @SerialName("progress")
+    val progress: HalamanProgressData
+)
+
+/**
+ * Data model untuk halaman progress dari database
+ */
+@Serializable
+data class HalamanProgressData(
+    @SerialName("user_id")
+    val userId: Int,
     
-    @SerialName("message")
-    val message: String,
+    @SerialName("halaman_id")
+    val halamanId: String,
     
-    @SerialName("progress_id")
-    val progressId: Int? = null
+    @SerialName("status")
+    val status: Int,
+    
+    @SerialName("last_update")
+    val lastUpdate: String? = null
 )
 
 /**
@@ -53,43 +83,41 @@ data class HalamanProgressCheckResponse(
  */
 @Serializable
 data class JilidProgressListResponse(
-    @SerialName("success")
-    val success: Boolean,
-    
     @SerialName("progress")
     val progress: List<JilidProgress>
 )
 
 /**
- * Model untuk progress jilid
+ * Model untuk progress jilid - matches backend API response
  */
 @Serializable
 data class JilidProgress(
     @SerialName("halaman_id")
-    val halamanId: Int,
+    val halamanId: String,
     
     @SerialName("nomor_halaman")
     val nomorHalaman: Int,
     
-    @SerialName("deskripsi")
-    val deskripsi: String,
+    @SerialName("status")
+    val status: Int = 0,  // 0 = not started, 1 = completed
     
-    @SerialName("completed")
-    val completed: Boolean,
+    @SerialName("last_update")
+    val lastUpdate: String? = null,
     
-    @SerialName("completed_at")
-    val completedAt: String? = null
-)
+    @SerialName("jilid_id")
+    val jilidId: Int? = null
+) {
+    // Computed property for compatibility
+    val completed: Boolean
+        get() = status == 1
+}
 
 /**
  * Response model untuk pages jilid
  */
 @Serializable
 data class JilidPagesApiResponse(
-    @SerialName("success")
-    val success: Boolean,
-    
-    @SerialName("pages")
+    @SerialName("halaman")
     val pages: List<HalamanInfo>
 )
 
@@ -99,7 +127,7 @@ data class JilidPagesApiResponse(
 @Serializable
 data class HalamanInfo(
     @SerialName("halaman_id")
-    val halamanId: Int,
+    val halamanId: String,
     
     @SerialName("nomor_halaman")
     val nomorHalaman: Int,
@@ -109,6 +137,51 @@ data class HalamanInfo(
     
     @SerialName("is_completed")
     var isCompleted: Boolean = false
+)
+
+/**
+ * Response model untuk detail halaman
+ */
+@Serializable
+data class PageDetailApiResponse(
+    @SerialName("pageDetail")
+    val pageDetail: List<PageDetailEntry>
+)
+
+/**
+ * Model entry detail halaman
+ */
+@Serializable
+data class PageDetailEntry(
+    @SerialName("jilid_id")
+    val jilidId: Int,
+    
+    @SerialName("jilid_name")
+    val jilidName: String,
+    
+    @SerialName("halaman_id")
+    val halamanId: String,
+    
+    @SerialName("nomor_halaman")
+    val nomorHalaman: Int,
+    
+    @SerialName("hijaiyah_halaman_id")
+    val hijaiyahHalamanId: Int,
+    
+    @SerialName("hijaiyah_id")
+    val hijaiyahId: Int,
+    
+    @SerialName("latin_name")
+    val latinName: String,
+    
+    @SerialName("arabic_char")
+    val arabicChar: String,
+    
+    @SerialName("baris")
+    val baris: Int,
+    
+    @SerialName("urutan")
+    val urutan: Int
 )
 
 /**
@@ -171,7 +244,9 @@ data class PracticeProgressListResponse(
  */
 @Serializable
 data class PracticeProgressSingleResponse(
-    @SerialName("practice")
+    @SerialName("practice"
+
+)
     val practice: PracticeProgressEntry
 )
 

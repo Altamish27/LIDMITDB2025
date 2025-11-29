@@ -97,15 +97,20 @@ class HijaiyahProgressManager(private val context: Context) {
     }
     
     fun getCompletedCount(): Int {
-        return (1..28).count { isLetterCompleted(it) }
+        val totalLetters = HijaiyahData.getAllLetters().size
+        if (totalLetters == 0) return 0
+        return (1..totalLetters).count { isLetterCompleted(it) }
     }
     
     fun getTotalProgress(): Pair<Int, Int> {
-        return Pair(getCompletedCount(), 28)
+        val totalLetters = HijaiyahData.getAllLetters().size
+        return Pair(getCompletedCount(), totalLetters)
     }
     
     fun getCompletedLetters(): Set<Int> {
-        return (1..28).filter { isLetterCompleted(it) }.toSet()
+        val totalLetters = HijaiyahData.getAllLetters().size
+        if (totalLetters == 0) return emptySet()
+        return (1..totalLetters).filter { isLetterCompleted(it) }.toSet()
     }
     
     fun resetProgress() {

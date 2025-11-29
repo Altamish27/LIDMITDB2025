@@ -181,7 +181,8 @@ class LatihanFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        updateProgress()
+        // Reload data from API to refresh completion status
+        loadPagesFromApi()
     }
 
     override fun onDestroyView() {

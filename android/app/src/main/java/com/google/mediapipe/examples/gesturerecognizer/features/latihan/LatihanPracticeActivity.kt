@@ -414,18 +414,16 @@ class LatihanPracticeActivity : AppCompatActivity() {
         currentBaris?.let { baris ->
             android.util.Log.d("LatihanPractice", "✓ Loaded baris ${baris.id} with ${baris.hurufList.size} huruf")
             
-            // Merge persisted completed letters from progress manager
-            try {
-                val persisted = com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager(this).getCompletedLetters()
-                completedPositions.addAll(persisted)
-                android.util.Log.d("LatihanPractice", "Added ${persisted.size} persisted completed positions")
-            } catch (e: Exception) {
-                android.util.Log.w("LatihanPractice", "Could not load persisted progress: ${e.message}")
-            }
+            // Note: completedPositions is tracked per session in this activity
+            // We don't load from HijaiyahProgressManager because that's for Hijaiyah learning,
+            // not for Latihan pages which have their own progress tracking
 
             // Update adapter with current baris data only if adapter is initialized
+            // Limit to 6 huruf to match the 6-column grid layout
             if (::adapter.isInitialized) {
-                adapter.updateHuruf(baris.hurufList)
+                val hurufToDisplay = baris.hurufList.take(6)
+                android.util.Log.d("LatihanPractice", "Displaying ${hurufToDisplay.size} huruf (limited to 6)")
+                adapter.updateHuruf(hurufToDisplay)
                 adapter.updateCompletedPositions(completedPositions)
             } else {
                 android.util.Log.w("LatihanPractice", "Adapter not initialized yet, skipping update")

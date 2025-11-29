@@ -48,8 +48,10 @@ import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.core.animation.ViewAnimationUtils
 import com.google.mediapipe.examples.gesturerecognizer.core.main.MainActivity
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahData
+import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahProgressManager
 import com.google.mediapipe.examples.gesturerecognizer.data.LatihanPageData
 import com.google.mediapipe.examples.gesturerecognizer.data.api.PrayerTimeApiService
+import com.google.mediapipe.examples.gesturerecognizer.data.api.SignQuranApiService
 import com.google.mediapipe.examples.gesturerecognizer.data.manager.AuthManager
 import com.google.mediapipe.examples.gesturerecognizer.data.models.AladhanTimingsData
 import com.google.mediapipe.examples.gesturerecognizer.databinding.ActivityHomeBinding
@@ -72,6 +74,7 @@ import java.util.Locale
 class HomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHomeBinding
     private lateinit var authManager: AuthManager
+    private lateinit var progressManager: HijaiyahProgressManager
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val prayerTimeApi = PrayerTimeApiService.getInstance()
     private var clockJob: Job? = null
@@ -106,6 +109,7 @@ class HomeActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         authManager = AuthManager(this)
+        progressManager = HijaiyahProgressManager(this)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         // Load data dari API di background
@@ -133,9 +137,19 @@ class HomeActivity : AppCompatActivity() {
                 // Load hijaiyah dan jilid data dari API with context for auth
                 HijaiyahData.loadFromApi(this@HomeActivity)
                 LatihanPageData.loadJilidFromApi(this@HomeActivity)
+                
+                // Sync progress from server to local cache
+                progressManager.syncProgressFromServer()
+                
+                // Update UI with synced progress
+                updateHijaiyahProgress()
+                updateLatihanProgress()
             } catch (e: Exception) {
                 Log.e("HomeActivity", "Failed to load API data: ${e.message}", e)
                 // Data fallback akan digunakan otomatis
+                // Still update progress from local cache
+                updateHijaiyahProgress()
+                updateLatihanProgress()
             }
         }
     }
@@ -621,6 +635,64 @@ class HomeActivity : AppCompatActivity() {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
         } else {
             super.onBackPressed()
+        }
+    }
+    
+    /**
+     * Update hijaiyah progress display from database
+     */
+    private fun updateHijaiyahProgress() {
+        val (completed, total) = progressManager.getTotalProgress()
+        val progressPercentage = if (total > 0) (completed * 100) / total else 0
+        
+        binding.tvHijaiyahProgress?.text = "$completed/$total"
+        binding.progressBarHijaiyah?.progress = progressPercentage
+        
+        Log.d("HomeActivity", "Updated hijaiyah progress: $completed/$total ($progressPercentage%)")
+    }
+    
+    /**
+     * Update latihan progress display from database
+     */
+    private fun updateLatihanProgress() {
+        lifecycleScope.launch {
+            try {
+                val apiService = SignQuranApiService.getInstance()
+                val token = if (authManager.isLoggedIn) authManager.authToken else null
+                
+                if (token == null) {
+                    Log.w("HomeActivity", "No auth token, skipping latihan progress update")
+                    return@launch
+                }
+                
+                // Get all jilid to count total pages
+                var totalPages = 0
+                var completedPages = 0
+                
+                // Count pages from all 6 jilid
+                for (jilidId in 1..6) {
+                    val pagesResult = apiService.getJilidPages(jilidId, token)
+                    pagesResult.onSuccess { response ->
+                        totalPages += response.pages.size
+                    }
+                    
+                    val progressResult = apiService.getJilidProgress(jilidId, token)
+                    progressResult.onSuccess { progressResponse ->
+                        completedPages += progressResponse.progress.count { it.status == 1 }
+                    }
+                }
+                
+                // Update UI
+                val progressPercentage = if (totalPages > 0) (completedPages * 100) / totalPages else 0
+                binding.tvLatihanProgress?.text = "$completedPages/$totalPages"
+                binding.progressBarLatihan?.progress = progressPercentage
+                
+                Log.d("HomeActivity", "Updated latihan progress: $completedPages/$totalPages ($progressPercentage%)")
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Failed to update latihan progress: ${e.message}", e)
+                binding.tvLatihanProgress?.text = "0/0"
+                binding.progressBarLatihan?.progress = 0
+            }
         }
     }
 

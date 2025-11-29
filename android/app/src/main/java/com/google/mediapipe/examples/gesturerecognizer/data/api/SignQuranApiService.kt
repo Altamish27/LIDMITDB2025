@@ -6,7 +6,7 @@ import com.google.mediapipe.examples.gesturerecognizer.data.models.JilidApiRespo
 import com.google.mediapipe.examples.gesturerecognizer.data.models.JilidPagesApiResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.JilidProgressListResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.PageDetailApiResponse
-import com.google.mediapipe.examples.gesturerecognizer.data.models.HalamanProgressRequest
+
 import com.google.mediapipe.examples.gesturerecognizer.data.models.HalamanProgressResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.HalamanProgressCheckResponse
 import com.google.mediapipe.examples.gesturerecognizer.data.models.JoinRoomRequest
@@ -34,6 +34,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -136,7 +137,8 @@ class SignQuranApiService {
     suspend fun getJilidPages(jilidId: Int, authToken: String? = null): Result<JilidPagesApiResponse> {
         return try {
             android.util.Log.d("SignQuranAPI", "Fetching pages for jilid: $jilidId")
-            val response = client.get("$BASE_URL/jilid/$jilidId/pages") {
+            val response = client.get("$BASE_URL/pages") {
+                parameter("jilidId", jilidId)
                 if (!authToken.isNullOrEmpty()) {
                     headers.append("Authorization", "Bearer $authToken")
                 }
@@ -210,11 +212,11 @@ class SignQuranApiService {
             detailResult.onSuccess { response ->
                 if (response.pageDetail.isNotEmpty()) {
                     val sample = response.pageDetail.first()
-                    val halamanNumericId = sample.hijaiyahHalamanId
+                    val halamanIdStr = sample.halamanId
                     val description = "Halaman ${sample.nomorHalaman} - ${sample.latinName}"
                     fallbackPages.add(
                         HalamanInfo(
-                            halamanId = halamanNumericId,
+                            halamanId = halamanIdStr,
                             nomorHalaman = sample.nomorHalaman,
                             deskripsi = description,
                             isCompleted = false
@@ -236,7 +238,7 @@ class SignQuranApiService {
 
         return if (fallbackPages.isNotEmpty()) {
             android.util.Log.d("SignQuranAPI", "Fallback produced ${fallbackPages.size} halaman for jilid $jilidId")
-            Result.success(JilidPagesApiResponse(success = true, pages = fallbackPages))
+            Result.success(JilidPagesApiResponse(pages = fallbackPages))
         } else {
             android.util.Log.e("SignQuranAPI", "Fallback failed to find pages for jilid $jilidId")
             Result.failure(IllegalStateException("Tidak menemukan halaman untuk jilid $jilidId"))
@@ -259,7 +261,7 @@ class SignQuranApiService {
         } catch (e: Exception) {
             android.util.Log.e("SignQuranAPI", "Get jilid progress error: ${e.message}", e)
             // Return empty list on error (user might not have any progress yet)
-            Result.success(JilidProgressListResponse(success = true, progress = emptyList()))
+            Result.success(JilidProgressListResponse(progress = emptyList()))
         }
     }
     
@@ -295,12 +297,17 @@ class SignQuranApiService {
     suspend fun saveHalamanProgress(halamanId: String, status: Int, authToken: String, userId: String): Result<HalamanProgressResponse> {
         return try {
             android.util.Log.d("SignQuranAPI", "Saving progress - halaman: $halamanId, status: $status")
-            val numericUserId = userId.toIntOrNull()
-                ?: throw IllegalArgumentException("User ID tidak valid")
+            
+            @Serializable
+            data class SaveHalamanProgressRequest(
+                val halamanId: String,
+                val status: Int
+            )
+            
             val response = client.post("$BASE_URL/progress/halaman") {
                 headers.append("Authorization", "Bearer $authToken")
                 contentType(ContentType.Application.Json)
-                setBody(HalamanProgressRequest(halamanId.toInt(), numericUserId, status == 1))
+                setBody(SaveHalamanProgressRequest(halamanId, status))
             }
             val body = response.body<HalamanProgressResponse>()
             android.util.Log.d("SignQuranAPI", "Progress saved successfully")

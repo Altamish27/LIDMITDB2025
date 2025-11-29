@@ -3,7 +3,7 @@ package com.google.mediapipe.examples.gesturerecognizer.data
 import android.util.Log
 import com.google.mediapipe.examples.gesturerecognizer.data.api.SignQuranApiService
 import com.google.mediapipe.examples.gesturerecognizer.data.models.JilidApi
-import com.google.mediapipe.examples.gesturerecognizer.data.models.PageDetailItem
+import com.google.mediapipe.examples.gesturerecognizer.data.models.PageDetailEntry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import io.ktor.client.*
@@ -268,7 +268,7 @@ object LatihanPageData {
      * Mapping dari API page detail ke LatihanHalaman
      */
     private fun mapApiPageToLatihanHalaman(
-        pageDetails: List<PageDetailItem>,
+        pageDetails: List<PageDetailEntry>,
         jilidId: Int,
         nomorHalaman: Int
     ): LatihanHalaman {
