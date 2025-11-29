@@ -19,226 +19,631 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Top Header -->
-    <RelativeLayout
+    <!-- ================= TOP SECTION: Letter Display ================= -->
+    <LinearLayout
+        android:id="@+id/topSection"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top"
+        android:orientation="vertical"
         android:background="@drawable/gradient_top_overlay"
-        android:padding="16dp">
+        android:paddingTop="48dp"
+        android:paddingBottom="24dp"
+        android:paddingHorizontal="16dp"
+        android:fitsSystemWindows="true"
+        android:clipToPadding="false">
 
-        <!-- Back Button -->
-        <ImageView
-            android:id="@+id/buttonBack"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_alignParentLeft="true"
-            android:layout_centerVertical="true"
-            android:background="@drawable/circle_button_background"
-            android:padding="8dp"
-            android:src="@drawable/ic_arrow_back"
-            android:tint="#FFFFFF" />
-        
-        <!-- Tutorial/Help Button -->
-        <ImageView
-            android:id="@+id/buttonHelp"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_toRightOf="@id/buttonBack"
-            android:layout_marginLeft="8dp"
-            android:layout_centerVertical="true"
-            android:background="@drawable/circle_button_background"
-            android:padding="8dp"
-            android:src="@android:drawable/ic_menu_help"
-            android:tint="#FFFFFF"
-            android:contentDescription="Lihat Tutorial" />
-
-        <!-- Target Letter Display -->
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <!-- Header Row: Back, Title, Help -->
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:orientation="vertical"
-            android:gravity="center">
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:id="@+id/buttonBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/circle_button_background"
+                android:padding="10dp"
+                android:src="@drawable/ic_arrow_back"
+                android:contentDescription="Kembali"
+                app:tint="#FFFFFF" />
 
             <TextView
-                android:id="@+id/textTargetLetter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ا"
+                android:layout_centerInParent="true"
+                android:text="Latihan Gesture"
                 android:textColor="#FFFFFF"
-                android:textSize="48sp"
-                android:textStyle="bold"
-                android:shadowColor="#80000000"
-                android:shadowDx="2"
-                android:shadowDy="2"
-                android:shadowRadius="4" />
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/textLetterName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="ALIF"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:shadowColor="#80000000"
-                android:shadowDx="1"
-                android:shadowDy="1"
-                android:shadowRadius="2" />
+            <ImageView
+                android:id="@+id/buttonHelp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/circle_button_background"
+                android:padding="10dp"
+                android:src="@android:drawable/ic_menu_help"
+                android:contentDescription="Bantuan"
+                app:tint="#FFFFFF" />
 
-        </LinearLayout>
+        </RelativeLayout>
 
-        <!-- Timer Display -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"
-            android:orientation="vertical"
-            android:gravity="center">
-
-            <TextView
-                android:id="@+id/textCountdown"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Siap deteksi..."
-                android:textColor="#FCD94B"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:shadowColor="#80000000"
-                android:shadowDx="2"
-                android:shadowDy="2"
-                android:shadowRadius="4"
-                android:gravity="center"
-                android:minLines="2"
-                android:maxWidth="120dp" />
-
-        </LinearLayout>
-
-    </RelativeLayout>
-
-    <!-- Center instruction removed to avoid blocking camera preview -->
-
-    <!-- Result Display -->
-    <RelativeLayout
-        android:id="@+id/overlayResult"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:background="@drawable/result_background"
-        android:padding="24dp"
-        android:visibility="gone">
-
-        <ImageView
-            android:id="@+id/iconResult"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_centerHorizontal="true"
-            android:src="@drawable/ic_check_circle" />
-
-        <TextView
-            android:id="@+id/textResult"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/iconResult"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="16dp"
-            android:text="BENAR!"
-            android:textColor="#4CAF50"
-            android:textSize="32sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/textResultDetail"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/textResult"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="8dp"
-            android:text="Anda berhasil memperagakan huruf ALIF dengan benar!"
-            android:textColor="#333333"
-            android:textSize="16sp"
-            android:gravity="center" />
-
+        <!-- Target Letter Card -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/textResultDetail"
-            android:layout_marginTop="24dp"
             android:orientation="horizontal"
-            android:gravity="center">
+            android:gravity="center"
+            android:background="@drawable/bg_guidance_panel"
+            android:padding="20dp">
 
-            <Button
-                android:id="@+id/btnTryAgain"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="16dp"
-                android:text="Coba Lagi"
-                android:backgroundTint="#147E7E"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold" />
+            <!-- Letter Circle -->
+            <FrameLayout
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginEnd="20dp">
 
-            <Button
-                android:id="@+id/btnNextLetter"
-                android:layout_width="wrap_content"
+                <View
+                    android:id="@+id/letterCircleBg"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_letter_circle" />
+
+                <TextView
+                    android:id="@+id/textTargetLetter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="ا"
+                    android:textColor="#FFFFFF"
+                    android:textSize="56sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif"
+                    android:shadowColor="#80000000"
+                    android:shadowDx="2"
+                    android:shadowDy="2"
+                    android:shadowRadius="4" />
+
+            </FrameLayout>
+
+            <!-- Letter Info -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Huruf Berikutnya"
-                android:backgroundTint="#FCD94B"
-                android:textColor="#333333"
-                android:textStyle="bold" />
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/textLetterName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Huruf Alif"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/textLetterType"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Hijaiyah Dasar"
+                    android:textColor="#B0FFFFFF"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/textGestureHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="🤚 Tunjukkan gesture di depan kamera"
+                    android:textColor="#FCD94B"
+                    android:textSize="13sp"
+                    android:textStyle="italic" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
-    </RelativeLayout>
+    </LinearLayout>
 
-    <!-- Bottom Progress -->
+    <!-- ================= CENTER: Guidance Panel ================= -->
     <LinearLayout
+        android:id="@+id/guidancePanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginHorizontal="24dp"
+        android:orientation="vertical"
+        android:background="@drawable/bg_guidance_panel"
+        android:padding="20dp"
+        android:visibility="gone">
+
+        <!-- Status Icon & Message -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:id="@+id/iconGuidanceStatus"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@android:drawable/ic_dialog_info"
+                app:tint="#FCD94B" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/textGuidanceTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Menunggu Gesture..."
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/textGuidanceMessage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Posisikan tangan Anda di depan kamera"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- ================= BOTTOM SECTION: Progress & Status ================= -->
+    <LinearLayout
+        android:id="@+id/bottomSection"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="@drawable/gradient_bottom_overlay"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:background="@drawable/gradient_bottom_overlay"
+        android:paddingTop="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="48dp"
+        android:fitsSystemWindows="true"
+        android:clipToPadding="false">
 
-        <!-- Detection Results -->
+        <!-- Step Indicator for Harakat (Fathah, Kasrah, Dhammah) -->
+        <LinearLayout
+            android:id="@+id/stepIndicatorContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="@drawable/bg_step_indicator"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone">
+
+            <!-- Step 1: Gesture -->
+            <LinearLayout
+                android:id="@+id/step1Container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <FrameLayout
+                    android:layout_width="36dp"
+                    android:layout_height="36dp">
+
+                    <View
+                        android:id="@+id/step1Circle"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_step_number_active" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="1"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/step1Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Gesture"
+                    android:textColor="#147E7E"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- Arrow -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="→"
+                android:textColor="#999999"
+                android:textSize="20sp"
+                android:layout_marginHorizontal="8dp" />
+
+            <!-- Step 2: Movement -->
+            <LinearLayout
+                android:id="@+id/step2Container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <FrameLayout
+                    android:layout_width="36dp"
+                    android:layout_height="36dp">
+
+                    <View
+                        android:id="@+id/step2Circle"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_step_number_inactive" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="2"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/step2Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Gerakan"
+                    android:textColor="#999999"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+            <!-- Arrow -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="→"
+                android:textColor="#999999"
+                android:textSize="20sp"
+                android:layout_marginHorizontal="8dp" />
+
+            <!-- Step 3: Complete -->
+            <LinearLayout
+                android:id="@+id/step3Container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <FrameLayout
+                    android:layout_width="36dp"
+                    android:layout_height="36dp">
+
+                    <View
+                        android:id="@+id/step3Circle"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_step_number_inactive" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="✓"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/step3Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Selesai"
+                    android:textColor="#999999"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Status Card -->
+        <LinearLayout
+            android:id="@+id/statusCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_status_waiting"
+            android:padding="16dp"
+            android:layout_marginBottom="8dp">
+
+            <!-- Status Header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:id="@+id/iconStatus"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@android:drawable/ic_menu_search"
+                    app:tint="#FFFFFF" />
+
+                <TextView
+                    android:id="@+id/textStatusTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:text="Mendeteksi Gesture..."
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/textCountdown"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+            <!-- Status Message -->
+            <TextView
+                android:id="@+id/textStatusMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Posisikan tangan Anda di depan kamera dan tahan selama 1 detik"
+                android:textColor="#E6FFFFFF"
+                android:textSize="14sp"
+                android:lineSpacingExtra="4dp" />
+
+            <!-- Progress Bar -->
+            <ProgressBar
+                android:id="@+id/progressTimer"
+                android:layout_width="match_parent"
+                android:layout_height="12dp"
+                android:layout_marginTop="12dp"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:max="100"
+                android:progress="0"
+                android:progressDrawable="@drawable/progress_gesture_timer"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <!-- Detected Gesture Info (Small) -->
+        <LinearLayout
+            android:id="@+id/detectedGestureContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/results_background"
+            android:padding="12dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Gesture Terdeteksi:"
+                android:textColor="#666666"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/textDetectedGesture"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="-"
+                android:textColor="#147E7E"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textGestureMatch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="❌"
+                android:textSize="18sp" />
+
+        </LinearLayout>
+
+        <!-- Hidden RecyclerView for results (keep for compatibility) -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerview_results"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/results_background"
-            android:clipToPadding="true"
-            android:padding="12dp"
             android:visibility="gone" />
 
-        <!-- Progress Bar -->
-        <ProgressBar
-            android:id="@+id/progressTimer"
-            android:layout_width="match_parent"
-            android:layout_height="8dp"
-            android:layout_marginTop="8dp"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:max="100"
-            android:progress="100"
-            android:progressDrawable="@drawable/timer_progress_bar"
-            android:visibility="gone" />
-            
-        <!-- Start Button -->
+        <!-- Start Button (hidden by default) -->
         <Button
             android:id="@+id/buttonStart"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"
-            android:text="Deteksi Otomatis Aktif"
-            android:backgroundTint="#4CAF50"
+            android:layout_marginTop="12dp"
+            android:text="Mulai Latihan"
+            android:backgroundTint="#147E7E"
             android:textColor="#FFFFFF"
+            android:textSize="16sp"
             android:textStyle="bold"
-            android:paddingHorizontal="32dp"
-            android:paddingVertical="12dp"
+            android:paddingVertical="14dp"
             android:visibility="gone" />
 
     </LinearLayout>
+
+    <!-- ================= SUCCESS OVERLAY ================= -->
+    <RelativeLayout
+        android:id="@+id/overlayResult"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#CC000000"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_marginHorizontal="32dp"
+            android:orientation="vertical"
+            android:background="@drawable/result_background"
+            android:padding="32dp"
+            android:gravity="center">
+
+            <!-- Success Icon with Animation -->
+            <FrameLayout
+                android:layout_width="100dp"
+                android:layout_height="100dp">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_letter_circle_active" />
+
+                <ImageView
+                    android:id="@+id/iconResult"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_check_circle"
+                    app:tint="#147E7E" />
+
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/textResult"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="BERHASIL!"
+                android:textColor="#147E7E"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textResultDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Anda berhasil memperagakan huruf dengan benar!"
+                android:textColor="#666666"
+                android:textSize="16sp"
+                android:gravity="center"
+                android:lineSpacingExtra="4dp" />
+
+            <!-- Letter Display in Result -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_step_indicator"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="12dp">
+
+                <TextView
+                    android:id="@+id/textResultLetter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ا"
+                    android:textColor="#147E7E"
+                    android:textSize="36sp"
+                    android:textStyle="bold" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="40dp"
+                    android:layout_marginHorizontal="16dp"
+                    android:background="#CCCCCC" />
+
+                <TextView
+                    android:id="@+id/textResultLetterName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Alif"
+                    android:textColor="#333333"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- Action Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/btnTryAgain"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:text="Ulangi"
+                    android:backgroundTint="#E0E0E0"
+                    android:textColor="#333333"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/btnNextLetter"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:text="Lanjut"
+                    android:backgroundTint="#147E7E"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </RelativeLayout>
 
     <!-- Include bottom sheet for advanced settings (hidden by default) -->
     <include

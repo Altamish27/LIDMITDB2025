@@ -239,7 +239,17 @@ class HijaiyahFragment : Fragment() {
                 
                 applyCategoryFilter(resetSearch = true)
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Gagal memuat huruf hijaiyah: ${e.message}", Toast.LENGTH_LONG).show()
+                Log.e("HijaiyahFragment", "Error loading hijaiyah: ${e.message}", e)
+                // Jangan tampilkan pesan error teknis ke user
+                // Coba gunakan data fallback jika ada
+                if (masterLetters.isEmpty()) {
+                    masterLetters = progressManager.getLettersWithProgress()
+                    applyCategoryFilter(resetSearch = true)
+                }
+                // Hanya tampilkan pesan jika benar-benar tidak ada data
+                if (masterLetters.isEmpty()) {
+                    Toast.makeText(requireContext(), "Memuat data dari cache...", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }

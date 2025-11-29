@@ -82,15 +82,30 @@ class JoinRoomActivity : AppCompatActivity() {
             val result = apiService.joinRoom(code.uppercase(), authToken, userId.toString())
             
             result.onSuccess { response ->
-                Toast.makeText(
-                    this@JoinRoomActivity,
-                    "Berhasil bergabung ke ${response.room?.name ?: "room"}",
-                    Toast.LENGTH_LONG
-                ).show()
-                
-                // Return to previous activity
-                setResult(RESULT_OK)
-                finish()
+                // Check if response contains error (backend returns error field on failure)
+                if (response.error != null) {
+                    val errorMessage = when (response.error) {
+                        "Room not found" -> "Kode room tidak ditemukan"
+                        "Already enrolled" -> "Anda sudah terdaftar di room ini"
+                        else -> response.error
+                    }
+                    Toast.makeText(this@JoinRoomActivity, errorMessage, Toast.LENGTH_LONG).show()
+                    
+                    // Reset button
+                    binding.btnJoinRoom.isEnabled = true
+                    binding.btnJoinRoom.text = "Bergabung"
+                } else {
+                    // Success
+                    Toast.makeText(
+                        this@JoinRoomActivity,
+                        response.message ?: "Berhasil bergabung ke room",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    
+                    // Return to previous activity
+                    setResult(RESULT_OK)
+                    finish()
+                }
             }.onFailure { error ->
                 val errorMessage = when {
                     error.message?.contains("404") == true -> "Kode room tidak ditemukan"
