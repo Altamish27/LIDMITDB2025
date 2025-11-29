@@ -631,33 +631,16 @@
                     android:scaleType="centerCrop"
                     android:layout_marginBottom="8dp" />
 
-                <!-- Progress Text -->
+                <!-- Jumlah Surat Text -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Progress"
-                    android:textSize="9sp"
-                    android:textColor="@color/dark_blue_gray"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="2dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="2/10"
+                    android:text="37 Surat"
                     android:textSize="12sp"
                     android:textColor="@color/dark_blue_gray"
                     android:textStyle="bold"
-                    android:fontFamily="sans-serif-black" />
-
-                <!-- Progress Bar -->
-                <ProgressBar
-                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="8dp"
-                    android:layout_marginTop="4dp"
-                    android:progress="20"
-                    android:progressDrawable="@drawable/custom_progress_bar" />
+                    android:fontFamily="sans-serif-black"
+                    android:layout_marginTop="4dp" />
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
