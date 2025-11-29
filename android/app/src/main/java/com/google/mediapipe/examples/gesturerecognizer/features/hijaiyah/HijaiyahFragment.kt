@@ -338,9 +338,13 @@ class HijaiyahFragment : Fragment() {
         binding.tvPercentage.text = "$percentage%"
     }
 
+
     private fun setupClickListeners() {
+        Log.d("HijaiyahFragment", "Setting up click listeners")
         binding.btnBack.setOnClickListener {
-            findNavController().navigateUp()
+            Log.d("HijaiyahFragment", "Back button clicked!")
+            // Since this is a root destination, use activity's back pressed instead of navigateUp
+            requireActivity().onBackPressed()
         }
     }
     

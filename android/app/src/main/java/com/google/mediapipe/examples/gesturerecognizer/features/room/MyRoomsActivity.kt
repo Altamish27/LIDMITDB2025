@@ -148,6 +148,11 @@ class MyRoomsActivity : AppCompatActivity() {
         }
     }
     
+    override fun onSupportNavigateUp(): Boolean {
+        finish()
+        return true
+    }
+    
     companion object {
         private const val REQUEST_JOIN_ROOM = 100
     }

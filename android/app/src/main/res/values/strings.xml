@@ -66,6 +66,7 @@
     <string name="title_panduan_kasrah">Panduan Huruf Kasrah</string>
     <string name="title_panduan_dhammah">Panduan Huruf Dhammah</string>
     <string name="dropdown_hint">Hijaiyah</string>
+    <string name="back_button">Tombol Kembali</string>
     
     <!-- Dropdown Options -->
     <string-array name="hijaiyah_categories">

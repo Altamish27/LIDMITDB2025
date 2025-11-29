@@ -121,4 +121,9 @@ class JoinRoomActivity : AppCompatActivity() {
             }
         }
     }
+    
+    override fun onSupportNavigateUp(): Boolean {
+        finish()
+        return true
+    }
 }
