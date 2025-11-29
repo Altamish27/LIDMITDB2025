@@ -8,11 +8,26 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.mediapipe.examples.gesturerecognizer.R
 import com.google.mediapipe.examples.gesturerecognizer.data.HijaiyahLetter
-import com.google.mediapipe.examples.gesturerecognizer.core.main.MainActivity
 
 class ArabicLetterAdapter(
     private val onLetterClick: (HijaiyahLetter) -> Unit
 ) : RecyclerView.Adapter<ArabicLetterAdapter.LetterViewHolder>() {
+    
+    companion object {
+        // Letters that don't have gesture recognition (skip camera, go to panduan directly)
+        private val LETTERS_WITHOUT_GESTURE = setOf(
+            "hamzah", "lam alif", "lamalif", "lam-alif"
+        )
+        
+        /**
+         * Check if a letter should skip camera and go directly to panduan
+         */
+        fun shouldSkipCamera(transliteration: String): Boolean {
+            return LETTERS_WITHOUT_GESTURE.any { 
+                transliteration.lowercase().contains(it) 
+            }
+        }
+    }
     
     private var letters: List<HijaiyahLetter> = emptyList()
     
@@ -57,20 +72,8 @@ class ArabicLetterAdapter(
             }
             
             itemView.setOnClickListener {
+                // Let the callback handle all navigation logic
                 onLetterClick(letter)
-                val context = itemView.context
-                val intent = android.content.Intent(context, MainActivity::class.java).apply {
-                    putExtra("openCamera", true)
-                    putExtra("selectedLetter", letter.arabic)
-                    putExtra("target_letter", letter.arabic)
-                    putExtra("letterName", letter.transliteration)
-                    putExtra("target_letter_name", letter.transliteration)
-                    val diacritic = letter.diacritic ?: "hijaiyah"
-                    putExtra("letterType", diacritic)
-                    putExtra("diacritic", letter.diacritic)
-                    putExtra("letterPosition", letter.position)
-                }
-                context.startActivity(intent)
             }
         }
     }

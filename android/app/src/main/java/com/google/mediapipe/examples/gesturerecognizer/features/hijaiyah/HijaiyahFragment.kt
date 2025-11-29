@@ -349,6 +349,30 @@ class HijaiyahFragment : Fragment() {
     }
     
     private fun navigateToGestureRecognition(letter: HijaiyahLetter) {
+        // Check if this letter should skip camera (Hamzah, Lam Alif)
+        if (ArabicLetterAdapter.shouldSkipCamera(letter.transliteration)) {
+            // Mark as completed automatically
+            progressManager.markLetterCompleted(letter.position)
+            
+            // Show toast notification
+            Toast.makeText(
+                requireContext(), 
+                "Huruf ${letter.transliteration} tidak memiliki gesture. Ditandai selesai.", 
+                Toast.LENGTH_SHORT
+            ).show()
+            
+            // Go directly to Panduan page instead of camera
+            val intent = android.content.Intent(requireContext(), 
+                com.google.mediapipe.examples.gesturerecognizer.features.praga.PragaActivity::class.java).apply {
+                putExtra("huruf_arab", letter.arabic)
+                putExtra("huruf_latin", letter.transliteration)
+                putExtra("gesture_name", letter.gestureName ?: "")
+            }
+            startActivity(intent)
+            return
+        }
+        
+        // Normal flow - navigate to camera for gesture recognition
         val bundle = Bundle().apply {
             putString("selectedLetter", letter.arabic)
             putString("letterName", letter.transliteration)

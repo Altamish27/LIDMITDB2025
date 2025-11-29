@@ -2557,6 +2557,7 @@ class CameraFragment : Fragment(),
                 putExtra("huruf_arab", hurufArab)
                 putExtra("huruf_latin", hurufLatin)
                 putExtra("gesture_name", gestureName)
+                putExtra("from_camera", true) // Flag to hide camera button in PragaActivity
             }
             startActivity(intent)
             

@@ -41,6 +41,7 @@ class PragaActivity : AppCompatActivity() {
     private var exoPlayer: ExoPlayer? = null
     private var videoTimeoutHandler: Runnable? = null
     private val videoHandler = Handler(Looper.getMainLooper())
+    private var isFromCamera: Boolean = false // Flag to indicate if opened from CameraFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,6 +55,7 @@ class PragaActivity : AppCompatActivity() {
         hurufArab = intent.getStringExtra("huruf_arab") ?: "ا"
         hurufLatin = intent.getStringExtra("huruf_latin") ?: "Alif"
         gestureName = intent.getStringExtra("gesture_name") ?: ""
+        isFromCamera = intent.getBooleanExtra("from_camera", false)
 
         // Load data dan setup UI
         loadDataAndSetup()
@@ -160,13 +162,18 @@ class PragaActivity : AppCompatActivity() {
             finish()
         }
 
-        binding.btnOpenCamera.setOnClickListener {
-            // Navigate to camera with the selected letter for detection
-            val intent = Intent(this, MainActivity::class.java).apply {
-                putExtra("target_letter", gestureName)
-                putExtra("huruf_latin", hurufLatin)
+        // Hide camera button if already opened from camera (to prevent double camera)
+        if (isFromCamera) {
+            binding.btnOpenCamera.visibility = View.GONE
+        } else {
+            binding.btnOpenCamera.setOnClickListener {
+                // Navigate to camera with the selected letter for detection
+                val intent = Intent(this, MainActivity::class.java).apply {
+                    putExtra("target_letter", gestureName)
+                    putExtra("huruf_latin", hurufLatin)
+                }
+                startActivity(intent)
             }
-            startActivity(intent)
         }
 
         binding.btnPrevious.setOnClickListener {
