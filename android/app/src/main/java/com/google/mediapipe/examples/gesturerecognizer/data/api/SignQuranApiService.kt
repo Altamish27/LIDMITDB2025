@@ -466,7 +466,7 @@ class SignQuranApiService {
                 setBody(JoinRoomRequest(code, numericUserId))
             }
             val body = response.body<JoinRoomResponse>()
-            android.util.Log.d("SignQuranAPI", "Successfully joined room: ${body.room?.name ?: "Unknown"}")
+            android.util.Log.d("SignQuranAPI", "Successfully joined room: ${body.message}")
             Result.success(body)
         } catch (e: Exception) {
             android.util.Log.e("SignQuranAPI", "Join room error: ${e.message}", e)
