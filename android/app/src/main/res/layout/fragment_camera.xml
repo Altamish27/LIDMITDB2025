@@ -19,7 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- ================= TOP SECTION: Letter Display ================= -->
+    <!-- ================= TOP SECTION ================= -->
     <LinearLayout
         android:id="@+id/topSection"
         android:layout_width="match_parent"
@@ -27,67 +27,60 @@
         android:layout_gravity="top"
         android:orientation="vertical"
         android:background="@drawable/gradient_top_overlay"
-        android:paddingTop="48dp"
-        android:paddingBottom="24dp"
-        android:paddingHorizontal="16dp"
-        android:fitsSystemWindows="true"
-        android:clipToPadding="false">
+        android:paddingTop="40dp"
+        android:paddingBottom="12dp"
+        android:paddingHorizontal="12dp"
+        android:fitsSystemWindows="true">
 
-        <!-- Header Row: Back, Title, Help -->
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
-
-            <ImageView
-                android:id="@+id/buttonBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
-                android:background="@drawable/circle_button_background"
-                android:padding="10dp"
-                android:src="@drawable/ic_arrow_back"
-                android:contentDescription="Kembali"
-                app:tint="#FFFFFF" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:text="Latihan Gesture"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <ImageView
-                android:id="@+id/buttonHelp"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:background="@drawable/circle_button_background"
-                android:padding="10dp"
-                android:src="@android:drawable/ic_menu_help"
-                android:contentDescription="Bantuan"
-                app:tint="#FFFFFF" />
-
-        </RelativeLayout>
-
-        <!-- Target Letter Card -->
+        <!-- Header Row: Back & Help buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center"
-            android:background="@drawable/bg_guidance_panel"
-            android:padding="20dp">
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
 
-            <!-- Letter Circle -->
+            <ImageView
+                android:id="@+id/buttonBack"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/circle_button_background"
+                android:padding="8dp"
+                android:src="@drawable/ic_arrow_back"
+                android:contentDescription="Kembali"
+                app:tint="#FFFFFF" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:id="@+id/buttonHelp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/circle_button_background"
+                android:padding="8dp"
+                android:src="@android:drawable/ic_menu_help"
+                android:contentDescription="Bantuan"
+                app:tint="#FFFFFF" />
+
+        </LinearLayout>
+
+        <!-- Current Letter Card (Compact) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_guidance_panel"
+            android:padding="12dp">
+
+            <!-- Letter Circle (Smaller) -->
             <FrameLayout
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:layout_marginEnd="20dp">
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_marginEnd="12dp">
 
                 <View
                     android:id="@+id/letterCircleBg"
@@ -102,13 +95,9 @@
                     android:layout_gravity="center"
                     android:text="ا"
                     android:textColor="#FFFFFF"
-                    android:textSize="56sp"
+                    android:textSize="36sp"
                     android:textStyle="bold"
-                    android:fontFamily="sans-serif"
-                    android:shadowColor="#80000000"
-                    android:shadowDx="2"
-                    android:shadowDy="2"
-                    android:shadowRadius="4" />
+                    android:fontFamily="sans-serif" />
 
             </FrameLayout>
 
@@ -125,84 +114,138 @@
                     android:layout_height="wrap_content"
                     android:text="Huruf Alif"
                     android:textColor="#FFFFFF"
-                    android:textSize="22sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/textLetterType"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="2dp"
                     android:text="Hijaiyah Dasar"
                     android:textColor="#B0FFFFFF"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/textGestureHint"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="🤚 Tunjukkan gesture di depan kamera"
+                    android:layout_marginTop="4dp"
+                    android:text="🤚 Tunjukkan gesture"
                     android:textColor="#FCD94B"
-                    android:textSize="13sp"
+                    android:textSize="11sp"
                     android:textStyle="italic" />
 
             </LinearLayout>
 
         </LinearLayout>
 
-    </LinearLayout>
-
-    <!-- ================= CENTER: Guidance Panel ================= -->
-    <LinearLayout
-        android:id="@+id/guidancePanel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginHorizontal="24dp"
-        android:orientation="vertical"
-        android:background="@drawable/bg_guidance_panel"
-        android:padding="20dp"
-        android:visibility="gone">
-
-        <!-- Status Icon & Message -->
+        <!-- ================= NEXT LETTERS LIST (MODE LATIHAN) ================= -->
+        <!-- Positioned at TOP, horizontal, for latihan jilid mode -->
         <LinearLayout
+            android:id="@+id/latihanModeContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:visibility="gone">
 
-            <ImageView
-                android:id="@+id/iconGuidanceStatus"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@android:drawable/ic_dialog_info"
-                app:tint="#FCD94B" />
-
-            <LinearLayout
-                android:layout_width="0dp"
+            <!-- Label -->
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="16dp"
-                android:orientation="vertical">
+                android:text="Huruf Selanjutnya"
+                android:textSize="10sp"
+                android:textColor="#B0FFFFFF"
+                android:layout_marginBottom="4dp" />
 
-                <TextView
-                    android:id="@+id/textGuidanceTitle"
+            <!-- Container for next letters (horizontal) -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp"
+                android:background="@drawable/bg_next_letters_row">
+
+                <!-- Next Letter 1 -->
+                <LinearLayout
+                    android:id="@+id/nextLetter1Container"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Menunggu Gesture..."
-                    android:textColor="#FFFFFF"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:layout_marginHorizontal="6dp"
+                    android:visibility="gone">
 
-                <TextView
-                    android:id="@+id/textGuidanceMessage"
+                    <TextView
+                        android:id="@+id/textNextLetter1"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:gravity="center"
+                        android:text="ب"
+                        android:textSize="24sp"
+                        android:textColor="#FFFFFF"
+                        android:background="@drawable/bg_next_letter_item" />
+
+                </LinearLayout>
+
+                <!-- Next Letter 2 -->
+                <LinearLayout
+                    android:id="@+id/nextLetter2Container"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Posisikan tangan Anda di depan kamera"
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="14sp" />
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:layout_marginHorizontal="6dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/textNextLetter2"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:gravity="center"
+                        android:text="ت"
+                        android:textSize="24sp"
+                        android:textColor="#FFFFFF"
+                        android:background="@drawable/bg_next_letter_item" />
+
+                </LinearLayout>
+
+                <!-- Next Letter 3 -->
+                <LinearLayout
+                    android:id="@+id/nextLetter3Container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:layout_marginHorizontal="6dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/textNextLetter3"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:gravity="center"
+                        android:text="ث"
+                        android:textSize="24sp"
+                        android:textColor="#FFFFFF"
+                        android:background="@drawable/bg_next_letter_item" />
+
+                </LinearLayout>
+
+                <!-- More indicator -->
+                <TextView
+                    android:id="@+id/textMoreLetters"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="..."
+                    android:textSize="16sp"
+                    android:textColor="#80FFFFFF"
+                    android:layout_marginStart="4dp"
+                    android:visibility="gone" />
 
             </LinearLayout>
 
@@ -210,7 +253,7 @@
 
     </LinearLayout>
 
-    <!-- ================= BOTTOM SECTION: Progress & Status ================= -->
+    <!-- ================= BOTTOM SECTION ================= -->
     <LinearLayout
         android:id="@+id/bottomSection"
         android:layout_width="match_parent"
@@ -218,11 +261,10 @@
         android:layout_gravity="bottom"
         android:orientation="vertical"
         android:background="@drawable/gradient_bottom_overlay"
-        android:paddingTop="16dp"
+        android:paddingTop="12dp"
         android:paddingHorizontal="16dp"
-        android:paddingBottom="48dp"
-        android:fitsSystemWindows="true"
-        android:clipToPadding="false">
+        android:paddingBottom="32dp"
+        android:fitsSystemWindows="true">
 
         <!-- Step Indicator for Harakat (Fathah, Kasrah, Dhammah) -->
         <LinearLayout
@@ -232,8 +274,8 @@
             android:orientation="horizontal"
             android:gravity="center"
             android:background="@drawable/bg_step_indicator"
-            android:padding="12dp"
-            android:layout_marginBottom="12dp"
+            android:padding="10dp"
+            android:layout_marginBottom="8dp"
             android:visibility="gone">
 
             <!-- Step 1: Gesture -->
@@ -246,8 +288,8 @@
                 android:gravity="center">
 
                 <FrameLayout
-                    android:layout_width="36dp"
-                    android:layout_height="36dp">
+                    android:layout_width="28dp"
+                    android:layout_height="28dp">
 
                     <View
                         android:id="@+id/step1Circle"
@@ -261,7 +303,7 @@
                         android:layout_gravity="center"
                         android:text="1"
                         android:textColor="#FFFFFF"
-                        android:textSize="16sp"
+                        android:textSize="12sp"
                         android:textStyle="bold" />
 
                 </FrameLayout>
@@ -270,10 +312,10 @@
                     android:id="@+id/step1Label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="2dp"
                     android:text="Gesture"
                     android:textColor="#147E7E"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
             </LinearLayout>
@@ -284,8 +326,8 @@
                 android:layout_height="wrap_content"
                 android:text="→"
                 android:textColor="#999999"
-                android:textSize="20sp"
-                android:layout_marginHorizontal="8dp" />
+                android:textSize="16sp"
+                android:layout_marginHorizontal="4dp" />
 
             <!-- Step 2: Movement -->
             <LinearLayout
@@ -297,8 +339,8 @@
                 android:gravity="center">
 
                 <FrameLayout
-                    android:layout_width="36dp"
-                    android:layout_height="36dp">
+                    android:layout_width="28dp"
+                    android:layout_height="28dp">
 
                     <View
                         android:id="@+id/step2Circle"
@@ -312,7 +354,7 @@
                         android:layout_gravity="center"
                         android:text="2"
                         android:textColor="#FFFFFF"
-                        android:textSize="16sp"
+                        android:textSize="12sp"
                         android:textStyle="bold" />
 
                 </FrameLayout>
@@ -321,10 +363,10 @@
                     android:id="@+id/step2Label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="2dp"
                     android:text="Gerakan"
                     android:textColor="#999999"
-                    android:textSize="12sp" />
+                    android:textSize="10sp" />
 
             </LinearLayout>
 
@@ -334,8 +376,8 @@
                 android:layout_height="wrap_content"
                 android:text="→"
                 android:textColor="#999999"
-                android:textSize="20sp"
-                android:layout_marginHorizontal="8dp" />
+                android:textSize="16sp"
+                android:layout_marginHorizontal="4dp" />
 
             <!-- Step 3: Complete -->
             <LinearLayout
@@ -347,8 +389,8 @@
                 android:gravity="center">
 
                 <FrameLayout
-                    android:layout_width="36dp"
-                    android:layout_height="36dp">
+                    android:layout_width="28dp"
+                    android:layout_height="28dp">
 
                     <View
                         android:id="@+id/step3Circle"
@@ -362,7 +404,7 @@
                         android:layout_gravity="center"
                         android:text="✓"
                         android:textColor="#FFFFFF"
-                        android:textSize="16sp"
+                        android:textSize="12sp"
                         android:textStyle="bold" />
 
                 </FrameLayout>
@@ -371,24 +413,24 @@
                     android:id="@+id/step3Label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="2dp"
                     android:text="Selesai"
                     android:textColor="#999999"
-                    android:textSize="12sp" />
+                    android:textSize="10sp" />
 
             </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Status Card -->
+        <!-- Status Card (Compact) -->
         <LinearLayout
             android:id="@+id/statusCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@drawable/bg_status_waiting"
-            android:padding="16dp"
-            android:layout_marginBottom="8dp">
+            android:padding="12dp"
+            android:layout_marginBottom="6dp">
 
             <!-- Status Header -->
             <LinearLayout
@@ -399,8 +441,8 @@
 
                 <ImageView
                     android:id="@+id/iconStatus"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
                     android:src="@android:drawable/ic_menu_search"
                     app:tint="#FFFFFF" />
 
@@ -409,10 +451,10 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="12dp"
+                    android:layout_marginStart="10dp"
                     android:text="Mendeteksi Gesture..."
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="14sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -421,7 +463,7 @@
                     android:layout_height="wrap_content"
                     android:text=""
                     android:textColor="#FFFFFF"
-                    android:textSize="20sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -432,18 +474,18 @@
                 android:id="@+id/textStatusMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Posisikan tangan Anda di depan kamera dan tahan selama 1 detik"
+                android:layout_marginTop="4dp"
+                android:text="Tahan gesture selama 1 detik"
                 android:textColor="#E6FFFFFF"
-                android:textSize="14sp"
-                android:lineSpacingExtra="4dp" />
+                android:textSize="12sp"
+                android:maxLines="2" />
 
             <!-- Progress Bar -->
             <ProgressBar
                 android:id="@+id/progressTimer"
                 android:layout_width="match_parent"
-                android:layout_height="12dp"
-                android:layout_marginTop="12dp"
+                android:layout_height="8dp"
+                android:layout_marginTop="8dp"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:max="100"
                 android:progress="0"
@@ -460,25 +502,25 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:background="@drawable/results_background"
-            android:padding="12dp"
+            android:padding="10dp"
             android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Gesture Terdeteksi:"
+                android:text="Terdeteksi:"
                 android:textColor="#666666"
-                android:textSize="13sp" />
+                android:textSize="11sp" />
 
             <TextView
                 android:id="@+id/textDetectedGesture"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="6dp"
                 android:text="-"
                 android:textColor="#147E7E"
-                android:textSize="15sp"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -486,7 +528,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="❌"
-                android:textSize="18sp" />
+                android:textSize="16sp" />
 
         </LinearLayout>
 
@@ -502,13 +544,13 @@
             android:id="@+id/buttonStart"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:text="Mulai Latihan"
             android:backgroundTint="#147E7E"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:textSize="14sp"
             android:textStyle="bold"
-            android:paddingVertical="14dp"
+            android:paddingVertical="10dp"
             android:visibility="gone" />
 
     </LinearLayout>
@@ -525,16 +567,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:layout_marginHorizontal="32dp"
+            android:layout_marginHorizontal="24dp"
             android:orientation="vertical"
             android:background="@drawable/result_background"
-            android:padding="32dp"
+            android:padding="24dp"
             android:gravity="center">
 
-            <!-- Success Icon with Animation -->
+            <!-- Success Icon -->
             <FrameLayout
-                android:layout_width="100dp"
-                android:layout_height="100dp">
+                android:layout_width="80dp"
+                android:layout_height="80dp">
 
                 <View
                     android:layout_width="match_parent"
@@ -543,8 +585,8 @@
 
                 <ImageView
                     android:id="@+id/iconResult"
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_check_circle"
                     app:tint="#147E7E" />
@@ -555,33 +597,32 @@
                 android:id="@+id/textResult"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="16dp"
                 android:text="BERHASIL!"
                 android:textColor="#147E7E"
-                android:textSize="28sp"
+                android:textSize="24sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/textResultDetail"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="8dp"
                 android:text="Anda berhasil memperagakan huruf dengan benar!"
                 android:textColor="#666666"
-                android:textSize="16sp"
-                android:gravity="center"
-                android:lineSpacingExtra="4dp" />
+                android:textSize="14sp"
+                android:gravity="center" />
 
             <!-- Letter Display in Result -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="16dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@drawable/bg_step_indicator"
-                android:paddingHorizontal="24dp"
-                android:paddingVertical="12dp">
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="10dp">
 
                 <TextView
                     android:id="@+id/textResultLetter"
@@ -589,13 +630,13 @@
                     android:layout_height="wrap_content"
                     android:text="ا"
                     android:textColor="#147E7E"
-                    android:textSize="36sp"
+                    android:textSize="28sp"
                     android:textStyle="bold" />
 
                 <View
                     android:layout_width="1dp"
-                    android:layout_height="40dp"
-                    android:layout_marginHorizontal="16dp"
+                    android:layout_height="32dp"
+                    android:layout_marginHorizontal="12dp"
                     android:background="#CCCCCC" />
 
                 <TextView
@@ -604,7 +645,7 @@
                     android:layout_height="wrap_content"
                     android:text="Alif"
                     android:textColor="#333333"
-                    android:textSize="20sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
             </LinearLayout>
@@ -613,7 +654,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
+                android:layout_marginTop="20dp"
                 android:orientation="horizontal"
                 android:gravity="center">
 
@@ -622,10 +663,11 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginEnd="8dp"
+                    android:layout_marginEnd="6dp"
                     android:text="Ulangi"
                     android:backgroundTint="#E0E0E0"
                     android:textColor="#333333"
+                    android:textSize="13sp"
                     android:textStyle="bold" />
 
                 <Button
@@ -633,10 +675,11 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="6dp"
                     android:text="Lanjut"
                     android:backgroundTint="#147E7E"
                     android:textColor="#FFFFFF"
+                    android:textSize="13sp"
                     android:textStyle="bold" />
 
             </LinearLayout>

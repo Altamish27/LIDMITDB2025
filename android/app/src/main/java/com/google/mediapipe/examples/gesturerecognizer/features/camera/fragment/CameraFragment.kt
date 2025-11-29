@@ -135,6 +135,10 @@ class CameraFragment : Fragment(),
     private var isWaitingForUpMovement = false
     private var dhammahPatternDetected = false // Prevent multiple detection
     
+    // Mode Latihan (Jilid) vs Mode Belajar (Hijaiyah)
+    private var isLatihanMode = false
+    private var nextLettersList: List<String> = emptyList()
+    
     // Movement history tracking for diacritics (Fathah, Dhammah, etc.)
     enum class MovementDirection {
         STATIC, LEFT, RIGHT, UP, DOWN, DIAGONAL_UP_LEFT, DIAGONAL_UP_RIGHT, 
@@ -250,6 +254,13 @@ class CameraFragment : Fragment(),
         letterType = arguments?.getString("letterType")
         diacritic = arguments?.getString("diacritic")
         
+        // Check if embedded mode (Latihan Jilid) or standalone (Belajar Hijaiyah)
+        isLatihanMode = arguments?.getBoolean("embedded", false) ?: false
+        
+        // Get next letters list for Latihan mode
+        val nextLettersArg = arguments?.getStringArrayList("next_letters")
+        nextLettersList = nextLettersArg?.toList() ?: emptyList()
+        
         // Set Fathah, Kasrah, and Dhammah mode
         isFathahMode = diacritic == "fathah"
         isKasrahMode = diacritic == "kasrah"
@@ -261,6 +272,8 @@ class CameraFragment : Fragment(),
         Log.d(TAG, "- targetLetterName: $targetLetterName")
         Log.d(TAG, "- letterType: $letterType")
         Log.d(TAG, "- diacritic: $diacritic")
+        Log.d(TAG, "- isLatihanMode: $isLatihanMode")
+        Log.d(TAG, "- nextLettersList: $nextLettersList")
         Log.d(TAG, "- isFathahMode: $isFathahMode")
         Log.d(TAG, "- isKasrahMode: $isKasrahMode")
         Log.d(TAG, "- isDhammahMode: $isDhammahMode")
@@ -372,18 +385,18 @@ class CameraFragment : Fragment(),
         
         // Setup letter type description
         val letterTypeText = when {
-            isFathahMode -> "Hijaiyah dengan Fathah (ـَ)"
-            isKasrahMode -> "Hijaiyah dengan Kasrah (ـِ)"
-            isDhammahMode -> "Hijaiyah dengan Dhammah (ـُ)"
+            isFathahMode -> "Fathah (ـَ)"
+            isKasrahMode -> "Kasrah (ـِ)"
+            isDhammahMode -> "Dhammah (ـُ)"
             else -> "Hijaiyah Dasar"
         }
         fragmentCameraBinding.textLetterType.text = letterTypeText
         
         // Setup gesture hint
         val gestureHint = when {
-            isFathahMode -> "🤚 Gesture + gerak ke KIRI"
-            isKasrahMode -> "🤚 Gesture + gerak ke BAWAH"
-            isDhammahMode -> "🤚 Gesture + gerak MELINGKAR"
+            isFathahMode -> "← Gerakkan tangan ke KIRI"
+            isKasrahMode -> "↓ Gerakkan tangan ke BAWAH"
+            isDhammahMode -> "∪ Gerakkan tangan membentuk huruf U"
             else -> "🤚 Tunjukkan gesture di depan kamera"
         }
         fragmentCameraBinding.textGestureHint.text = gestureHint
@@ -395,23 +408,35 @@ class CameraFragment : Fragment(),
         // Setup step 2 label based on mode
         if (isHarakatMode) {
             val step2Text = when {
-                isFathahMode -> "Kiri"
-                isKasrahMode -> "Bawah"
-                isDhammahMode -> "Lingkar"
+                isFathahMode -> "← Kiri"
+                isKasrahMode -> "↓ Bawah"
+                isDhammahMode -> "∪ Huruf U"
                 else -> "Gerakan"
             }
             fragmentCameraBinding.step2Label.text = step2Text
         }
         
+        // Setup Mode Latihan: Show next letters list
+        setupLatihanModeUI()
+        
         // Log for debugging
-        Log.d(TAG, "UI Setup - Letter: $displayLetter, Name: $displayName, Type: $letterTypeText")
+        Log.d(TAG, "UI Setup - Letter: $displayLetter, Name: $displayName, Type: $letterTypeText, LatihanMode: $isLatihanMode")
         
         // Setup back button
         fragmentCameraBinding.buttonBack.setOnClickListener {
             try {
                 if (isAdded) {
-                    activity?.let { act ->
-                        Navigation.findNavController(act, R.id.fragment_container).navigateUp()
+                    // For embedded/latihan mode, just close camera overlay
+                    if (isLatihanMode) {
+                        val result = Bundle().apply {
+                            putBoolean("cancelled", true)
+                        }
+                        parentFragmentManager.setFragmentResult("camera_result", result)
+                        parentFragmentManager.beginTransaction().remove(this@CameraFragment).commitAllowingStateLoss()
+                    } else {
+                        activity?.let { act ->
+                            Navigation.findNavController(act, R.id.fragment_container).navigateUp()
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -448,6 +473,49 @@ class CameraFragment : Fragment(),
             } catch (e: Exception) {
                 Log.e(TAG, "Error navigating to next", e)
             }
+        }
+    }
+    
+    /**
+     * Setup UI for Latihan (Jilid) mode - shows next letters list
+     */
+    private fun setupLatihanModeUI() {
+        if (_fragmentCameraBinding == null) return
+        
+        if (isLatihanMode && nextLettersList.isNotEmpty()) {
+            // Show next letters panel
+            fragmentCameraBinding.latihanModeContainer.visibility = View.VISIBLE
+            
+            // Set next letters (up to 3)
+            if (nextLettersList.isNotEmpty()) {
+                fragmentCameraBinding.nextLetter1Container.visibility = View.VISIBLE
+                fragmentCameraBinding.textNextLetter1.text = nextLettersList.getOrNull(0) ?: ""
+            } else {
+                fragmentCameraBinding.nextLetter1Container.visibility = View.GONE
+            }
+            
+            if (nextLettersList.size > 1) {
+                fragmentCameraBinding.nextLetter2Container.visibility = View.VISIBLE
+                fragmentCameraBinding.textNextLetter2.text = nextLettersList.getOrNull(1) ?: ""
+            } else {
+                fragmentCameraBinding.nextLetter2Container.visibility = View.GONE
+            }
+            
+            if (nextLettersList.size > 2) {
+                fragmentCameraBinding.nextLetter3Container.visibility = View.VISIBLE
+                fragmentCameraBinding.textNextLetter3.text = nextLettersList.getOrNull(2) ?: ""
+            } else {
+                fragmentCameraBinding.nextLetter3Container.visibility = View.GONE
+            }
+            
+            // Show "more" indicator if there are more than 3 letters
+            fragmentCameraBinding.textMoreLetters.visibility = if (nextLettersList.size > 3) View.VISIBLE else View.GONE
+            
+            Log.d(TAG, "Latihan mode UI setup: showing ${nextLettersList.size} next letters")
+        } else {
+            // Hide next letters panel for belajar mode
+            fragmentCameraBinding.latihanModeContainer.visibility = View.GONE
+            Log.d(TAG, "Belajar mode UI setup: hiding next letters panel")
         }
     }
     
@@ -1420,11 +1488,11 @@ class CameraFragment : Fragment(),
                     movementHistory.joinToString(" → ")
                 }
                 
-                updatePredictionText("Gerak: $lastMovements. Untuk Dhammah: diam → bawah → diagonal kiri-bawah → kiri → diagonal kiri-atas → atas")
+                updatePredictionText("Gerakkan tangan membentuk huruf U")
             } else {
                 // Wrong gesture, reset movement tracking for this attempt
                 updatePredictionText(
-                    "Pertahankan gesture ${baseHijaiyahLetter?.gestureName} dan lakukan gerakan: diam → bawah → diagonal → kiri → diagonal → atas"
+                    "Tunjukkan gesture ${baseHijaiyahLetter?.gestureName} lalu gerakkan membentuk huruf U"
                 )
             }
         }
@@ -1454,8 +1522,8 @@ class CameraFragment : Fragment(),
         
         // Update UI with better guidance
         updateStatusUI(
-            title = "Langkah 2: Gerakan Fathah",
-            message = "Bagus! Sekarang DIAM sebentar, lalu gerakkan tangan ke KIRI ←",
+            title = "Langkah 2: Gerakan Fathah ←",
+            message = "Bagus! Sekarang gerakkan tangan ke KIRI",
             statusType = StatusType.SUCCESS,
             showProgress = false
         )
@@ -1490,8 +1558,8 @@ class CameraFragment : Fragment(),
         
         // Update UI with better guidance
         updateStatusUI(
-            title = "Langkah 2: Gerakan Kasrah",
-            message = "Bagus! Sekarang DIAM sebentar, lalu gerakkan tangan ke BAWAH ↓",
+            title = "Langkah 2: Gerakan Kasrah ↓",
+            message = "Bagus! Sekarang gerakkan tangan ke BAWAH",
             statusType = StatusType.SUCCESS,
             showProgress = false
         )
@@ -1526,8 +1594,8 @@ class CameraFragment : Fragment(),
         
         // Update UI with better guidance
         updateStatusUI(
-            title = "Langkah 2: Gerakan Dhammah",
-            message = "Bagus! Sekarang buat gerakan MELINGKAR: Bawah → Kiri → Atas ↻",
+            title = "Langkah 2: Gerakan Dhammah ∪",
+            message = "Bagus! Sekarang gerakkan tangan membentuk huruf U",
             statusType = StatusType.SUCCESS,
             showProgress = false
         )
@@ -1922,22 +1990,45 @@ class CameraFragment : Fragment(),
     }
     
     private fun handleCameraInitializationError(error: Exception) {
+        Log.e(TAG, "Camera initialization error: ${error.message}", error)
+        
         activity?.runOnUiThread {
             if (isAdded && context != null) {
-                Toast.makeText(
-                    context,
-                    "Gagal menginisialisasi kamera: ${error.message}",
-                    Toast.LENGTH_LONG
-                ).show()
-                
-                // For embedded mode, notify parent about failure
+                // For embedded mode, notify parent about failure and close self
                 val isEmbedded = arguments?.getBoolean("embedded", false) ?: false
                 if (isEmbedded) {
                     val result = Bundle().apply {
                         putBoolean("success", false)
-                        putString("error", "Camera initialization failed")
+                        putBoolean("camera_error", true)
+                        putString("error", error.message ?: "Camera initialization failed")
                     }
                     parentFragmentManager.setFragmentResult("camera_result", result)
+                    
+                    // Close self after a short delay
+                    view?.postDelayed({
+                        try {
+                            if (isAdded) {
+                                parentFragmentManager.beginTransaction()
+                                    .remove(this@CameraFragment)
+                                    .commitAllowingStateLoss()
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Failed to remove CameraFragment after error: ${e.message}")
+                        }
+                    }, 500)
+                } else {
+                    // Not embedded, show toast and navigate back
+                    Toast.makeText(
+                        context,
+                        "Gagal menginisialisasi kamera. Silakan coba lagi.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    
+                    try {
+                        activity?.onBackPressed()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to navigate back: ${e.message}")
+                    }
                 }
             }
         }
@@ -2315,147 +2406,47 @@ class CameraFragment : Fragment(),
     
     private fun onFathahSuccess() {
         // Success! User performed correct Hijaiyah gesture + left movement for Fathah
-        updatePredictionText("BERHASIL! Fathah $targetLetterName terdeteksi!")
-        
-        // Update UI to show success
-        fragmentCameraBinding.textLetterName.text = "Berhasil: Fathah $targetLetterName"
-        fragmentCameraBinding.progressTimer.progress = 100
-        
-        // Mark as completed and save progress
-        val letterPosition = arguments?.getInt("letterPosition", -1) ?: -1
-        if (letterPosition >= 0) {
-            progressManager.markLetterCompleted(letterPosition)
-        }
+        Log.d(TAG, "Fathah gesture completed successfully!")
         
         // Stop detection and reset all states
         isDetecting = false
         isWaitingForLeftMovement = false
         resetStaticTracking()
+        practiceTimer?.cancel()
+        resetTimer?.cancel()
         
-        // Show success dialog or navigate back
-        showFathahSuccessDialog()
-        
-        Log.d(TAG, "Fathah gesture completed successfully!")
-    }
-    
-    private fun showFathahSuccessDialog() {
-        try {
-            // Safe check - fragment might be detached
-            if (!isAdded) return
-            
-            context?.let { ctx ->
-                Toast.makeText(ctx, "Berhasil! Fathah $targetLetterName telah selesai!", Toast.LENGTH_LONG).show()
-            }
-            
-            // Auto navigate back after delay
-            view?.postDelayed({
-                try {
-                    if (isAdded && view != null) {
-                        view?.let { v ->
-                            Navigation.findNavController(v).navigateUp()
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error navigating back", e)
-                }
-            }, 2000)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error showing success dialog", e)
-        }
+        // Use showResult which properly handles embedded mode and FragmentResult
+        showResult(true)
     }
     
     private fun onKasrahSuccess() {
         // Success! User performed correct Hijaiyah gesture + down movement for Kasrah
-        updatePredictionText("BERHASIL! Kasrah $targetLetterName terdeteksi!")
-        
-        // Update UI to show success
-        fragmentCameraBinding.textLetterName.text = "Berhasil: Kasrah $targetLetterName"
-        fragmentCameraBinding.progressTimer.progress = 100
-        
-        // Mark as completed and save progress
-        val letterPosition = arguments?.getInt("letterPosition", -1) ?: -1
-        if (letterPosition >= 0) {
-            progressManager.markLetterCompleted(letterPosition)
-        }
+        Log.d(TAG, "Kasrah gesture completed successfully!")
         
         // Stop detection and reset all states
         isDetecting = false
         isWaitingForDownMovement = false
         resetStaticTracking()
+        practiceTimer?.cancel()
+        resetTimer?.cancel()
         
-        // Show success dialog or navigate back
-        showKasrahSuccessDialog()
-        
-        Log.d(TAG, "Kasrah gesture completed successfully!")
-    }
-    
-    private fun showKasrahSuccessDialog() {
-        try {
-            // Safe check - fragment might be detached
-            if (!isAdded) return
-            
-            context?.let { ctx ->
-                Toast.makeText(ctx, "Berhasil! Kasrah $targetLetterName telah selesai!", Toast.LENGTH_LONG).show()
-            }
-            
-            // Auto navigate back after delay
-            view?.postDelayed({
-                try {
-                    if (isAdded && view != null) {
-                        view?.let { v ->
-                            Navigation.findNavController(v).navigateUp()
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error navigating back", e)
-                }
-            }, 2000)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error showing success dialog", e)
-        }
+        // Use showResult which properly handles embedded mode and FragmentResult
+        showResult(true)
     }
     
     private fun onDhammahSuccess() {
         // Success! User performed correct Hijaiyah gesture + complex movement pattern for Dhammah
-        updatePredictionText("BERHASIL! Dhammah $targetLetterName terdeteksi!")
-        
-        // Update UI to show success
-        fragmentCameraBinding.textLetterName.text = "Berhasil: Dhammah $targetLetterName"
-        fragmentCameraBinding.progressTimer.progress = 100
-        
-        // Mark as completed and save progress
-        val letterPosition = arguments?.getInt("letterPosition", -1) ?: -1
-        if (letterPosition >= 0) {
-            progressManager.markLetterCompleted(letterPosition)
-        }
+        Log.d(TAG, "Dhammah gesture completed successfully!")
         
         // Stop detection and reset all states
         isDetecting = false
         isWaitingForUpMovement = false
         resetStaticTracking()
+        practiceTimer?.cancel()
+        resetTimer?.cancel()
         
-        // Show success dialog or navigate back
-        showDhammahSuccessDialog()
-        
-        Log.d(TAG, "Dhammah gesture completed successfully!")
-    }
-    
-    private fun showDhammahSuccessDialog() {
-        try {
-            // Simple success message, could be enhanced with dialog
-            Toast.makeText(requireContext(), "Berhasil! Dhammah $targetLetterName telah selesai!", Toast.LENGTH_LONG).show()
-            
-            // Auto navigate back after delay
-            view?.postDelayed({
-                try {
-                    Navigation.findNavController(requireView()).navigateUp()
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error navigating back", e)
-                }
-            }, 2000)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error showing success dialog", e)
-        }
+        // Use showResult which properly handles embedded mode and FragmentResult
+        showResult(true)
     }
     
     /**
@@ -2593,22 +2584,22 @@ class CameraFragment : Fragment(),
             val instructionText = when {
                 isFathahMode -> {
                     textTutorialDiacriticInfo.visibility = View.VISIBLE
-                    textTutorialDiacriticInfo.text = "MODE FATHAH:\nSetelah gesture huruf terdeteksi, gerakkan tangan ke KIRI untuk harakat Fathah"
-                    "1. Tunjukkan gesture huruf $targetLetterName\n2. Tahan posisi tangan tetap diam selama 1 detik\n3. Setelah terdeteksi, gerakkan tangan ke KIRI\n4. Pola: DIAM → KIRI → DIAM"
+                    textTutorialDiacriticInfo.text = "MODE FATHAH:\nSetelah gesture huruf terdeteksi, gerakkan tangan ke KIRI"
+                    "1. Tunjukkan gesture huruf $targetLetterName\n2. Tunggu sampai gesture terdeteksi\n3. Gerakkan tangan ke KIRI ←\n4. Selesai!"
                 }
                 isKasrahMode -> {
                     textTutorialDiacriticInfo.visibility = View.VISIBLE
-                    textTutorialDiacriticInfo.text = "MODE KASRAH:\nSetelah gesture huruf terdeteksi, gerakkan tangan ke BAWAH untuk harakat Kasrah"
-                    "1. Tunjukkan gesture huruf $targetLetterName\n2. Tahan posisi tangan tetap diam selama 1 detik\n3. Setelah terdeteksi, gerakkan tangan ke BAWAH\n4. Pola: DIAM → BAWAH → DIAM"
+                    textTutorialDiacriticInfo.text = "MODE KASRAH:\nSetelah gesture huruf terdeteksi, gerakkan tangan ke BAWAH"
+                    "1. Tunjukkan gesture huruf $targetLetterName\n2. Tunggu sampai gesture terdeteksi\n3. Gerakkan tangan ke BAWAH ↓\n4. Selesai!"
                 }
                 isDhammahMode -> {
                     textTutorialDiacriticInfo.visibility = View.VISIBLE
-                    textTutorialDiacriticInfo.text = "MODE DHAMMAH:\nSetelah gesture huruf terdeteksi, lakukan gerakan melingkar ke atas untuk harakat Dhammah"
-                    "1. Tunjukkan gesture huruf $targetLetterName\n2. Tahan posisi tangan tetap diam selama 1 detik\n3. Lakukan gerakan: BAWAH → diagonal kiri-bawah → KIRI → diagonal kiri-atas → ATAS\n4. Pola: Gerakan melingkar ke atas"
+                    textTutorialDiacriticInfo.text = "MODE DHAMMAH:\nSetelah gesture huruf terdeteksi, gerakkan tangan membentuk huruf U"
+                    "1. Tunjukkan gesture huruf $targetLetterName\n2. Tunggu sampai gesture terdeteksi\n3. Gerakkan tangan membentuk huruf U ∪\n4. Selesai!"
                 }
                 else -> {
                     textTutorialDiacriticInfo.visibility = View.GONE
-                    "1. Tunjukkan gesture huruf $targetLetterName\n2. Tahan posisi tangan tetap diam selama 1 detik\n3. Tunggu hingga progress bar penuh\n4. Gesture berhasil terdeteksi!"
+                    "1. Tunjukkan gesture huruf $targetLetterName\n2. Tahan posisi tangan tetap diam\n3. Tunggu hingga progress bar penuh\n4. Gesture berhasil terdeteksi!"
                 }
             }
             
