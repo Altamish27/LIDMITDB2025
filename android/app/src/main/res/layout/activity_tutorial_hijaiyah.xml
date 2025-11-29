@@ -64,7 +64,9 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:paddingBottom="88dp"
+        android:clipToPadding="false">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -188,37 +190,33 @@
 
             </androidx.cardview.widget.CardView>
 
-            <!-- Tutorial Video Card -->
+            <!-- Tutorial Video Card - NO BEZEL, NO CONTROLLER -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardVideoContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:visibility="gone"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                app:cardBackgroundColor="@android:color/white">
+                app:cardCornerRadius="0dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/black">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Video Tutorial"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="16dp" />
+                    android:padding="0dp">
 
                     <com.google.android.exoplayer2.ui.PlayerView
                         android:id="@+id/playerViewTutorial"
                         android:layout_width="match_parent"
-                        android:layout_height="250dp"
-                        android:background="@color/black" />
+                        android:layout_height="280dp"
+                        android:background="@color/black"
+                        app:surface_type="texture_view"
+                        app:resize_mode="zoom"
+                        app:use_controller="false"
+                        app:show_buffering="never"
+                        app:keep_content_on_player_reset="true" />
 
                 </LinearLayout>
 
