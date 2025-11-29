@@ -380,7 +380,15 @@ class LatihanPracticeActivity : AppCompatActivity() {
             finish()
         }
         
-        // Camera button removed; camera auto-starts on first resume
+        // Start Practice button - sequential mode
+        binding.btnStartPractice.setOnClickListener {
+            openCamera()
+        }
+        
+        // Close camera button
+        binding.btnCloseCamera.setOnClickListener {
+            closeCameraMode()
+        }
         
         binding.btnNext.setOnClickListener {
             nextBaris()
@@ -389,6 +397,59 @@ class LatihanPracticeActivity : AppCompatActivity() {
         binding.btnPrevious.setOnClickListener {
             previousBaris()
         }
+    }
+    
+    // ==================== CAMERA MODE TRANSITIONS ====================
+    
+    private fun showCameraMode(huruf: LatihanHuruf) {
+        // Update camera overlay info
+        binding.tvCameraCurrentLetter.text = huruf.arabic
+        binding.tvCameraCurrentLetterName.text = huruf.latin
+        
+        // Calculate progress text
+        val totalHuruf = currentBaris?.hurufList?.size ?: 0
+        val currentIndex = currentBaris?.hurufList?.indexOfFirst { it.position == huruf.position }?.plus(1) ?: 0
+        binding.tvCameraLetterProgress.text = "Huruf $currentIndex dari $totalHuruf"
+        
+        // Animate transition to camera mode
+        binding.mainContentLayout.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .withEndAction {
+                binding.mainContentLayout.visibility = View.GONE
+            }
+            .start()
+        
+        binding.cameraOverlayLayout.visibility = View.VISIBLE
+        binding.cameraOverlayLayout.alpha = 0f
+        binding.cameraOverlayLayout.animate()
+            .alpha(1f)
+            .setDuration(200)
+            .start()
+    }
+    
+    private fun closeCameraMode() {
+        sequenceMode = false
+        
+        // Animate transition back to grid mode
+        binding.cameraOverlayLayout.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .withEndAction {
+                binding.cameraOverlayLayout.visibility = View.GONE
+                hideEmbeddedCamera()
+            }
+            .start()
+        
+        binding.mainContentLayout.visibility = View.VISIBLE
+        binding.mainContentLayout.alpha = 0f
+        binding.mainContentLayout.animate()
+            .alpha(1f)
+            .setDuration(200)
+            .start()
+        
+        // Refresh grid to show updated completion status
+        adapter.updateCompletedPositions(completedPositions)
     }
 
     private fun loadCurrentBaris() {
@@ -472,6 +533,9 @@ class LatihanPracticeActivity : AppCompatActivity() {
     }
 
     private fun embedCameraForLetter(huruf: LatihanHuruf, sequence: Boolean) {
+        // Show camera mode UI
+        showCameraMode(huruf)
+        
         // Create fragment and set arguments
         val frag = CameraFragment().apply {
             arguments = Bundle().apply {
@@ -483,16 +547,14 @@ class LatihanPracticeActivity : AppCompatActivity() {
             }
         }
 
-        // Show container and place fragment
-        binding.cameraFragmentContainer.visibility = android.view.View.VISIBLE
+        // Place fragment in container
         supportFragmentManager.commit {
             replace(binding.cameraFragmentContainer.id, frag)
         }
     }
 
     private fun hideEmbeddedCamera() {
-        binding.cameraFragmentContainer.visibility = android.view.View.GONE
-        // remove fragment if present
+        // Remove fragment if present
         val existing = supportFragmentManager.findFragmentById(binding.cameraFragmentContainer.id)
         existing?.let {
             supportFragmentManager.commit { remove(it) }
@@ -525,6 +587,8 @@ class LatihanPracticeActivity : AppCompatActivity() {
 
             if (nextIndex >= 0) {
                 val nextHuruf = baris.hurufList[nextIndex]
+                // Update camera overlay info for next letter
+                showCameraMode(nextHuruf)
                 // replace fragment with next letter
                 embedCameraForLetter(nextHuruf, true)
             } else {
@@ -532,20 +596,20 @@ class LatihanPracticeActivity : AppCompatActivity() {
                 if (canGoNextBaris()) {
                     showInfoMessage("Selesai baris ini. Pindah ke baris selanjutnya...")
                     // Auto advance to next baris after a short delay
-                    hideEmbeddedCamera()
+                    closeCameraMode()
                     currentBarisId++
                     loadCurrentBaris()
                     // Auto start camera for next baris
                     android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                         if (sequenceMode) {
+                            sequenceMode = true // Re-enable sequence mode
                             startSequenceFromCurrentBaris()
                         }
                     }, 1000) // 1 second delay
                 } else {
                     // No more baris available
                     showInfoMessage("Halaman selesai! Menyimpan progress...")
-                    sequenceMode = false
-                    hideEmbeddedCamera()
+                    closeCameraMode()
                     
                     // Check if entire halaman is completed and show dialog
                     if (isCurrentHalamanCompleted()) {

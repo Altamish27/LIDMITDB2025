@@ -151,19 +151,39 @@ class CameraFragment : Fragment(),
 
     override fun onResume() {
         super.onResume()
+        
+        // Safety check - make sure fragment is attached
+        if (!isAdded) {
+            Log.w(TAG, "onResume called but fragment not attached")
+            return
+        }
+        
+        val ctx = context ?: return
+        
         // Make sure that all permissions are still present, since the
         // user could have removed them while the app was in paused state.
-        if (!PermissionsFragment.hasPermissions(requireContext())) {
-            Navigation.findNavController(
-                requireActivity(), R.id.fragment_container
-            ).navigate(R.id.action_camera_to_permissions)
+        if (!PermissionsFragment.hasPermissions(ctx)) {
+            try {
+                Navigation.findNavController(
+                    requireActivity(), R.id.fragment_container
+                ).navigate(R.id.action_camera_to_permissions)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to navigate to permissions: ${e.message}")
+            }
+            return
         }
 
         // Start the GestureRecognizerHelper again when users come back
         // to the foreground.
-        backgroundExecutor.execute {
-            if (gestureRecognizerHelper.isClosed()) {
-                gestureRecognizerHelper.setupGestureRecognizer()
+        if (this::backgroundExecutor.isInitialized && !backgroundExecutor.isShutdown) {
+            backgroundExecutor.execute {
+                try {
+                    if (this::gestureRecognizerHelper.isInitialized && gestureRecognizerHelper.isClosed()) {
+                        gestureRecognizerHelper.setupGestureRecognizer()
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to setup gesture recognizer: ${e.message}")
+                }
             }
         }
     }
@@ -182,18 +202,31 @@ class CameraFragment : Fragment(),
     }
 
     override fun onDestroyView() {
+        // Cancel timers first to prevent callbacks accessing destroyed views
+        practiceTimer?.cancel()
+        practiceTimer = null
+        resetTimer?.cancel()
+        resetTimer = null
+        countdownTimer?.cancel()
+        countdownTimer = null
+        
+        // Clear binding reference AFTER canceling timers but BEFORE super call
         _fragmentCameraBinding = null
+        
         super.onDestroyView()
 
-        // Shut down our background executor
-        backgroundExecutor.shutdown()
-        backgroundExecutor.awaitTermination(
-            Long.MAX_VALUE, TimeUnit.NANOSECONDS
-        )
-        
-        // Cancel timer if active
-        practiceTimer?.cancel()
-        resetTimer?.cancel()
+        // Shut down our background executor asynchronously to avoid ANR
+        if (this::backgroundExecutor.isInitialized) {
+            backgroundExecutor.shutdown()
+            // Don't block - let it terminate in background
+            try {
+                if (!backgroundExecutor.awaitTermination(500, TimeUnit.MILLISECONDS)) {
+                    backgroundExecutor.shutdownNow()
+                }
+            } catch (e: InterruptedException) {
+                backgroundExecutor.shutdownNow()
+            }
+        }
     }
 
     override fun onCreateView(
@@ -233,28 +266,50 @@ class CameraFragment : Fragment(),
         Log.d(TAG, "- isDhammahMode: $isDhammahMode")
         Log.d(TAG, "- all arguments: ${arguments?.keySet()?.joinToString { "$it=${arguments?.get(it)}" }}")
         
-        // Setup UI with target letter
+        // Setup UI with target letter first (with loading state)
         setupHijaiyahUI()
         
+        // Get context safely - use view.context which is always available in onViewCreated
+        val safeContext = view.context
+        
+        // Preload HijaiyahData dari API
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                // Load data jika belum ada
+                if (HijaiyahData.letters.isEmpty()) {
+                    Log.d(TAG, "HijaiyahData empty, loading from API...")
+                    val success = HijaiyahData.loadFromApi(safeContext)
+                    if (success) {
+                        Log.d(TAG, "HijaiyahData loaded successfully: ${HijaiyahData.letters.size} letters")
+                    } else {
+                        Log.w(TAG, "Failed to load HijaiyahData from API, will use fallback")
+                    }
+                } else {
+                    Log.d(TAG, "HijaiyahData already loaded: ${HijaiyahData.letters.size} letters")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading HijaiyahData", e)
+            }
+        }
+        
         with(fragmentCameraBinding.recyclerviewResults) {
-            layoutManager = LinearLayoutManager(requireContext())
+            layoutManager = LinearLayoutManager(safeContext)
             adapter = gestureRecognizerResultAdapter
         }
 
         // Initialize our background executor
         backgroundExecutor = Executors.newSingleThreadExecutor()
         // Initialize managers
-        val ctx = requireContext()
-        progressManager = HijaiyahProgressManager(ctx)
-        authManager = AuthManager(ctx)
-        roomPreferenceManager = RoomPreferenceManager(ctx)
+        progressManager = HijaiyahProgressManager(safeContext)
+        authManager = AuthManager(safeContext)
+        roomPreferenceManager = RoomPreferenceManager(safeContext)
         viewLifecycleOwner.lifecycleScope.launch {
             activeRoomId = getActiveRoomId()
         }
         
         // Initialize trajectory system
         trajectoryBuffer = TrajectoryRingBuffer()
-        trajectoryOverlay = TrajectoryOverlayView(requireContext())
+        trajectoryOverlay = TrajectoryOverlayView(safeContext)
         
         // Set up unified movement detection listener
         trajectoryOverlay.setMovementDetectionListener(this)
@@ -280,17 +335,26 @@ class CameraFragment : Fragment(),
         }
 
         // Create the Hand Gesture Recognition Helper that will handle the
-        // inference
+        // inference - use safeContext captured earlier
         backgroundExecutor.execute {
-            gestureRecognizerHelper = GestureRecognizerHelper(
-                context = requireContext(),
-                runningMode = RunningMode.LIVE_STREAM,
-                minHandDetectionConfidence = viewModel.currentMinHandDetectionConfidence,
-                minHandTrackingConfidence = viewModel.currentMinHandTrackingConfidence,
-                minHandPresenceConfidence = viewModel.currentMinHandPresenceConfidence,
-                currentDelegate = viewModel.currentDelegate,
-                gestureRecognizerListener = this
-            )
+            try {
+                // Re-check context availability since this runs on background thread
+                val gestureContext = context ?: safeContext
+                gestureRecognizerHelper = GestureRecognizerHelper(
+                    context = gestureContext,
+                    runningMode = RunningMode.LIVE_STREAM,
+                    minHandDetectionConfidence = viewModel.currentMinHandDetectionConfidence,
+                    minHandTrackingConfidence = viewModel.currentMinHandTrackingConfidence,
+                    minHandPresenceConfidence = viewModel.currentMinHandPresenceConfidence,
+                    currentDelegate = viewModel.currentDelegate,
+                    gestureRecognizerListener = this
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to create GestureRecognizerHelper: ${e.message}", e)
+                activity?.runOnUiThread {
+                    handleCameraInitializationError(e)
+                }
+            }
         }
 
         // Attach listeners to UI control widgets
@@ -298,25 +362,62 @@ class CameraFragment : Fragment(),
     }
     
     private fun setupHijaiyahUI() {
-        // Check if this is embedded mode (latihan) or regular learning mode
-        val isEmbedded = arguments?.getBoolean("embedded", false) ?: false
+        // Setup target letter display - always show the letter directly
+        val displayLetter = targetLetter ?: getDefaultLetter()
+        fragmentCameraBinding.textTargetLetter.text = displayLetter
         
-        // Setup target letter display
-        targetLetter?.let { letter ->
-            // For embedded (latihan) mode: show the actual letter
-            // For regular learning mode: show question mark as hint
-            fragmentCameraBinding.textTargetLetter.text = if (isEmbedded) letter else "?"
+        // Setup letter name
+        val displayName = targetLetterName ?: getDefaultLetterName()
+        fragmentCameraBinding.textLetterName.text = displayName
+        
+        // Setup letter type description
+        val letterTypeText = when {
+            isFathahMode -> "Hijaiyah dengan Fathah (ـَ)"
+            isKasrahMode -> "Hijaiyah dengan Kasrah (ـِ)"
+            isDhammahMode -> "Hijaiyah dengan Dhammah (ـُ)"
+            else -> "Hijaiyah Dasar"
+        }
+        fragmentCameraBinding.textLetterType.text = letterTypeText
+        
+        // Setup gesture hint
+        val gestureHint = when {
+            isFathahMode -> "🤚 Gesture + gerak ke KIRI"
+            isKasrahMode -> "🤚 Gesture + gerak ke BAWAH"
+            isDhammahMode -> "🤚 Gesture + gerak MELINGKAR"
+            else -> "🤚 Tunjukkan gesture di depan kamera"
+        }
+        fragmentCameraBinding.textGestureHint.text = gestureHint
+        
+        // Show step indicator for Harakat modes
+        val isHarakatMode = isFathahMode || isKasrahMode || isDhammahMode
+        fragmentCameraBinding.stepIndicatorContainer.visibility = if (isHarakatMode) View.VISIBLE else View.GONE
+        
+        // Setup step 2 label based on mode
+        if (isHarakatMode) {
+            val step2Text = when {
+                isFathahMode -> "Kiri"
+                isKasrahMode -> "Bawah"
+                isDhammahMode -> "Lingkar"
+                else -> "Gerakan"
+            }
+            fragmentCameraBinding.step2Label.text = step2Text
         }
         
-        targetLetterName?.let { name ->
-            fragmentCameraBinding.textLetterName.text = "Huruf $name"
-            // instruction text removed from layout to avoid overlaying camera preview
-        }
+        // Log for debugging
+        Log.d(TAG, "UI Setup - Letter: $displayLetter, Name: $displayName, Type: $letterTypeText")
         
         // Setup back button
         fragmentCameraBinding.buttonBack.setOnClickListener {
-            Navigation.findNavController(requireActivity(), R.id.fragment_container)
-                .navigateUp()
+            try {
+                if (isAdded) {
+                    activity?.let { act ->
+                        Navigation.findNavController(act, R.id.fragment_container).navigateUp()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error navigating back", e)
+                activity?.onBackPressed()
+            }
         }
         
         // Setup help/tutorial button
@@ -329,6 +430,163 @@ class CameraFragment : Fragment(),
         
         // Initially hide result overlay
         fragmentCameraBinding.overlayResult.visibility = View.GONE
+        
+        // Setup result buttons
+        fragmentCameraBinding.btnTryAgain.setOnClickListener {
+            fragmentCameraBinding.overlayResult.visibility = View.GONE
+            resetGestureDetection()
+            startAutomaticDetection()
+        }
+        
+        fragmentCameraBinding.btnNextLetter.setOnClickListener {
+            try {
+                if (isAdded) {
+                    activity?.let { act ->
+                        Navigation.findNavController(act, R.id.fragment_container).navigateUp()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error navigating to next", e)
+            }
+        }
+    }
+    
+    /**
+     * Update the status card UI to show current detection state
+     */
+    private fun updateStatusUI(
+        title: String,
+        message: String,
+        statusType: StatusType,
+        showProgress: Boolean = false,
+        progress: Int = 0,
+        detectedGesture: String? = null,
+        isCorrectGesture: Boolean = false
+    ) {
+        if (_fragmentCameraBinding == null || !isAdded) return
+        
+        activity?.runOnUiThread {
+            try {
+                // Update status card background
+                val bgResource = when (statusType) {
+                    StatusType.WAITING -> R.drawable.bg_status_waiting
+                    StatusType.DETECTING -> R.drawable.bg_status_waiting
+                    StatusType.SUCCESS -> R.drawable.bg_status_success
+                    StatusType.ERROR -> R.drawable.bg_status_error
+                }
+                fragmentCameraBinding.statusCard.setBackgroundResource(bgResource)
+                
+                // Update status icon
+                val iconResource = when (statusType) {
+                    StatusType.WAITING -> android.R.drawable.ic_menu_search
+                    StatusType.DETECTING -> android.R.drawable.ic_menu_view
+                    StatusType.SUCCESS -> android.R.drawable.ic_menu_send
+                    StatusType.ERROR -> android.R.drawable.ic_dialog_alert
+                }
+                fragmentCameraBinding.iconStatus.setImageResource(iconResource)
+                
+                // Update texts
+                fragmentCameraBinding.textStatusTitle.text = title
+                fragmentCameraBinding.textStatusMessage.text = message
+                
+                // Update progress bar
+                fragmentCameraBinding.progressTimer.visibility = if (showProgress) View.VISIBLE else View.GONE
+                if (showProgress) {
+                    fragmentCameraBinding.progressTimer.progress = progress
+                }
+                
+                // Update countdown if showing progress
+                if (showProgress && progress > 0) {
+                    val remainingSeconds = ((100 - progress) * REQUIRED_DURATION / 100 / 1000) + 1
+                    fragmentCameraBinding.textCountdown.visibility = View.VISIBLE
+                    fragmentCameraBinding.textCountdown.text = "${remainingSeconds}s"
+                } else {
+                    fragmentCameraBinding.textCountdown.visibility = View.GONE
+                }
+                
+                // Update detected gesture info
+                if (detectedGesture != null) {
+                    fragmentCameraBinding.detectedGestureContainer.visibility = View.VISIBLE
+                    fragmentCameraBinding.textDetectedGesture.text = detectedGesture
+                    fragmentCameraBinding.textGestureMatch.text = if (isCorrectGesture) "✅" else "❌"
+                } else {
+                    fragmentCameraBinding.detectedGestureContainer.visibility = View.GONE
+                }
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "Error updating status UI", e)
+            }
+        }
+    }
+    
+    /**
+     * Update step indicator for Harakat modes
+     */
+    private fun updateStepIndicator(currentStep: Int) {
+        if (_fragmentCameraBinding == null || !isAdded) return
+        if (!isFathahMode && !isKasrahMode && !isDhammahMode) return
+        
+        activity?.runOnUiThread {
+            try {
+                // Step 1
+                val step1Active = currentStep >= 1
+                fragmentCameraBinding.step1Circle.setBackgroundResource(
+                    if (step1Active) R.drawable.bg_step_number_active else R.drawable.bg_step_number_inactive
+                )
+                fragmentCameraBinding.step1Label.setTextColor(
+                    ContextCompat.getColor(requireContext(), if (step1Active) R.color.teal_primary else R.color.gray_dark)
+                )
+                
+                // Step 2
+                val step2Active = currentStep >= 2
+                fragmentCameraBinding.step2Circle.setBackgroundResource(
+                    if (step2Active) R.drawable.bg_step_number_active else R.drawable.bg_step_number_inactive
+                )
+                fragmentCameraBinding.step2Label.setTextColor(
+                    ContextCompat.getColor(requireContext(), if (step2Active) R.color.teal_primary else R.color.gray_dark)
+                )
+                
+                // Step 3
+                val step3Active = currentStep >= 3
+                fragmentCameraBinding.step3Circle.setBackgroundResource(
+                    if (step3Active) R.drawable.bg_step_number_active else R.drawable.bg_step_number_inactive
+                )
+                fragmentCameraBinding.step3Label.setTextColor(
+                    ContextCompat.getColor(requireContext(), if (step3Active) R.color.teal_primary else R.color.gray_dark)
+                )
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "Error updating step indicator", e)
+            }
+        }
+    }
+    
+    enum class StatusType {
+        WAITING, DETECTING, SUCCESS, ERROR
+    }
+    
+    /**
+     * Get default letter based on current mode
+     */
+    private fun getDefaultLetter(): String {
+        return when {
+            isFathahMode -> FathahData.letters.firstOrNull()?.arabic ?: "اَ"
+            isKasrahMode -> KasrahData.letters.firstOrNull()?.arabic ?: "اِ"
+            isDhammahMode -> DhammahData.letters.firstOrNull()?.arabic ?: "اُ"
+            else -> HijaiyahData.letters.firstOrNull()?.arabic ?: "ا"
+        }
+    }
+    
+    /**
+     * Get default letter name based on current mode
+     */
+    private fun getDefaultLetterName(): String {
+        return when {
+            isFathahMode -> FathahData.letters.firstOrNull()?.transliteration ?: "Alif Fathah"
+            isKasrahMode -> KasrahData.letters.firstOrNull()?.transliteration ?: "Alif Kasrah"
+            isDhammahMode -> DhammahData.letters.firstOrNull()?.transliteration ?: "Alif Dhammah"
+            else -> HijaiyahData.letters.firstOrNull()?.transliteration ?: "Alif"
+        }
     }
     
     private fun startAutomaticDetection() {
@@ -336,16 +594,24 @@ class CameraFragment : Fragment(),
         gestureStartTime = 0L
         consecutiveCorrectCount = 0
         
-        // Hide start button and show detection status
+        // Hide start button
         fragmentCameraBinding.buttonStart.visibility = View.GONE
+        
+        // Show progress bar
         fragmentCameraBinding.progressTimer.visibility = View.VISIBLE
-        fragmentCameraBinding.textCountdown.visibility = View.VISIBLE
-        
-        // Reset progress
         fragmentCameraBinding.progressTimer.progress = 0
-        fragmentCameraBinding.textCountdown.text = "Mulai gesture..."
         
-    // Instruction text removed; no UI update here
+        // Update status UI
+        val gestureTarget = getGestureNameWithFallback() ?: "gesture yang benar"
+        updateStatusUI(
+            title = "Mendeteksi Gesture...",
+            message = "Posisikan tangan Anda dan tunjukkan gesture \"$gestureTarget\"",
+            statusType = StatusType.WAITING,
+            showProgress = false
+        )
+        
+        // Update step indicator to step 1
+        updateStepIndicator(1)
     }
     
     private fun checkHandStaticStatus(): Boolean {
@@ -1183,11 +1449,18 @@ class CameraFragment : Fragment(),
         movementHistory.add(MovementDirection.STATIC)
         Log.d(TAG, "Added initial STATIC to movement history. History[0] = STATIC")
         
-        // Update UI to show next instruction
-        updatePredictionText("Bagus! Sekarang untuk Fathah: diam dulu, lalu gerak ke KIRI")
+        // Update step indicator to step 2
+        updateStepIndicator(2)
         
-        // Show instruction overlay or update text
-        fragmentCameraBinding.textLetterName.text = "Fathah: DIAM → KIRI →"
+        // Update UI with better guidance
+        updateStatusUI(
+            title = "Langkah 2: Gerakan Fathah",
+            message = "Bagus! Sekarang DIAM sebentar, lalu gerakkan tangan ke KIRI ←",
+            statusType = StatusType.SUCCESS,
+            showProgress = false
+        )
+        
+        fragmentCameraBinding.textLetterName.text = targetLetterName ?: "Fathah"
         
         Log.d(TAG, "Hijaiyah gesture detected successfully. Waiting for Fathah movement pattern.")
         Log.d(TAG, "Movement history initialized with STATIC baseline: ${movementHistory.joinToString(" → ")}")
@@ -1212,11 +1485,18 @@ class CameraFragment : Fragment(),
         movementHistory.add(MovementDirection.STATIC)
         Log.d(TAG, "Added initial STATIC to movement history for Kasrah. History[0] = STATIC")
         
-        // Update UI to show next instruction
-        updatePredictionText("Bagus! Sekarang untuk Kasrah: diam dulu, lalu gerak ke BAWAH")
+        // Update step indicator to step 2
+        updateStepIndicator(2)
         
-        // Show instruction overlay or update text
-        fragmentCameraBinding.textLetterName.text = "Kasrah: DIAM → BAWAH →"
+        // Update UI with better guidance
+        updateStatusUI(
+            title = "Langkah 2: Gerakan Kasrah",
+            message = "Bagus! Sekarang DIAM sebentar, lalu gerakkan tangan ke BAWAH ↓",
+            statusType = StatusType.SUCCESS,
+            showProgress = false
+        )
+        
+        fragmentCameraBinding.textLetterName.text = targetLetterName ?: "Kasrah"
         
         Log.d(TAG, "Hijaiyah gesture detected successfully. Waiting for Kasrah movement pattern.")
         Log.d(TAG, "Movement history initialized with STATIC baseline: ${movementHistory.joinToString(" → ")}")
@@ -1241,11 +1521,18 @@ class CameraFragment : Fragment(),
         movementHistory.add(MovementDirection.STATIC)
         Log.d(TAG, "Added initial STATIC to movement history for Dhammah. History[0] = STATIC")
         
-        // Update UI to show next instruction
-        updatePredictionText("Bagus! Sekarang untuk Dhammah: diam → bawah → diagonal kiri-bawah → kiri → diagonal kiri-atas → atas")
+        // Update step indicator to step 2
+        updateStepIndicator(2)
         
-        // Show instruction overlay or update text
-        fragmentCameraBinding.textLetterName.text = "Dhammah: DIAM → BAWAH → DIAGONAL → KIRI → DIAGONAL → ATAS →"
+        // Update UI with better guidance
+        updateStatusUI(
+            title = "Langkah 2: Gerakan Dhammah",
+            message = "Bagus! Sekarang buat gerakan MELINGKAR: Bawah → Kiri → Atas ↻",
+            statusType = StatusType.SUCCESS,
+            showProgress = false
+        )
+        
+        fragmentCameraBinding.textLetterName.text = targetLetterName ?: "Dhammah"
         
         Log.d(TAG, "Hijaiyah gesture detected successfully. Waiting for Dhammah movement pattern.")
         Log.d(TAG, "Movement history initialized with STATIC baseline: ${movementHistory.joinToString(" → ")}")
@@ -1260,7 +1547,59 @@ class CameraFragment : Fragment(),
     }
     
     private fun updatePredictionText(text: String) {
-        fragmentCameraBinding.textCountdown.text = text
+        // Update the status message based on current detection state
+        if (_fragmentCameraBinding == null || !isAdded) return
+        
+        val isSuccess = text.contains("BERHASIL", ignoreCase = true) || text.contains("Bagus", ignoreCase = true)
+        val isError = text.contains("tidak cocok", ignoreCase = true) || text.contains("Reset", ignoreCase = true)
+        val isProgress = text.contains("mulai hitung", ignoreCase = true) || text.contains("ms", ignoreCase = true)
+        
+        val statusType = when {
+            isSuccess -> StatusType.SUCCESS
+            isError -> StatusType.ERROR
+            isProgress -> StatusType.DETECTING
+            else -> StatusType.WAITING
+        }
+        
+        // Parse detected gesture from text if available
+        val gestureMatch = Regex("^([A-Za-z_]+)\\s").find(text)
+        val detectedGesture = gestureMatch?.groupValues?.get(1)
+        val targetGesture = getGestureNameWithFallback()
+        val isCorrectGesture = detectedGesture != null && targetGesture != null && 
+                               detectedGesture.equals(targetGesture, ignoreCase = true)
+        
+        // Determine title based on state
+        val title = when {
+            isWaitingForLeftMovement -> "Langkah 2: Gerakan Fathah"
+            isWaitingForDownMovement -> "Langkah 2: Gerakan Kasrah"
+            isWaitingForUpMovement -> "Langkah 2: Gerakan Dhammah"
+            isSuccess -> "Progres Gesture"
+            isProgress -> "Menahan Gesture..."
+            else -> "Mendeteksi Gesture..."
+        }
+        
+        // Show progress if counting
+        val showProgress = isProgress || text.contains("tangan diam", ignoreCase = true)
+        val progress = if (showProgress) {
+            val progressMatch = Regex("(\\d+)ms\\s*/\\s*(\\d+)ms").find(text)
+            if (progressMatch != null) {
+                val current = progressMatch.groupValues[1].toLongOrNull() ?: 0
+                val total = progressMatch.groupValues[2].toLongOrNull() ?: REQUIRED_DURATION
+                ((current * 100) / total).toInt().coerceIn(0, 100)
+            } else {
+                fragmentCameraBinding.progressTimer.progress
+            }
+        } else 0
+        
+        updateStatusUI(
+            title = title,
+            message = text,
+            statusType = statusType,
+            showProgress = showProgress,
+            progress = progress,
+            detectedGesture = detectedGesture,
+            isCorrectGesture = isCorrectGesture
+        )
     }
     
     private fun resetGestureDetection() {
@@ -1268,7 +1607,17 @@ class CameraFragment : Fragment(),
         gestureStartTime = 0L
         consecutiveCorrectCount = 0
         fragmentCameraBinding.progressTimer.progress = 0
-        updatePredictionText("Reset - coba lagi")
+        
+        // Update UI to reset state
+        updateStatusUI(
+            title = "Mendeteksi Gesture...",
+            message = "Posisikan tangan Anda dan coba lagi",
+            statusType = StatusType.WAITING,
+            showProgress = false
+        )
+        
+        // Reset step indicator to step 1
+        updateStepIndicator(1)
         
         // Reset movement pattern tracking
         resetStaticTracking()
@@ -1325,12 +1674,24 @@ class CameraFragment : Fragment(),
     }
     
     private fun showResult(success: Boolean) {
+        if (_fragmentCameraBinding == null || !isAdded) return
+        
         fragmentCameraBinding.overlayResult.visibility = View.VISIBLE
+        
+        // Update step indicator to complete
+        updateStepIndicator(3)
         
         if (success) {
             fragmentCameraBinding.iconResult.setImageResource(R.drawable.ic_check_circle)
-            fragmentCameraBinding.textResult.text = "Bagus!"
-            fragmentCameraBinding.textResultDetail.text = "Anda berhasil memperagakan huruf ${targetLetterName}"
+            fragmentCameraBinding.textResult.text = "BERHASIL!"
+            fragmentCameraBinding.textResult.setTextColor(ContextCompat.getColor(requireContext(), R.color.teal_primary))
+            
+            val displayLetter = targetLetter ?: getDefaultLetter()
+            val displayName = targetLetterName ?: getDefaultLetterName()
+            
+            fragmentCameraBinding.textResultDetail.text = "Anda berhasil memperagakan huruf $displayName dengan benar! 🎉"
+            fragmentCameraBinding.textResultLetter.text = displayLetter
+            fragmentCameraBinding.textResultLetterName.text = displayName
             
             // Mark letter as completed
             val letterPosition = arguments?.getInt("letterPosition", -1) ?: -1
@@ -1340,58 +1701,51 @@ class CameraFragment : Fragment(),
                 Log.d(TAG, "Letter $letterPosition ($targetLetterName) marked as completed")
             }
             
-            // Auto navigate back to hijaiyah learning page after success (only when not embedded)
-            // Instruction text removed; handled via overlayResult and navigation
-            
-            // Show option to stay or go back
-            fragmentCameraBinding.buttonStart.visibility = View.VISIBLE
-            fragmentCameraBinding.buttonStart.text = "Tetap Di Sini"
-            fragmentCameraBinding.buttonStart.setOnClickListener {
-                countdownTimer?.cancel()
-                fragmentCameraBinding.overlayResult.visibility = View.GONE
-                fragmentCameraBinding.buttonStart.visibility = View.GONE
-                // instruction TextView removed; no action needed here
-            }
-            
             // If embedded inside `LatihanPracticeActivity`, return result via FragmentResult
             val isEmbedded = arguments?.getBoolean("embedded", false) ?: false
             if (isEmbedded) {
-                val letterPosition = arguments?.getInt("letterPosition", -1) ?: -1
                 val result = Bundle().apply {
                     putBoolean("success", true)
                     putInt("letterPosition", letterPosition)
                 }
                 parentFragmentManager.setFragmentResult("camera_result", result)
 
-                // Remove self from container
-                activity?.runOnUiThread {
-                    try {
-                        parentFragmentManager.beginTransaction().remove(this@CameraFragment).commitAllowingStateLoss()
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Failed to remove embedded CameraFragment: ${e.message}")
+                // Remove self from container after delay
+                view?.postDelayed({
+                    activity?.runOnUiThread {
+                        try {
+                            if (isAdded) {
+                                parentFragmentManager.beginTransaction().remove(this@CameraFragment).commitAllowingStateLoss()
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Failed to remove embedded CameraFragment: ${e.message}")
+                        }
                     }
-                }
+                }, 1500)
                 return
             }
 
             // Show countdown for non-embedded mode
             var countdown = 3
-            countdownTimer?.cancel() // Cancel any existing countdown
+            countdownTimer?.cancel()
             countdownTimer = object : CountDownTimer(3000, 1000) {
                 override fun onTick(millisUntilFinished: Long) {
-                    // countdown tick; UI instruction removed
                     countdown--
                 }
 
                 override fun onFinish() {
-                    // Navigate back after countdown
                     try {
-                        Navigation.findNavController(requireActivity(), R.id.fragment_container)
-                            .navigateUp()
+                        if (!isAdded) return
+                        activity?.let { act ->
+                            Navigation.findNavController(act, R.id.fragment_container).navigateUp()
+                        }
                     } catch (e: Exception) {
                         Log.e(TAG, "Navigation error: ${e.message}")
-                        // Fallback navigation
-                        requireActivity().onBackPressed()
+                        try {
+                            activity?.onBackPressed()
+                        } catch (e2: Exception) {
+                            Log.e(TAG, "Fallback navigation error: ${e2.message}")
+                        }
                     }
                 }
             }
@@ -1400,16 +1754,11 @@ class CameraFragment : Fragment(),
         } else {
             fragmentCameraBinding.iconResult.setImageResource(R.drawable.ic_error_circle)
             fragmentCameraBinding.textResult.text = "Coba Lagi"
-            fragmentCameraBinding.textResultDetail.text = "Gesture belum tepat. Silakan coba lagi!"
+            fragmentCameraBinding.textResult.setTextColor(ContextCompat.getColor(requireContext(), R.color.fathah_card_color))
+            fragmentCameraBinding.textResultDetail.text = "Gesture belum tepat. Silakan coba lagi dengan posisi yang benar."
+            fragmentCameraBinding.textResultLetter.text = targetLetter ?: "?"
+            fragmentCameraBinding.textResultLetterName.text = targetLetterName ?: "Unknown"
         }
-        
-        // Show start button again
-        fragmentCameraBinding.buttonStart.visibility = View.VISIBLE
-        fragmentCameraBinding.buttonStart.text = "Coba Lagi"
-        fragmentCameraBinding.buttonStart.setOnClickListener {
-            startAutomaticDetection()
-        }
-    // instruction text removed from layout
     }
 
     private fun initBottomSheetControls() {
@@ -1533,53 +1882,118 @@ class CameraFragment : Fragment(),
 
     // Initialize CameraX, and prepare to bind the camera use cases
     private fun setUpCamera() {
-        val cameraProviderFuture =
-            ProcessCameraProvider.getInstance(requireContext())
-        cameraProviderFuture.addListener(
-            {
-                // CameraProvider
-                cameraProvider = cameraProviderFuture.get()
+        // Safety check - ensure fragment is still attached
+        if (!isAdded || _fragmentCameraBinding == null) {
+            Log.w(TAG, "setUpCamera called but fragment not attached, skipping")
+            return
+        }
+        
+        val ctx = context ?: run {
+            Log.e(TAG, "setUpCamera: context is null, cannot initialize camera")
+            return
+        }
+        
+        try {
+            val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+            cameraProviderFuture.addListener(
+                {
+                    try {
+                        // Safety check again - fragment might have been detached during async operation
+                        if (!isAdded || _fragmentCameraBinding == null) {
+                            Log.w(TAG, "Fragment detached before camera provider ready, skipping bind")
+                            return@addListener
+                        }
+                        
+                        // CameraProvider
+                        cameraProvider = cameraProviderFuture.get()
 
-                // Build and bind the camera use cases
-                bindCameraUseCases()
-            }, ContextCompat.getMainExecutor(requireContext())
-        )
+                        // Build and bind the camera use cases
+                        bindCameraUseCases()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to get camera provider: ${e.message}", e)
+                        handleCameraInitializationError(e)
+                    }
+                }, ContextCompat.getMainExecutor(ctx)
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to initialize camera provider: ${e.message}", e)
+            handleCameraInitializationError(e)
+        }
+    }
+    
+    private fun handleCameraInitializationError(error: Exception) {
+        activity?.runOnUiThread {
+            if (isAdded && context != null) {
+                Toast.makeText(
+                    context,
+                    "Gagal menginisialisasi kamera: ${error.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+                
+                // For embedded mode, notify parent about failure
+                val isEmbedded = arguments?.getBoolean("embedded", false) ?: false
+                if (isEmbedded) {
+                    val result = Bundle().apply {
+                        putBoolean("success", false)
+                        putString("error", "Camera initialization failed")
+                    }
+                    parentFragmentManager.setFragmentResult("camera_result", result)
+                }
+            }
+        }
     }
 
     // Declare and bind preview, capture and analysis use cases
     @SuppressLint("UnsafeOptInUsageError")
     private fun bindCameraUseCases() {
+        // Safety checks
+        if (!isAdded || _fragmentCameraBinding == null) {
+            Log.w(TAG, "bindCameraUseCases: fragment not attached, skipping")
+            return
+        }
 
         // CameraProvider
         val cameraProvider = cameraProvider
-            ?: throw IllegalStateException("Camera initialization failed.")
-
-        val cameraSelector =
-            CameraSelector.Builder().requireLensFacing(cameraFacing).build()
-
-        // Preview. Only using the 4:3 ratio because this is the closest to our models
-        preview = Preview.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3)
-            .setTargetRotation(fragmentCameraBinding.viewFinder.display.rotation)
-            .build()
-
-        // ImageAnalysis. Using RGBA 8888 to match how our models work
-        imageAnalyzer =
-            ImageAnalysis.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                .setTargetRotation(fragmentCameraBinding.viewFinder.display.rotation)
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
-                .build()
-                // The analyzer can then be assigned to the instance
-                .also {
-                    it.setAnalyzer(backgroundExecutor) { image ->
-                        recognizeHand(image)
-                    }
-                }
-
-        // Must unbind the use-cases before rebinding them
-        cameraProvider.unbindAll()
+        if (cameraProvider == null) {
+            Log.e(TAG, "Camera initialization failed: cameraProvider is null")
+            handleCameraInitializationError(IllegalStateException("Camera provider not available"))
+            return
+        }
+        
+        // Get display rotation safely
+        val displayRotation = try {
+            fragmentCameraBinding.viewFinder.display?.rotation ?: android.view.Surface.ROTATION_0
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to get display rotation, using default: ${e.message}")
+            android.view.Surface.ROTATION_0
+        }
 
         try {
+            val cameraSelector =
+                CameraSelector.Builder().requireLensFacing(cameraFacing).build()
+
+            // Preview. Only using the 4:3 ratio because this is the closest to our models
+            preview = Preview.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                .setTargetRotation(displayRotation)
+                .build()
+
+            // ImageAnalysis. Using RGBA 8888 to match how our models work
+            imageAnalyzer =
+                ImageAnalysis.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                    .setTargetRotation(displayRotation)
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+                    .build()
+                    // The analyzer can then be assigned to the instance
+                    .also {
+                        it.setAnalyzer(backgroundExecutor) { image ->
+                            recognizeHand(image)
+                        }
+                    }
+
+            // Must unbind the use-cases before rebinding them
+            cameraProvider.unbindAll()
+
             // A variable number of use-cases can be passed here -
             // camera provides access to CameraControl & CameraInfo
             camera = cameraProvider.bindToLifecycle(
@@ -1587,9 +2001,14 @@ class CameraFragment : Fragment(),
             )
 
             // Attach the viewfinder's surface provider to preview use case
-            preview?.setSurfaceProvider(fragmentCameraBinding.viewFinder.surfaceProvider)
+            if (_fragmentCameraBinding != null) {
+                preview?.setSurfaceProvider(fragmentCameraBinding.viewFinder.surfaceProvider)
+            }
+            
+            Log.d(TAG, "Camera use cases bound successfully")
         } catch (exc: Exception) {
             Log.e(TAG, "Use case binding failed", exc)
+            handleCameraInitializationError(exc)
         }
     }
 
@@ -1615,8 +2034,15 @@ class CameraFragment : Fragment(),
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        imageAnalyzer?.targetRotation =
-            fragmentCameraBinding.viewFinder.display.rotation
+        try {
+            if (_fragmentCameraBinding != null && isAdded) {
+                val rotation = fragmentCameraBinding.viewFinder.display?.rotation
+                    ?: android.view.Surface.ROTATION_0
+                imageAnalyzer?.targetRotation = rotation
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to update rotation on config change: ${e.message}")
+        }
     }
 
     // Update UI after a hand gesture has been recognized. Extracts original
@@ -1721,13 +2147,22 @@ class CameraFragment : Fragment(),
 
     override fun onError(error: String, errorCode: Int) {
         activity?.runOnUiThread {
-            Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
-            gestureRecognizerResultAdapter.updateResults(emptyList())
+            // Safe check - fragment might be detached
+            if (!isAdded || _fragmentCameraBinding == null) return@runOnUiThread
+            
+            try {
+                context?.let { ctx ->
+                    Toast.makeText(ctx, error, Toast.LENGTH_SHORT).show()
+                }
+                gestureRecognizerResultAdapter.updateResults(emptyList())
 
-            if (errorCode == GestureRecognizerHelper.GPU_ERROR) {
-                fragmentCameraBinding.bottomSheetLayout.spinnerDelegate.setSelection(
-                    GestureRecognizerHelper.DELEGATE_CPU, false
-                )
+                if (errorCode == GestureRecognizerHelper.GPU_ERROR) {
+                    _fragmentCameraBinding?.bottomSheetLayout?.spinnerDelegate?.setSelection(
+                        GestureRecognizerHelper.DELEGATE_CPU, false
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in onError callback", e)
             }
         }
     }
@@ -1905,13 +2340,21 @@ class CameraFragment : Fragment(),
     
     private fun showFathahSuccessDialog() {
         try {
-            // Simple success message, could be enhanced with dialog
-            Toast.makeText(requireContext(), "Berhasil! Fathah $targetLetterName telah selesai!", Toast.LENGTH_LONG).show()
+            // Safe check - fragment might be detached
+            if (!isAdded) return
+            
+            context?.let { ctx ->
+                Toast.makeText(ctx, "Berhasil! Fathah $targetLetterName telah selesai!", Toast.LENGTH_LONG).show()
+            }
             
             // Auto navigate back after delay
             view?.postDelayed({
                 try {
-                    Navigation.findNavController(requireView()).navigateUp()
+                    if (isAdded && view != null) {
+                        view?.let { v ->
+                            Navigation.findNavController(v).navigateUp()
+                        }
+                    }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error navigating back", e)
                 }
@@ -1948,13 +2391,21 @@ class CameraFragment : Fragment(),
     
     private fun showKasrahSuccessDialog() {
         try {
-            // Simple success message, could be enhanced with dialog
-            Toast.makeText(requireContext(), "Berhasil! Kasrah $targetLetterName telah selesai!", Toast.LENGTH_LONG).show()
+            // Safe check - fragment might be detached
+            if (!isAdded) return
+            
+            context?.let { ctx ->
+                Toast.makeText(ctx, "Berhasil! Kasrah $targetLetterName telah selesai!", Toast.LENGTH_LONG).show()
+            }
             
             // Auto navigate back after delay
             view?.postDelayed({
                 try {
-                    Navigation.findNavController(requireView()).navigateUp()
+                    if (isAdded && view != null) {
+                        view?.let { v ->
+                            Navigation.findNavController(v).navigateUp()
+                        }
+                    }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error navigating back", e)
                 }
@@ -2007,6 +2458,98 @@ class CameraFragment : Fragment(),
         }
     }
     
+    /**
+     * Get gesture name with fallback mechanism
+     * This function tries multiple strategies to get the gesture name
+     */
+    private fun getGestureNameWithFallback(): String? {
+        if (isFathahMode) {
+            Log.d(TAG, "Getting gesture name for Fathah mode")
+            val fathahLetter = if (targetLetter != null) {
+                FathahData.getLetterByArabic(targetLetter!!)
+            } else {
+                FathahData.getAllLetters().find { it.transliteration.equals(targetLetterName, ignoreCase = true) }
+            }
+            
+            Log.d(TAG, "Fathah letter found: ${fathahLetter?.arabic} at position ${fathahLetter?.position}")
+            
+            // Try to get from FathahLetter directly first
+            fathahLetter?.gestureName?.let { 
+                Log.d(TAG, "Got gesture name from FathahLetter: $it")
+                return it 
+            }
+            
+            // Fallback: Get from base HijaiyahData
+            val baseHijaiyah = fathahLetter?.let { 
+                HijaiyahData.getLetterById(it.position) 
+                    ?: HijaiyahData.getLetterByPosition(it.position)
+            }
+            Log.d(TAG, "Base Hijaiyah found: ${baseHijaiyah?.gestureName}")
+            return baseHijaiyah?.gestureName
+        }
+        
+        if (isKasrahMode) {
+            Log.d(TAG, "Getting gesture name for Kasrah mode")
+            val kasrahLetter = if (targetLetter != null) {
+                KasrahData.getLetterByArabic(targetLetter!!)
+            } else {
+                KasrahData.getAllLetters().find { it.transliteration.equals(targetLetterName, ignoreCase = true) }
+            }
+            
+            Log.d(TAG, "Kasrah letter found: ${kasrahLetter?.arabic} at position ${kasrahLetter?.position}")
+            
+            // Try to get from KasrahLetter directly first
+            kasrahLetter?.gestureName?.let { 
+                Log.d(TAG, "Got gesture name from KasrahLetter: $it")
+                return it 
+            }
+            
+            // Fallback: Get from base HijaiyahData
+            val baseHijaiyah = kasrahLetter?.let { 
+                HijaiyahData.getLetterByPosition(it.position) 
+                    ?: HijaiyahData.getLetterById(it.position)
+            }
+            Log.d(TAG, "Base Hijaiyah found: ${baseHijaiyah?.gestureName}")
+            return baseHijaiyah?.gestureName
+        }
+        
+        if (isDhammahMode) {
+            Log.d(TAG, "Getting gesture name for Dhammah mode")
+            val dhammahLetter = if (targetLetter != null) {
+                DhammahData.getLetterByArabic(targetLetter!!)
+            } else {
+                DhammahData.getAllLetters().find { it.transliteration.equals(targetLetterName, ignoreCase = true) }
+            }
+            
+            Log.d(TAG, "Dhammah letter found: ${dhammahLetter?.arabic} at position ${dhammahLetter?.position}")
+            
+            // Try to get from DhammahLetter directly first
+            dhammahLetter?.gestureName?.let { 
+                Log.d(TAG, "Got gesture name from DhammahLetter: $it")
+                return it 
+            }
+            
+            // Fallback: Get from base HijaiyahData
+            val baseHijaiyah = dhammahLetter?.let { 
+                HijaiyahData.getLetterByPosition(it.position) 
+                    ?: HijaiyahData.getLetterById(it.position)
+            }
+            Log.d(TAG, "Base Hijaiyah found: ${baseHijaiyah?.gestureName}")
+            return baseHijaiyah?.gestureName
+        }
+        
+        // Regular Hijaiyah mode
+        Log.d(TAG, "Getting gesture name for regular Hijaiyah mode")
+        val hijaiyahLetter = if (targetLetter != null) {
+            HijaiyahData.letters.find { it.arabic == targetLetter }
+                ?: HijaiyahData.getLetterByArabic(targetLetter!!)
+        } else {
+            HijaiyahData.letters.find { it.transliteration.equals(targetLetterName, ignoreCase = true) }
+        }
+        Log.d(TAG, "Hijaiyah letter found: ${hijaiyahLetter?.gestureName}")
+        return hijaiyahLetter?.gestureName
+    }
+    
     private fun showTutorialDialog() {
         try {
             val dialogView = layoutInflater.inflate(R.layout.dialog_tutorial, null)
@@ -2027,43 +2570,7 @@ class CameraFragment : Fragment(),
             textTutorialLetterName.text = targetLetterName ?: "Alif"
             
             // Get gesture name and load image
-            val gestureName = when {
-                isFathahMode -> {
-                    val fathahLetter = if (targetLetter != null) {
-                        FathahData.getLetterByArabic(targetLetter!!)
-                    } else {
-                        FathahData.getAllLetters().find { it.transliteration.equals(targetLetterName, ignoreCase = true) }
-                    }
-                    val baseHijaiyah = fathahLetter?.let { HijaiyahData.getLetterById(it.position) }
-                    baseHijaiyah?.gestureName
-                }
-                isKasrahMode -> {
-                    val kasrahLetter = if (targetLetter != null) {
-                        KasrahData.getLetterByArabic(targetLetter!!)
-                    } else {
-                        KasrahData.getAllLetters().find { it.transliteration.equals(targetLetterName, ignoreCase = true) }
-                    }
-                    val baseHijaiyah = kasrahLetter?.let { HijaiyahData.getLetterByPosition(it.position) }
-                    baseHijaiyah?.gestureName
-                }
-                isDhammahMode -> {
-                    val dhammahLetter = if (targetLetter != null) {
-                        DhammahData.getLetterByArabic(targetLetter!!)
-                    } else {
-                        DhammahData.getAllLetters().find { it.transliteration.equals(targetLetterName, ignoreCase = true) }
-                    }
-                    val baseHijaiyah = dhammahLetter?.let { HijaiyahData.getLetterByPosition(it.position) }
-                    baseHijaiyah?.gestureName
-                }
-                else -> {
-                    val hijaiyahLetter = if (targetLetter != null) {
-                        HijaiyahData.letters.find { it.arabic == targetLetter }
-                    } else {
-                        HijaiyahData.letters.find { it.transliteration.equals(targetLetterName, ignoreCase = true) }
-                    }
-                    hijaiyahLetter?.gestureName
-                }
-            }
+            val gestureName = getGestureNameWithFallback()
             
             // Load gesture image - convert "01_alif" to "praga_alif"
             if (gestureName != null) {

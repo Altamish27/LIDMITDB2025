@@ -119,7 +119,14 @@ object HijaiyahData {
      */
     private fun mapApiLetterToHijaiyahLetter(apiLetter: HijaiyahLetterApi): HijaiyahLetter {
         val (baseLatinName, diacriticType) = extractBaseNameAndDiacritic(apiLetter.latinName)
-        val gestureName = latinToGestureMap[baseLatinName] ?: baseLatinName
+        // Try direct mapping first, then try variations
+        val gestureName = latinToGestureMap[baseLatinName] 
+            ?: latinToGestureMap[baseLatinName.trim()]
+            ?: latinToGestureMap[apiLetter.latinName]
+            ?: baseLatinName
+        
+        android.util.Log.d("HijaiyahData", "Mapping: '${apiLetter.latinName}' -> base='$baseLatinName', gesture='$gestureName', diacritic='$diacriticType'")
+        
         return HijaiyahLetter(
             arabic = apiLetter.arabicChar,
             transliteration = apiLetter.latinName,
@@ -135,22 +142,33 @@ object HijaiyahData {
         val lower = rawName.lowercase()
         val diacritic = when {
             lower.contains("fathah") -> "fathah"
-            lower.contains("kasrah") -> "kasrah"
-            lower.contains("dhammah") || lower.contains("dhommah") || lower.contains("dhomah") -> "dhammah"
+            lower.contains("kasrah") || lower.contains("kasroh") -> "kasrah"
+            lower.contains("dhammah") || lower.contains("dhommah") || lower.contains("dhamah") -> "dhammah"
             lower.contains("dammah") -> "dhammah"
             else -> null
         }
         
         if (diacritic == null) {
+            // No diacritic, return as is
             return rawName to null
         }
         
-        val base = rawName.replace("Fathah", "", ignoreCase = true)
+        // Extract base name by removing diacritic-related words
+        val base = rawName
+            .replace(" Fathah", "", ignoreCase = true)
+            .replace(" Kasrah", "", ignoreCase = true)
+            .replace(" Kasroh", "", ignoreCase = true)
+            .replace(" Dhammah", "", ignoreCase = true)
+            .replace(" Dhommah", "", ignoreCase = true)
+            .replace(" Dhamah", "", ignoreCase = true)
+            .replace("Fathah", "", ignoreCase = true)
             .replace("Kasrah", "", ignoreCase = true)
+            .replace("Kasroh", "", ignoreCase = true)
             .replace("Dhammah", "", ignoreCase = true)
             .replace("Dhommah", "", ignoreCase = true)
-            .replace("Dhomah", "", ignoreCase = true)
+            .replace("Dhamah", "", ignoreCase = true)
             .replace("Tanwin", "", ignoreCase = true)
+            .replace(" Akhir", "", ignoreCase = true)
             .trim()
         
         return base.ifEmpty { rawName } to diacritic
@@ -183,6 +201,21 @@ object HijaiyahData {
     // Fungsi untuk mendapatkan huruf berdasarkan position
     fun getLetterByPosition(position: Int): HijaiyahLetter? {
         return letters.find { it.position == position }
+    }
+    
+    // Fungsi untuk mendapatkan huruf berdasarkan arabic character
+    fun getLetterByArabic(arabic: String): HijaiyahLetter? {
+        return letters.find { it.arabic == arabic }
+    }
+    
+    // Fungsi untuk mendapatkan base hijaiyah letter (tanpa diacritic)
+    fun getBaseLetters(): List<HijaiyahLetter> {
+        return letters.filter { it.diacritic == null }
+    }
+    
+    // Fungsi untuk mendapatkan huruf dengan diacritic tertentu
+    fun getLettersByDiacritic(diacritic: String): List<HijaiyahLetter> {
+        return letters.filter { it.diacritic == diacritic }
     }
 
     // Fungsi untuk menyimpan dan mengambil status completed letters

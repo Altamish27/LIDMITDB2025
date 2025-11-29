@@ -1,190 +1,362 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/background_light">
 
-    <!-- Header Section with Gradient -->
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:background="@drawable/gradient_header_hijaiyah"
-        android:padding="16dp">
-
-        <!-- Back Arrow -->
-        <ImageView
-            android:id="@+id/btnBack"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:src="@drawable/ic_arrow_back"
-            android:clickable="true"
-            android:focusable="true"
-            app:tint="@color/white"
-            android:background="@android:color/transparent"
-            android:padding="4dp"/>
-
-        <!-- Title -->
-        <TextView
-            android:id="@+id/tvTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:text="Latihan 1"
-            android:textColor="@color/white"
-            android:textSize="22sp"
-            android:textStyle="bold"/>
-
-        <!-- Subtitle -->
-        <TextView
-            android:id="@+id/tvSubtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/tvTitle"
-            android:layout_centerHorizontal="true"
-            android:text="Halaman 1"
-            android:textColor="@color/white"
-            android:alpha="0.9"
-            android:textSize="14sp"
-            android:layout_marginTop="4dp"/>
-
-    </RelativeLayout>
-
-    <!-- Content Container -->
+    <!-- ==================== MAIN CONTENT (Grid Mode) ==================== -->
     <LinearLayout
+        android:id="@+id/mainContentLayout"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:background="@color/background_light">
 
-        <!-- Row Title Card -->
-        <androidx.cardview.widget.CardView
+        <!-- Header Section with Gradient -->
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@color/white">
-            
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="12dp"
-                android:gravity="center_vertical">
-                
-                <TextView
-                    android:id="@+id/tvRowTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Baris 1"
-                    android:textColor="@color/hijaiyah_navy"
-                    android:textSize="16sp"
-                    android:textStyle="bold"/>
-                    
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_arrow_forward"
-                    app:tint="@color/hijaiyah_green"/>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+            android:background="@drawable/gradient_header_hijaiyah"
+            android:paddingTop="48dp"
+            android:paddingBottom="20dp"
+            android:paddingHorizontal="16dp">
 
-        <!-- Camera + overlay area: camera fills area, UI overlays on top -->
-        <FrameLayout
+            <!-- Back Arrow -->
+            <ImageView
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/ic_arrow_back"
+                android:clickable="true"
+                android:focusable="true"
+                app:tint="@color/white"
+                android:background="@drawable/circle_button_background"
+                android:padding="10dp"/>
+
+            <!-- Title & Subtitle -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tvTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Latihan 1"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/tvSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Halaman 1"
+                    android:textColor="@color/white"
+                    android:alpha="0.9"
+                    android:textSize="14sp"
+                    android:layout_marginTop="2dp"/>
+                    
+            </LinearLayout>
+
+        </RelativeLayout>
+
+        <!-- Content Container -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <!-- Full-size camera fragment container -->
-            <FrameLayout
-                android:id="@+id/camera_fragment_container"
+            <!-- Row Title Card -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="gone" />
-
-            <!-- Overlay layout: top list + camera button at bottom center -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:padding="12dp"
-                android:background="@android:color/transparent">
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="0.3" />
-
-                <!-- Huruf Grid (overlay) with Card Background -->
-                <androidx.cardview.widget.CardView
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/white">
+                
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="-8dp"
-                    android:layout_marginBottom="8dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="4dp"
-                    app:cardBackgroundColor="@color/white">
+                    android:orientation="horizontal"
+                    android:padding="14dp"
+                    android:gravity="center_vertical">
                     
+                    <View
+                        android:layout_width="4dp"
+                        android:layout_height="24dp"
+                        android:background="@color/hijaiyah_green"
+                        android:layout_marginEnd="12dp"/>
+                    
+                    <TextView
+                        android:id="@+id/tvRowTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Baris 1"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+                        
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tap huruf untuk latihan"
+                        android:textColor="#999999"
+                        android:textSize="12sp"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Huruf Grid Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/white">
+                
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    
+                    <!-- Grid Label -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Pilih Huruf untuk Dilatih:"
+                        android:textColor="@color/hijaiyah_navy"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp"/>
+                    
+                    <!-- Huruf Grid -->
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/recyclerViewGrid"
                         android:layout_width="match_parent"
-                        android:layout_height="140dp"
-                        android:padding="12dp"
-                        android:background="@android:color/transparent" />
-                </androidx.cardview.widget.CardView>
+                        android:layout_height="wrap_content"
+                        android:minHeight="120dp"
+                        android:background="@android:color/transparent"
+                        android:overScrollMode="never"/>
+                        
+                    <!-- Legend -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:layout_marginTop="16dp">
+                        
+                        <!-- Completed Legend -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginEnd="24dp">
+                            
+                            <View
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:background="@drawable/legend_completed"/>
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Selesai"
+                                android:textColor="#666666"
+                                android:textSize="12sp"
+                                android:layout_marginStart="6dp"/>
+                        </LinearLayout>
+                        
+                        <!-- Not Started Legend -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+                            
+                            <View
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:background="@drawable/legend_not_started"/>
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Belum"
+                                android:textColor="#666666"
+                                android:textSize="12sp"
+                                android:layout_marginStart="6dp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+            
+            <!-- Spacer -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+
+            <!-- Start Practice Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStartPractice"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="🎯 Mulai Latihan Berurutan"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/hijaiyah_green"
+                app:cornerRadius="28dp"
+                app:icon="@android:drawable/ic_media_play"
+                app:iconGravity="textStart"
+                app:iconTint="@color/white"
+                android:layout_marginBottom="8dp"/>
+
+        </LinearLayout>
+
+        <!-- Bottom Navigation -->
+        <LinearLayout
+            android:id="@+id/bottomNavLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="24dp"
+            android:background="@color/white"
+            android:elevation="8dp"
+            android:gravity="center_vertical">
+
+            <!-- Previous Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPrevious"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="◀ Sebelumnya"
+                android:textColor="@color/hijaiyah_navy"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/white"
+                app:strokeColor="@color/hijaiyah_navy"
+                app:strokeWidth="1dp"
+                app:cornerRadius="24dp"/>
+
+            <!-- Next Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNext"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="Selanjutnya ▶"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/hijaiyah_green"
+                app:cornerRadius="24dp"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- ==================== CAMERA MODE (Full Screen Overlay) ==================== -->
+    <FrameLayout
+        android:id="@+id/cameraOverlayLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="#000000">
+
+        <!-- Camera Fragment Container - Full Screen -->
+        <FrameLayout
+            android:id="@+id/camera_fragment_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <!-- Close Camera Button (Top Left) -->
+        <ImageView
+            android:id="@+id/btnCloseCamera"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="top|start"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="48dp"
+            android:src="@drawable/ic_close"
+            android:background="@drawable/circle_button_dark"
+            android:padding="12dp"
+            app:tint="@color/white"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <!-- Current Letter Info (Top Center) - Overlay on Camera -->
+        <LinearLayout
+            android:id="@+id/cameraLetterInfoOverlay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="48dp"
+            android:orientation="horizontal"
+            android:background="@drawable/bg_camera_letter_overlay"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="12dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvCameraCurrentLetter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ا"
+                android:textColor="@color/white"
+                android:textSize="32sp"
+                android:textStyle="bold"/>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="32dp"
+                android:layout_marginHorizontal="16dp"
+                android:background="#80FFFFFF"/>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvCameraCurrentLetterName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Alif"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/tvCameraLetterProgress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Huruf 1 dari 5"
+                    android:textColor="#B0FFFFFF"
+                    android:textSize="12sp"/>
 
             </LinearLayout>
 
-        </FrameLayout>
+        </LinearLayout>
 
-    </LinearLayout>
+    </FrameLayout>
 
-    <!-- Bottom Navigation -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:background="@color/white"
-        android:elevation="4dp"
-        android:gravity="center_vertical">
-
-        <!-- Previous Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnPrevious"
-            android:layout_width="0dp"
-            android:layout_height="50dp"
-            android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:text="◀ Sebelumnya"
-            android:textColor="@color/hijaiyah_navy"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            app:backgroundTint="@color/white"
-            app:strokeColor="@color/hijaiyah_navy"
-            app:strokeWidth="2dp"
-            app:cornerRadius="25dp"/>
-
-        <!-- Next Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnNext"
-            android:layout_width="0dp"
-            android:layout_height="50dp"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:text="Selanjutnya ▶"
-            android:textColor="@color/white"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            app:backgroundTint="@color/hijaiyah_green"
-            app:cornerRadius="25dp"/>
-
-    </LinearLayout>
-
-</LinearLayout>
+</FrameLayout>
