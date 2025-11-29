@@ -159,8 +159,16 @@ class LatihanPracticeActivity : AppCompatActivity() {
                         }
                     }
                 } else {
-                    // on failure just hide embedded camera for now
-                    hideEmbeddedCamera()
+                    // On failure, properly close camera mode and return to grid
+                    val cameraError = bundle.getBoolean("camera_error", false)
+                    val errorMsg = bundle.getString("error", "")
+                    
+                    if (cameraError && errorMsg.isNotEmpty()) {
+                        showErrorMessage("Error kamera: $errorMsg. Silakan coba lagi.")
+                    }
+                    
+                    // Close camera mode properly
+                    closeCameraMode()
                 }
             }
 
@@ -385,10 +393,7 @@ class LatihanPracticeActivity : AppCompatActivity() {
             openCamera()
         }
         
-        // Close camera button
-        binding.btnCloseCamera.setOnClickListener {
-            closeCameraMode()
-        }
+        // Close camera button removed - using CameraFragment's back button instead
         
         binding.btnNext.setOnClickListener {
             nextBaris()
@@ -402,14 +407,8 @@ class LatihanPracticeActivity : AppCompatActivity() {
     // ==================== CAMERA MODE TRANSITIONS ====================
     
     private fun showCameraMode(huruf: LatihanHuruf) {
-        // Update camera overlay info
-        binding.tvCameraCurrentLetter.text = huruf.arabic
-        binding.tvCameraCurrentLetterName.text = huruf.latin
-        
-        // Calculate progress text
-        val totalHuruf = currentBaris?.hurufList?.size ?: 0
-        val currentIndex = currentBaris?.hurufList?.indexOfFirst { it.position == huruf.position }?.plus(1) ?: 0
-        binding.tvCameraLetterProgress.text = "Huruf $currentIndex dari $totalHuruf"
+        // Camera overlay info is now handled by CameraFragment's UI
+        // No need to update tvCameraCurrentLetter, tvCameraCurrentLetterName, tvCameraLetterProgress
         
         // Animate transition to camera mode
         binding.mainContentLayout.animate()
@@ -536,6 +535,9 @@ class LatihanPracticeActivity : AppCompatActivity() {
         // Show camera mode UI
         showCameraMode(huruf)
         
+        // Get next letters for the list panel
+        val nextLetters = getNextLettersAfter(huruf.position)
+        
         // Create fragment and set arguments
         val frag = CameraFragment().apply {
             arguments = Bundle().apply {
@@ -544,6 +546,10 @@ class LatihanPracticeActivity : AppCompatActivity() {
                 putInt("letterPosition", huruf.position)
                 putBoolean("embedded", true)
                 putBoolean("sequence_mode", sequence)
+                // Pass diacritic for harakat detection (fathah/kasrah/dhammah)
+                huruf.diacritic?.let { putString("diacritic", it) }
+                // Pass next letters for display
+                putStringArrayList("next_letters", ArrayList(nextLetters))
             }
         }
 
@@ -551,6 +557,26 @@ class LatihanPracticeActivity : AppCompatActivity() {
         supportFragmentManager.commit {
             replace(binding.cameraFragmentContainer.id, frag)
         }
+    }
+    
+    /**
+     * Get list of next letters (arabic characters) after current position
+     */
+    private fun getNextLettersAfter(currentPosition: Int): List<String> {
+        val result = mutableListOf<String>()
+        currentBaris?.let { baris ->
+            val currentIndex = baris.hurufList.indexOfFirst { it.position == currentPosition }
+            if (currentIndex >= 0) {
+                // Get up to 5 next letters
+                for (i in (currentIndex + 1) until minOf(currentIndex + 6, baris.hurufList.size)) {
+                    val huruf = baris.hurufList[i]
+                    if (!completedPositions.contains(huruf.position)) {
+                        result.add(huruf.arabic)
+                    }
+                }
+            }
+        }
+        return result
     }
 
     private fun hideEmbeddedCamera() {

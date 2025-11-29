@@ -19,7 +19,8 @@ data class LatihanHuruf(
     val gestureName: String? = null,
     val position: Int,
     val isCompleted: Boolean = false,
-    val isActive: Boolean = false
+    val isActive: Boolean = false,
+    val diacritic: String? = null  // "fathah", "kasrah", "dhammah" or null for hijaiyah dasar
 )
 
 /**
@@ -98,6 +99,47 @@ object LatihanPageData {
         "Ha'" to "27_ha'",
         "Ya" to "28_ya"
     )
+    
+    /**
+     * Extract base name and diacritic type from latin name
+     * e.g. "Alif Fathah" -> ("Alif", "fathah")
+     *      "Ba" -> ("Ba", null)
+     */
+    private fun extractBaseNameAndDiacritic(rawName: String): Pair<String, String?> {
+        val lower = rawName.lowercase()
+        val diacritic = when {
+            lower.contains("fathah") -> "fathah"
+            lower.contains("kasrah") || lower.contains("kasroh") -> "kasrah"
+            lower.contains("dhammah") || lower.contains("dhommah") || lower.contains("dhamah") || lower.contains("dammah") -> "dhammah"
+            else -> null
+        }
+        
+        if (diacritic == null) {
+            return rawName to null
+        }
+        
+        // Extract base name by removing diacritic-related words
+        val base = rawName
+            .replace(" Fathah", "", ignoreCase = true)
+            .replace(" Kasrah", "", ignoreCase = true)
+            .replace(" Kasroh", "", ignoreCase = true)
+            .replace(" Dhammah", "", ignoreCase = true)
+            .replace(" Dhommah", "", ignoreCase = true)
+            .replace(" Dhamah", "", ignoreCase = true)
+            .replace(" Dammah", "", ignoreCase = true)
+            .replace("Fathah", "", ignoreCase = true)
+            .replace("Kasrah", "", ignoreCase = true)
+            .replace("Kasroh", "", ignoreCase = true)
+            .replace("Dhammah", "", ignoreCase = true)
+            .replace("Dhommah", "", ignoreCase = true)
+            .replace("Dhamah", "", ignoreCase = true)
+            .replace("Dammah", "", ignoreCase = true)
+            .replace("Tanwin", "", ignoreCase = true)
+            .replace(" Akhir", "", ignoreCase = true)
+            .trim()
+        
+        return base.ifEmpty { rawName } to diacritic
+    }
     
     /**
      * Load data jilid dari API
@@ -287,12 +329,15 @@ object LatihanPageData {
             Log.d(TAG, "  - Urutan sequence: ${sortedItems.map { it.urutan }}")
             
             val hurufList = sortedItems.mapIndexed { index, item ->
-                val gestureName = latinToGestureMap[item.latinName] ?: item.latinName.lowercase()
+                // Extract base name and diacritic from latin name (e.g. "Alif Fathah" -> "Alif", "fathah")
+                val (baseName, diacritic) = extractBaseNameAndDiacritic(item.latinName)
+                
+                val gestureName = latinToGestureMap[baseName] ?: baseName.lowercase()
                 
                 // Position calculation: for this context we'll use a combination of barisId and urutan
                 val position = (barisId * 100) + item.urutan  // Simple position calculation
                 
-                Log.d(TAG, "    [$index] Urutan ${item.urutan}: latin='${item.latinName}' -> gesture='$gestureName', arab='${item.arabicChar}', pos=$position")
+                Log.d(TAG, "    [$index] Urutan ${item.urutan}: latin='${item.latinName}' base='$baseName' diacritic='$diacritic' -> gesture='$gestureName', arab='${item.arabicChar}', pos=$position")
                 
                 LatihanHuruf(
                     arabic = item.arabicChar,
@@ -300,7 +345,8 @@ object LatihanPageData {
                     gestureName = gestureName,
                     position = position,
                     isCompleted = false,
-                    isActive = false
+                    isActive = false,
+                    diacritic = diacritic
                 )
             }
             

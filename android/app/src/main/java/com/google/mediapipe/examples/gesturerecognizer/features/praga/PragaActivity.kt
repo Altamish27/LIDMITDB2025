@@ -14,6 +14,7 @@ import android.os.Handler
 import android.os.Looper
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.DefaultLoadControl
+import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.LoadControl
 import com.google.android.exoplayer2.MediaItem
@@ -38,9 +39,8 @@ class PragaActivity : AppCompatActivity() {
     private var gestureName: String = ""
     private var currentIndex: Int = 0
     private var exoPlayer: ExoPlayer? = null
-    private var videoLoadStartTime: Long = 0
-    private val progressUpdateHandler = Handler(Looper.getMainLooper())
-    private var progressUpdateRunnable: Runnable? = null
+    private var videoTimeoutHandler: Runnable? = null
+    private val videoHandler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,14 +64,77 @@ class PragaActivity : AppCompatActivity() {
             // Load data hijaiyah dari API
             HijaiyahData.loadFromApi()
             
-            // Find current index
-            currentIndex = HijaiyahData.letters.indexOfFirst { it.transliteration == hurufLatin }
+            // Find current index using multiple matching strategies
+            currentIndex = findLetterIndex()
             if (currentIndex == -1) currentIndex = 0
 
             setupViews()
             setupClickListeners()
             updateNavigationButtons()
         }
+    }
+    
+    /**
+     * Find letter index using multiple matching strategies:
+     * 1. Exact transliteration match
+     * 2. Arabic character match
+     * 3. Case-insensitive transliteration match
+     * 4. Base transliteration match (for diacritic letters like "Ba Fathah" -> match "Ba")
+     */
+    private fun findLetterIndex(): Int {
+        // Strategy 1: Exact transliteration match
+        var index = HijaiyahData.letters.indexOfFirst { it.transliteration == hurufLatin }
+        if (index != -1) {
+            Log.d(TAG, "Found letter by exact transliteration: $hurufLatin at index $index")
+            return index
+        }
+        
+        // Strategy 2: Arabic character match
+        index = HijaiyahData.letters.indexOfFirst { it.arabic == hurufArab }
+        if (index != -1) {
+            Log.d(TAG, "Found letter by Arabic character: $hurufArab at index $index")
+            return index
+        }
+        
+        // Strategy 3: Case-insensitive transliteration match
+        index = HijaiyahData.letters.indexOfFirst { 
+            it.transliteration.equals(hurufLatin, ignoreCase = true) 
+        }
+        if (index != -1) {
+            Log.d(TAG, "Found letter by case-insensitive transliteration: $hurufLatin at index $index")
+            return index
+        }
+        
+        // Strategy 4: Base transliteration match (for diacritic letters)
+        // Extract base name without diacritic (e.g., "Ba Fathah" -> "Ba")
+        val baseName = extractBaseName(hurufLatin)
+        index = HijaiyahData.letters.indexOfFirst { 
+            it.transliteration.equals(baseName, ignoreCase = true) ||
+            extractBaseName(it.transliteration).equals(baseName, ignoreCase = true)
+        }
+        if (index != -1) {
+            Log.d(TAG, "Found letter by base transliteration: $baseName at index $index")
+            return index
+        }
+        
+        Log.w(TAG, "Letter not found: arab='$hurufArab', latin='$hurufLatin'. Defaulting to index 0")
+        return -1
+    }
+    
+    /**
+     * Extract base name from transliteration by removing diacritic suffixes
+     */
+    private fun extractBaseName(name: String): String {
+        val lower = name.lowercase()
+        return when {
+            lower.contains(" fathah") -> name.replace(" Fathah", "", ignoreCase = true).replace(" fathah", "", ignoreCase = true)
+            lower.contains(" kasrah") -> name.replace(" Kasrah", "", ignoreCase = true).replace(" kasrah", "", ignoreCase = true)
+            lower.contains(" kasroh") -> name.replace(" Kasroh", "", ignoreCase = true).replace(" kasroh", "", ignoreCase = true)
+            lower.contains(" dhammah") -> name.replace(" Dhammah", "", ignoreCase = true).replace(" dhammah", "", ignoreCase = true)
+            lower.contains(" dhommah") -> name.replace(" Dhommah", "", ignoreCase = true).replace(" dhommah", "", ignoreCase = true)
+            lower.contains(" dammah") -> name.replace(" Dammah", "", ignoreCase = true).replace(" dammah", "", ignoreCase = true)
+            else -> name
+        }.trim()
     }
 
     private fun setupViews() {
@@ -196,9 +259,22 @@ class PragaActivity : AppCompatActivity() {
      * Sembunyikan semua container asset
      */
     private fun hideAllAssetContainers() {
+        // Cancel video timeout
+        videoTimeoutHandler?.let { videoHandler.removeCallbacks(it) }
+        
+        // Hide containers
         binding.cardImageContainer.visibility = View.GONE
         binding.cardVideoContainer.visibility = View.GONE
         binding.loadingProgressContainer.visibility = View.GONE
+        
+        // Properly release player untuk prevent frame nyangkut
+        exoPlayer?.let { player ->
+            player.stop()
+            player.clearMediaItems()
+            binding.playerViewTutorial.player = null
+        }
+        exoPlayer?.release()
+        exoPlayer = null
     }
     
     /**
@@ -223,200 +299,177 @@ class PragaActivity : AppCompatActivity() {
     }
     
     /**
-     * Tampilkan video menggunakan ExoPlayer
+     * Tampilkan video menggunakan ExoPlayer - OPTIMIZED FOR LARGE FILES (2-3MB)
      */
     private fun displayVideo(videoUrl: String) {
+        // Show container and loading
         binding.cardVideoContainer.visibility = View.VISIBLE
         binding.loadingProgressContainer.visibility = View.VISIBLE
         binding.loadingProgress.progress = 0
-        binding.tvLoadingPercentage.text = "0%"
+        binding.tvLoadingPercentage.text = "Loading..."
         
-        // Ensure PlayerView is visible and properly configured
-        binding.playerViewTutorial.visibility = View.VISIBLE
-        binding.playerViewTutorial.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-        binding.playerViewTutorial.useController = false // Hide default controller
+        // Cancel any existing timeout
+        videoTimeoutHandler?.let { videoHandler.removeCallbacks(it) }
         
-        // Track loading time
-        videoLoadStartTime = System.currentTimeMillis()
-        Log.d(TAG, "Displaying video: $videoUrl")
+        // Release any existing player properly
+        exoPlayer?.stop()
+        exoPlayer?.release()
+        exoPlayer = null
+        binding.playerViewTutorial.player = null
+        
+        // Set timeout untuk auto-skip video jika terlalu lama (20 detik)
+        videoTimeoutHandler = Runnable {
+            if (binding.loadingProgressContainer.visibility == View.VISIBLE) {
+                handleVideoLoadFailure()
+            }
+        }
+        videoHandler.postDelayed(videoTimeoutHandler!!, 20000) // 20 detik timeout
         
         try {
-            // Release previous player if exists
-            exoPlayer?.release()
-            exoPlayer = null
-            
-            // Configure LoadControl untuk buffering yang lebih cepat dan efektif
-            // Mengurangi minimum buffer agar video bisa mulai play lebih cepat
-            val loadControl: LoadControl = DefaultLoadControl.Builder()
+            // Configure LoadControl untuk cepat detect error
+            // Buffer lebih kecil agar error cepat terdeteksi
+            val loadControl = DefaultLoadControl.Builder()
                 .setBufferDurationsMs(
-                    300,   // minBufferMs - minimum buffer sebelum mulai play (0.3 detik) - LEBIH CEPAT
-                    15000, // maxBufferMs - maximum buffer (15 detik) - LEBIH BESAR untuk smooth playback
-                    300,   // bufferForPlaybackMs - buffer untuk playback (0.3 detik) - LEBIH CEPAT
-                    500    // bufferForPlaybackAfterRebufferMs - buffer setelah rebuffer (0.5 detik) - LEBIH CEPAT
+                    1000,  // minBufferMs - 1 detik (lebih cepat)
+                    10000, // maxBufferMs - 10 detik (cukup)
+                    500,   // bufferForPlaybackMs - 0.5 detik (cepat start)
+                    1000   // bufferForPlaybackAfterRebufferMs - 1 detik
                 )
-                .setTargetBufferBytes(-1) // Unlimited target buffer
-                .setPrioritizeTimeOverSizeThresholds(true) // Prioritaskan waktu daripada ukuran
-                .setBackBuffer(3000, true) // Back buffer 3 detik - dikurangi untuk lebih cepat
+                .setTargetBufferBytes(3 * 1024 * 1024) // 3MB buffer target
+                .setPrioritizeTimeOverSizeThresholds(true)
                 .build()
             
-            // Initialize new ExoPlayer dengan LoadControl yang dioptimasi
-            exoPlayer = ExoPlayer.Builder(this)
+            // Configure Renderers Factory untuk support semua codec
+            // Gunakan software decoder jika hardware decoder gagal
+            val renderersFactory = DefaultRenderersFactory(this).apply {
+                // PREFER_EXTENSION_RENDERER akan coba extension (software) renderer jika platform (hardware) renderer gagal
+                setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+                // Enable decoder fallback
+                setEnableDecoderFallback(true)
+            }
+            
+            // Create new player with LoadControl dan RenderersFactory
+            exoPlayer = ExoPlayer.Builder(this, renderersFactory)
                 .setLoadControl(loadControl)
-                .build()
-                .apply {
-                    binding.playerViewTutorial.player = this
-                    videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
-                    playWhenReady = true
-                    repeatMode = Player.REPEAT_MODE_OFF
-                }
-            
-            // Create media item dari video URL
-            val mediaItem = MediaItem.fromUri(videoUrl)
-            
-            // Setup player listeners
-            exoPlayer?.apply {
-                // Clear previous media items
-                clearMediaItems()
-                setMediaItem(mediaItem)
+                .build().also { player ->
                 
-                // Set playWhenReady to true so video auto-plays when ready
-                playWhenReady = true
+                // Configure player FIRST sebelum bind
+                player.playWhenReady = true
+                player.repeatMode = Player.REPEAT_MODE_ALL
+                player.volume = 1f
+                player.videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
                 
-                // Prepare the player
-                prepare()
+                // Bind to view
+                binding.playerViewTutorial.player = player
                 
-                // Start updating progress periodically
-                startProgressUpdates()
+                // Set media item dengan configuration
+                val mediaItem = MediaItem.Builder()
+                    .setUri(videoUrl)
+                    .build()
+                    
+                player.setMediaItem(mediaItem)
                 
-                // Listener untuk handle loading dan error
-                addListener(object : Player.Listener {
+                // Add listener
+                player.addListener(object : Player.Listener {
                     override fun onPlaybackStateChanged(playbackState: Int) {
                         when (playbackState) {
-                            Player.STATE_READY -> {
-                                val readyTime = System.currentTimeMillis() - videoLoadStartTime
-                                Log.d(TAG, "Video STATE_READY: $videoUrl (took ${readyTime}ms), isPlaying: $isPlaying, playWhenReady: $playWhenReady")
-                                // Ensure video starts playing
-                                if (!isPlaying && playWhenReady) {
-                                    play()
-                                }
-                                // Don't hide loading yet, wait for first frame
-                            }
                             Player.STATE_BUFFERING -> {
-                                // Video sedang loading, tetap tampilkan loading progress
+                                // Show buffering progress
                                 binding.loadingProgressContainer.visibility = View.VISIBLE
-                                updateBufferingProgress()
-                                val bufferingTime = System.currentTimeMillis() - videoLoadStartTime
-                                Log.d(TAG, "Video buffering: $videoUrl (elapsed: ${bufferingTime}ms)")
+                                val duration = player.duration
+                                val buffered = player.bufferedPosition
+                                if (duration > 0) {
+                                    val percent = ((buffered * 100) / duration).toInt()
+                                    binding.loadingProgress.progress = percent
+                                    binding.tvLoadingPercentage.text = "$percent%"
+                                }
                             }
-                            Player.STATE_IDLE -> {
-                                // Video sedang idle, tetap tunggu
-                                binding.loadingProgressContainer.visibility = View.VISIBLE
-                                updateBufferingProgress()
-                                Log.d(TAG, "Video idle: $videoUrl")
+                            Player.STATE_READY -> {
+                                // Force play jika belum playing
+                                if (!player.isPlaying) {
+                                    player.playWhenReady = true
+                                    player.play()
+                                }
+                            }
+                            Player.STATE_ENDED -> {
+                                // Loop video
+                                player.seekTo(0)
+                                player.play()
                             }
                         }
-                        super.onPlaybackStateChanged(playbackState)
                     }
                     
                     override fun onRenderedFirstFrame() {
-                        // Video frame pertama sudah di-render, sembunyikan loading
-                        stopProgressUpdates()
-                        binding.loadingProgressContainer.visibility = View.GONE
-                        binding.loadingProgress.progress = 100
-                        binding.tvLoadingPercentage.text = "100%"
-                        val loadTime = System.currentTimeMillis() - videoLoadStartTime
-                        Log.d(TAG, "First frame rendered for: $videoUrl (took ${loadTime}ms)")
-                        super.onRenderedFirstFrame()
-                    }
-                    
-                    override fun onIsLoadingChanged(isLoading: Boolean) {
-                        if (isLoading) {
-                            startProgressUpdates()
-                        } else {
-                            stopProgressUpdates()
+                        // Cancel timeout - video berhasil render
+                        videoTimeoutHandler?.let { videoHandler.removeCallbacks(it) }
+                        
+                        // Hide loading - video is now visible
+                        runOnUiThread {
+                            binding.loadingProgressContainer.visibility = View.GONE
+                            binding.loadingProgress.progress = 100
                         }
-                        super.onIsLoadingChanged(isLoading)
+                        
+                        // Ensure video playing
+                        if (!player.isPlaying) {
+                            player.play()
+                        }
                     }
                     
                     override fun onIsPlayingChanged(isPlaying: Boolean) {
-                        Log.d(TAG, "Video isPlaying changed: $isPlaying for: $videoUrl")
+                        // Auto-restart if stopped unexpectedly
+                        if (!isPlaying && player.playWhenReady && player.playbackState == Player.STATE_READY) {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                if (!player.isPlaying && player.playWhenReady && player.playbackState == Player.STATE_READY) {
+                                    player.play()
+                                }
+                            }, 200)
+                        }
                         super.onIsPlayingChanged(isPlaying)
                     }
                     
-                    override fun onVideoSizeChanged(videoSize: com.google.android.exoplayer2.video.VideoSize) {
-                        Log.d(TAG, "Video size changed: width=${videoSize.width}, height=${videoSize.height}, pixelWidthHeightRatio=${videoSize.pixelWidthHeightRatio} for: $videoUrl")
-                        super.onVideoSizeChanged(videoSize)
-                    }
-                    
                     override fun onPlayerError(error: com.google.android.exoplayer2.PlaybackException) {
-                        // Log error dengan detail lebih lengkap
-                        Log.e(TAG, "Error playing video: $videoUrl", error)
-                        Log.e(TAG, "Error type: ${error.errorCode}, message: ${error.message}")
-                        // Jangan sembunyikan loading progress, biarkan user tahu masih loading
-                        super.onPlayerError(error)
+                        // Silent skip - hide video container tanpa notifikasi
+                        runOnUiThread {
+                            handleVideoLoadFailure()
+                        }
                     }
                 })
+                
+                // Prepare AFTER everything is set up
+                player.prepare()
+                
+                // Force play setelah prepare jika perlu
+                Handler(Looper.getMainLooper()).postDelayed({
+                    if (!player.isPlaying && player.playWhenReady && player.playbackState != Player.STATE_IDLE) {
+                        player.play()
+                    }
+                }, 2000)
             }
+            
         } catch (e: Exception) {
-            Log.e(TAG, "Error setting up video player for: $videoUrl", e)
-            // Jangan tampilkan error, biarkan loading tetap berjalan
-        }
-    }
-    
-    
-    /**
-     * Start updating progress periodically
-     */
-    private fun startProgressUpdates() {
-        stopProgressUpdates() // Stop any existing updates
-        progressUpdateRunnable = object : Runnable {
-            override fun run() {
-                updateBufferingProgress()
-                progressUpdateHandler.postDelayed(this, 100) // Update every 100ms
+            // Silent skip on exception
+            runOnUiThread {
+                handleVideoLoadFailure()
             }
         }
-        progressUpdateHandler.post(progressUpdateRunnable!!)
     }
     
     /**
-     * Stop updating progress
+     * Handle video load failure - silent skip, hide video container
      */
-    private fun stopProgressUpdates() {
-        progressUpdateRunnable?.let {
-            progressUpdateHandler.removeCallbacks(it)
-            progressUpdateRunnable = null
-        }
-    }
-    
-    /**
-     * Update buffering progress berdasarkan buffered position
-     */
-    private fun updateBufferingProgress() {
-        exoPlayer?.let { player ->
-            val duration = player.duration
-            if (duration > 0) {
-                val bufferedPosition = player.bufferedPosition
-                val progress = ((bufferedPosition.toFloat() / duration.toFloat()) * 100).toInt().coerceIn(0, 100)
-                binding.loadingProgress.progress = progress
-                binding.tvLoadingPercentage.text = "$progress%"
-            } else {
-                // Jika duration belum diketahui, gunakan buffered position saja
-                val bufferedPosition = player.bufferedPosition
-                if (bufferedPosition > 0) {
-                    // Estimasi progress berdasarkan buffered position (asumsi video ~5 detik)
-                    val estimatedDuration = 5000L
-                    val progress = ((bufferedPosition.toFloat() / estimatedDuration.toFloat()) * 100).toInt().coerceIn(0, 95)
-                    binding.loadingProgress.progress = progress
-                    binding.tvLoadingPercentage.text = "$progress%"
-                } else {
-                    // Progress minimal saat baru mulai, increment sedikit
-                    val currentProgress = binding.loadingProgress.progress
-                    val newProgress = (currentProgress + 2).coerceIn(5, 20)
-                    binding.loadingProgress.progress = newProgress
-                    binding.tvLoadingPercentage.text = "$newProgress%"
-                }
-            }
-        }
+    private fun handleVideoLoadFailure() {
+        // Cancel timeout
+        videoTimeoutHandler?.let { videoHandler.removeCallbacks(it) }
+        
+        // Stop and release player
+        exoPlayer?.stop()
+        exoPlayer?.release()
+        exoPlayer = null
+        binding.playerViewTutorial.player = null
+        
+        // Hide loading dan video container (silent, no notification)
+        binding.loadingProgressContainer.visibility = View.GONE
+        binding.cardVideoContainer.visibility = View.GONE
     }
     
     /**
@@ -438,8 +491,8 @@ class PragaActivity : AppCompatActivity() {
     
     override fun onDestroy() {
         super.onDestroy()
-        // Stop progress updates
-        stopProgressUpdates()
+        // Cancel timeout
+        videoTimeoutHandler?.let { videoHandler.removeCallbacks(it) }
         // Release ExoPlayer resources
         exoPlayer?.let { player ->
             player.release()
