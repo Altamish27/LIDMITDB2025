@@ -457,25 +457,6 @@ class CameraFragment : Fragment(),
         
         // Initially hide result overlay
         fragmentCameraBinding.overlayResult.visibility = View.GONE
-        
-        // Setup result buttons
-        fragmentCameraBinding.btnTryAgain.setOnClickListener {
-            fragmentCameraBinding.overlayResult.visibility = View.GONE
-            resetGestureDetection()
-            startAutomaticDetection()
-        }
-        
-        fragmentCameraBinding.btnNextLetter.setOnClickListener {
-            try {
-                if (isAdded) {
-                    activity?.let { act ->
-                        Navigation.findNavController(act, R.id.fragment_container).navigateUp()
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error navigating to next", e)
-            }
-        }
     }
     
     /**

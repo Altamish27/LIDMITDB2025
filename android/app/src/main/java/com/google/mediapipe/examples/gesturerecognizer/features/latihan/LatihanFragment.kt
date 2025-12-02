@@ -44,11 +44,20 @@ class LatihanFragment : Fragment() {
         // Update UI with jilid info
         binding.tvTitle.text = jilidTitle
         
+        // Setup back button
+        setupBackButton()
+        
         // Setup dynamic adapter
         setupHalamanAdapter()
         
         // Load pages from API
         loadPagesFromApi()
+    }
+    
+    private fun setupBackButton() {
+        binding.btnBack.setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
     }
     
     private fun setupHalamanAdapter() {

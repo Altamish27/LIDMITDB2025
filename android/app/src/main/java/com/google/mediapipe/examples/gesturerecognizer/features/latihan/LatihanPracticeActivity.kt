@@ -728,7 +728,7 @@ class LatihanPracticeActivity : AppCompatActivity() {
         val dialog = AlertDialog.Builder(this)
         val dialogView = layoutInflater.inflate(R.layout.dialog_page_completed, null)
         dialog.setView(dialogView)
-        dialog.setCancelable(false)
+        dialog.setCancelable(true)
 
         val alertDialog = dialog.create()
         
@@ -736,16 +736,9 @@ class LatihanPracticeActivity : AppCompatActivity() {
         val tvMessage = dialogView.findViewById<TextView>(R.id.tvMessage)
         tvMessage.text = "Anda telah menyelesaikan Halaman $currentHalamanId!"
         
-        // Stop button - back to page list
-        dialogView.findViewById<Button>(R.id.btnStop).setOnClickListener {
+        // OK button - just close dialog
+        dialogView.findViewById<Button>(R.id.btnOk).setOnClickListener {
             alertDialog.dismiss()
-            finish() // Go back to previous activity (page list)
-        }
-        
-        // Next page button
-        dialogView.findViewById<Button>(R.id.btnNextPage).setOnClickListener {
-            alertDialog.dismiss()
-            navigateToNextPage()
         }
         
         alertDialog.show()

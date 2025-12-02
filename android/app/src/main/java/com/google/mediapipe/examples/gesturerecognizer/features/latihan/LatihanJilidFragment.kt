@@ -47,8 +47,21 @@ class LatihanJilidFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
+        setupBackButton()
         setupRecyclerView()
         loadJilidData()
+    }
+    
+    private fun setupBackButton() {
+        binding.btnBack.setOnClickListener {
+            // Check if there's a back stack
+            if (parentFragmentManager.backStackEntryCount > 0) {
+                parentFragmentManager.popBackStack()
+            } else {
+                // If no back stack, trigger activity's back press to go home
+                requireActivity().onBackPressedDispatcher.onBackPressed()
+            }
+        }
     }
 
     private fun setupRecyclerView() {
