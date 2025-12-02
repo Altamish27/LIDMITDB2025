@@ -44,7 +44,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Belajar Hijaiyah"
+            android:text="Sign Quran"
             android:textColor="#80147E7E"
             android:textSize="14sp" />
 

@@ -197,7 +197,7 @@ android/
 | 🔐 Login & Profile | `features.auth` | Autentikasi dan profil user |
 | 📸 Kamera Deteksi | `features.camera` | Deteksi gesture real-time dengan kamera |
 | 🖼️ Galeri Deteksi | `features.gallery` | Deteksi gesture dari gambar/video |
-| 📝 Belajar Hijaiyah | `features.hijaiyah` | Pembelajaran huruf hijaiyah |
+| 📝 Sign Quran | `features.hijaiyah` | Pembelajaran huruf hijaiyah |
 | 💾 Database Hijaiyah | `features.hijaiyahdb` | Penyimpanan data hijaiyah |
 | 🏠 Home | `features.home` | Halaman utama aplikasi |
 | 📚 Latihan | `features.latihan` | Latihan menulis huruf |

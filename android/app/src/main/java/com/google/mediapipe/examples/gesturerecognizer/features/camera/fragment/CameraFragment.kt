@@ -256,7 +256,7 @@ class CameraFragment : Fragment(),
         letterType = arguments?.getString("letterType")
         diacritic = arguments?.getString("diacritic")
         
-        // Check if embedded mode (Latihan Jilid) or standalone (Belajar Hijaiyah)
+        // Check if embedded mode (Latihan Jilid) or standalone (Sign Quran)
         isLatihanMode = arguments?.getBoolean("embedded", false) ?: false
         
         // Get next letters list for Latihan mode

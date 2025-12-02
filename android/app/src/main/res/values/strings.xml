@@ -15,7 +15,7 @@
     ~ limitations under the License.
 -->
 <resources>
-    <string name="app_name">Belajar Hijaiyah</string>
+    <string name="app_name">Sign Quran</string>
 
     <string name="media_pipe">MediaPipe</string>
     
