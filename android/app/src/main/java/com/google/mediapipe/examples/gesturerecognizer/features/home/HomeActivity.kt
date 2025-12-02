@@ -377,6 +377,28 @@ class HomeActivity : AppCompatActivity() {
             }
         }
         
+        navigationDrawer.findViewById<View>(R.id.menu_messages)?.setOnClickListener {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+            if (authManager.isLoggedIn) {
+                try {
+                    val intent = Intent(this, com.google.mediapipe.examples.gesturerecognizer.features.messages.MessagesListActivity::class.java)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Failed to start MessagesListActivity: ${e.message}", e)
+                    Toast.makeText(this, "Error opening messages: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            } else {
+                Toast.makeText(this, "Silakan login terlebih dahulu", Toast.LENGTH_SHORT).show()
+                try {
+                    val intent = Intent(this, LoginActivity::class.java)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Failed to start LoginActivity: ${e.message}", e)
+                    Toast.makeText(this, "Error opening login: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+        
         navigationDrawer.findViewById<View>(R.id.menu_settings)?.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
             try {
